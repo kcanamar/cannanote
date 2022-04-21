@@ -4,18 +4,14 @@
 require('dotenv').config()
 require('./config/db')
 const express = require('express')
-const methodOverride = require('method-override')
-const morgan = require('morgan')
+const middleware = require('./middleware/mid')
 const cannaRouter = require('./routes/entires')
 const app = express()
 const PORT = process.env.PORT || 3001
 //////////////////////
 // Declare Middleware
 //////////////////////
-app.use(methodOverride('_method'))
-app.use("/static", express.static('public'))
-app.use(express.urlencoded({extended: true}))
-app.use(morgan('tiny'))
+middleware(app)
 ///////////////////////
 // Declare Routes and Routers 
 ///////////////////////
