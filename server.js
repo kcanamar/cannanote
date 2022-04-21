@@ -2,9 +2,9 @@
 // Setup - Import deps and create app object
 ////////////////////////
 require('dotenv').config()
+require('./config/db')
 const express = require('express')
 const methodOverride = require('method-override')
-const mongoose = require('mongoose')
 const morgan = require('morgan')
 const cannaRouter = require('./routes/entires')
 const app = express()
@@ -52,14 +52,5 @@ app.delete("/:id", (req, res) => {
 ///////////////////////////
 // Server Listener
 ///////////////////////////
-// MongoDB & Mongoose 
-mongoose.connect(process.env.DATABASE_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-const db = mongoose.connection;
-db.on('error', (err) => console.log(err.message + "yeah... that didn't work"))
-db.on('connected', () => console.log('mongoose connected'))
-db.on('disconnected', () => console.log('mongoose disconnected'))
 
 app.listen(PORT, () => console.log(`Who..Are..You?...${PORT}`))
