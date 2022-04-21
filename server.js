@@ -6,7 +6,7 @@ const express = require('express')
 const methodOverride = require('method-override')
 const mongoose = require('mongoose')
 const morgan = require('morgan')
-const cannaRouter = require('./routes/logs')
+const cannaRouter = require('./routes/entires')
 const app = express()
 const PORT = process.env.PORT || 3001
 //////////////////////
