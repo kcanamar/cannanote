@@ -5,7 +5,8 @@ require('dotenv').config()
 require('./config/db')
 const express = require('express')
 const middleware = require('./middleware/mid')
-const cannaRouter = require('./routes/entires')
+const CannaRouter = require('./routes/entires')
+const indexRouter = require('./routes/index')
 const app = express()
 const PORT = process.env.PORT
 //////////////////////
@@ -15,7 +16,8 @@ middleware(app)
 ///////////////////////
 // Declare Routes and Routers 
 ///////////////////////
-app.use("/", cannaRouter)
+app.use("/", indexRouter)
+app.use("/cannalog", CannaRouter)
 ///////////////////////////
 // Server Listener
 ///////////////////////////
