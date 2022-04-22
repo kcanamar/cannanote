@@ -1,12 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<%- include ('./partials/head.ejs') %>
     <title>Show Entry</title>
 </head>
 <body>
-    
+<%- include('./partials/nav.ejs') %>
+<div class="show">
+
+    <h1><%=entry.author%></h1>
+    <table>
+        <thead>
+            <th>Strain</th><th>Type</th><th>Amount</th><th>Method</th>
+        </thead>
+        <tbody>
+            <td><%= entry.strain %></td>
+            <td><%= entry.type %></td>
+            <td><%= entry.amount %></td>
+            <td><%= entry.consumption %></td>
+        </tbody>
+    </table>
+    <div class="description">
+        <h3>The Wisdom Gained</h3>
+        <p><%= entry.description %></p>
+    </div>
+</div>
 </body>
 </html>
