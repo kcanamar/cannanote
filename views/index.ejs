@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('./partials/head.ejs')%>
+    <title>CannaNote</title>
+</head>
+<body>
+<%- include('./partials/nav.ejs') %>
+    <div class="user-dash">
+        <a href="" class="create">Make a New Entry</a>
+        <div class="new"></div>
+    </div>
+    <main>
+        <% entries.forEach(entry => { %>
+            <div class="entry-container">
+                <form action="">
+                    <fieldset>
+                        <legend><a href=""><span class="author"><%=entry.author%></span></a> <span class="date"><%=entry.date%></span></legend>
+                        <label for="strain">The Strain: <span class="strain"><%= entry.strain%></span></label>
+                        <label for="type">What type of Cannabis: <span class="type"><%= entry.type%></span></label> <br>
+                        <label for="amount">How much they used: <span class="amount"><%= entry.amount %></span></label>
+                        <label for="consumptiom">Method of Consumption: <span class="consumption"><%= entry.consumption%></span></label> <br>
+                        <label for="description"> <span>What it was like: </span> <br>
+                            <textarea name="description" id="" cols="100" rows="1" readonly style="resize:none"><%= entry.description%></textarea>
+                        </label> <br>
+                        <label for="favs"><span>Likes:</span> <%= entry.meta.favs%></label>
+                        <label for="likes"><input type="submit" value="Like"></label>
+                        <label for="show"><a href="" class="show">More</a></label>
+                        <label for="edit"><a href="" class="edit">Edit</a></label>
+                        <label for="delete"><a href="" class="delete">Delete</a></label>
+                    </fieldset>
+                </form>
+            </div>
+        <% })%>
+    </main>
+</body>
+</html>
