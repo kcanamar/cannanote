@@ -2,6 +2,7 @@
 // Setup - Import deps
 ////////////////////////
 const Entry = require('../models/entries');
+const entrySeed = require('../models/seed')
 ///////////////////////
 // Exports
 ///////////////////////
@@ -13,7 +14,8 @@ module.exports = {
     index,
     edit,
     update,
-    delete: deleteEntry
+    delete: deleteEntry,
+    seed
 };
 ///////////////////////
 // Declare Routes 
@@ -62,7 +64,7 @@ async function edit(req, res) {
 async function update(req, res) {
     try {
         await Entry.findByIdAndUpdate(req.params.id, req.body);
-        res.redirect(`/cannalog/${req.params.id}`);
+        res.redirect(`/cannanote/${req.params.id}`);
     } catch(err) {
         res.send(err);
     }
@@ -72,17 +74,28 @@ async function update(req, res) {
 async function create(req, res) {
     try {
         let freshEntry = await Entry.create(req.body);
-        res.redirect(`/cannalog/${freshEntry._id}`)
+        res.redirect(`/cannanote/${freshEntry._id}`)
     } catch(err) {
         res.send(err);
     }
 };
 
 // Delete
-async function deleteEntry(req, res){
+async function deleteEntry(req, res) {
     try {
         await Entry.findByIdAndDelete(req.params.id);
-        res.redirect('/cannalog')
+        res.redirect('/cannanote')
+    } catch(err) {
+        res.send(err)
+    }
+}
+
+// Seed
+async function seed(req, res) {
+    try {
+        await Entry.deleteMany({});
+        await Entry.create(entrySeed);
+        res.redirect('/cannanote')
     } catch(err) {
         res.send(err)
     }

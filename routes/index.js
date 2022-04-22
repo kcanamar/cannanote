@@ -8,7 +8,7 @@ const router = express.Router()
 // Declare Routes 
 ///////////////////////
 router.get('/', function(req, res, next) {
-    res.redirect('/cannalog')
+    res.redirect('/cannanote')
 })
 ///////////////////////
 // Exports

@@ -17,7 +17,7 @@ middleware(app)
 // Declare Routes and Routers 
 ///////////////////////
 app.use("/", indexRouter)
-app.use("/cannalog", CannaRouter)
+app.use("/cannanote", CannaRouter)
 ///////////////////////////
 // Server Listener
 ///////////////////////////
