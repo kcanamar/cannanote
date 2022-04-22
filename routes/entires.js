@@ -15,7 +15,7 @@ router.get("/seed", entryCtrl.seed)
 router.get("/:id", entryCtrl.show)
 // router.put("/:id", entryCtrl.update)
 router.post("/", entryCtrl.create)
-// router.delete("/:id", entryCtrl.delete)
+router.delete("/:id", entryCtrl.delete)
 ///////////////////////
 // Exports
 ///////////////////////
