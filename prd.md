@@ -4,7 +4,7 @@
 **Summary**
 | Field | Detail |
 |-------|--------|
-| Project Name | CannaLog |
+| Project Name | CannaNote |
 | Description | Journal for Cannabis Users |
 | Developers | Kyle Canamar |
 | Live Website | {website of deployed application} |
@@ -12,7 +12,7 @@
 
 ## Problem Being Solved and Target Market
 
-CannaLog is a social site where you can share your experience with Cannabis. Everyone is different and cannabis affects us each in different ways, this service will allow users to share posts and share experiences.
+CannaNote is a social site where you can share your experience with Cannabis. Everyone is different and cannabis affects us each in different ways, this service will allow users to share posts and share experiences.
 
 ## User Stories
 

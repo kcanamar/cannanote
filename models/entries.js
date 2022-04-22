@@ -4,27 +4,25 @@
 const mongoose = require('mongoose');
 const { Schema, model } = mongoose;
 
-const entrySchema = new Schema({
-    strain: {
-        type: String,
-        required: true
-    },
-    amount: {
-        type: String,
-        required: true
-    },
-    method: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    tags: Array
-});
+const entrySchema = new Schema(
+    {
+    author: String,
+    strain: String,
+    type: String,
+    amount: String,
+    consumption: String,
+    description: String,
+    date: { type: Date, default: Date.now},
+    tags: [String],
+    meta: {
+        votes: Number,
+        favs: Number,
+        },
+    }, 
+    { timestamps: true }
+);
 
-const Entry = model("Entry", userSchema);
+const Entry = model("Entry", entrySchema);
 
 //////////////////////
 // Export
