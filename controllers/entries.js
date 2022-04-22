@@ -71,6 +71,7 @@ async function update(req, res) {
 };
 
 // Create
+// todo find a way to place the created entry at the top of the index.ejs page
 async function create(req, res) {
     try {
         let freshEntry = await Entry.create(req.body);
