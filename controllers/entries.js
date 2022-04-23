@@ -15,12 +15,13 @@ module.exports = {
     edit,
     update,
     delete: deleteEntry,
-    seed
+    seed,
+    like
 };
 ///////////////////////
 // Declare Routes 
 ///////////////////////
-
+// todo find a way to sort mongodb
 // Index
 async function index(req, res) {
     try {
@@ -71,10 +72,10 @@ async function update(req, res) {
 };
 
 // Create
-// todo find a way to place the created entry at the top of the index.ejs page
 async function create(req, res) {
     try {
         let freshEntry = await Entry.create(req.body);
+        freshEntry.save()
         res.redirect(`/cannanote/${freshEntry._id}`)
     } catch(err) {
         res.send(err);
@@ -97,6 +98,19 @@ async function seed(req, res) {
         await Entry.deleteMany({});
         await Entry.create(entrySeed);
         res.redirect('/cannanote')
+    } catch(err) {
+        res.send(err)
+    }
+}
+
+// todo work out functionality of like button
+// Like
+async function like(req, res) {
+    try {
+        let foundEntry = await Entry.findById(req.params.id);
+        foundEntry.meta.favs += 1
+        foundEntry.save()
+        res.redirect(`/cannanote`)
     } catch(err) {
         res.send(err)
     }
