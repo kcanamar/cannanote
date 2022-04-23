@@ -1,12 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<%- include('./partials/head.ejs')%>
     <title>Edit Entry</title>
 </head>
 <body>
-    
+<%- include('./partials/nav.ejs')%>
+    <div class="new-entry">
+        <form action="/cannanote/<%=entry._id%>?_method=PUT" method="POST">
+            <fieldset>
+                <legend><span>Create A New CannaNote Entry</span></legend>
+                <fieldset>
+                    <legend>What strain was used?</legend>
+                    <label for="strain">Strain: <input type="text" name="strain" id="" value="<%= entry.strain%>"></label> 
+                </fieldset>
+                <fieldset>
+                    <legend>Was it Indica Sativa or Hybrid?</legend>
+                        <label for="type">Type/Types: <input type="text" name="type" id="" value="<%= entry.type %>"></label> 
+                </fieldset>
+                <fieldset>
+                    <legend>So how much was used? (<span class="metric" >Please use Metric</span> ex. "3.5g, 10ml, 1000mg, etc...")</legend>
+                    <label for="amount">Dosage: <input type="text" name="amount" id="" value="<%= entry.amount %>"></label>
+                </fieldset>
+                <fieldset>
+                    <legend>What method of consumption was used?</legend>
+                    <label for="consumptiom">Method: <input type="text" name="consumption" id="" value="<%= entry.consumption%>"></label> 
+                </fieldset>
+                <fieldset>
+                    <legend>Describe your experience.</legend>
+                    <label for="description"> <span>What was your experience like? What did you taste? What was the aroma like? How long did the experience last? </span> <br>
+                        <textarea name="description" id="" cols="100" rows="10"  style="resize:none"><%= entry.description %></textarea>
+                    </label> 
+                </fieldset>
+                <input type="submit" value="Update">
+            </fieldset>
+        </form>
+    </div>
 </body>
 </html>
