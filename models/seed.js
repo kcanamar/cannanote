@@ -1,6 +1,6 @@
 module.exports = [
     {
-    author: 'Method Man',
+    username: 'Method Man',
     strain: 'White Widow',
     type: 'Sativa',
     amount: '3.5g',
@@ -13,7 +13,7 @@ module.exports = [
         },
     },
     {
-    author: 'Red Man',
+    username: 'Red Man',
     strain: 'OG Kush',
     type: 'Indica',
     amount: '1g',

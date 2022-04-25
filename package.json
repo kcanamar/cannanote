@@ -12,12 +12,15 @@
   "author": "Kyle Canamar",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^4.6.0",
     "dotenv": "^16.0.0",
     "ejs": "^3.1.7",
     "express": "^4.17.3",
+    "express-session": "^1.17.2",
     "method-override": "^3.0.0",
-    "morgan": "^1.10.0",
-    "mongoose": "^6.3.0"
+    "mongoose": "^6.3.0",
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<%- include('./partials/head.ejs')%>
+
+    <title>Main</title>
+</head>
+<body>
+    <div id="login">
+        <h2>Login Form</h2>
+        <form action="/login" method="POST">
+            <input type="text" name="username" id="" placeholder="username">
+            <input type="password" name="password" id="" placeholder="password">
+            <input type="submit" value="Login">
+        </form>
+    </div>
+</body>
+<body>
+    <div id="signup">
+        <h2>Signup Form</h2>
+        <form action="/signup" method="POST">
+            <input type="text" name="username" id="" placeholder="username">
+            <input type="password" name="password" id="" placeholder="password">
+            <input type="submit" value="signup">
+        </form>
+    </div>
+</body>
+</html>

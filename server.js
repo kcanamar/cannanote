@@ -7,6 +7,7 @@ const express = require('express')
 const middleware = require('./middleware/mid')
 const CannaRouter = require('./routes/entires')
 const indexRouter = require('./routes/index')
+const UnauthRouter = require('./routes/unauth')
 const app = express()
 const PORT = process.env.PORT
 //////////////////////
@@ -16,8 +17,17 @@ middleware(app)
 ///////////////////////
 // Declare Routes and Routers 
 ///////////////////////
-app.use("/", indexRouter)
+app.use("/", UnauthRouter)
+// app.use("/", indexRouter)
 app.use("/cannanote", CannaRouter)
+
+CannaRouter.use((req, res, next) => {
+    if (req.session.loggedIn) {
+        next()
+    } else {
+        res.redirect("/")
+    }
+})
 ///////////////////////////
 // Server Listener
 ///////////////////////////

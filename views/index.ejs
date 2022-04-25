@@ -14,7 +14,7 @@
         <% entries.forEach(entry => { %>
             <div class="entry-container">
                 <fieldset>
-                    <legend><a href=""><span class="author"><%=entry.author%></span></a> <span class="date"><%=entry.date.toDateString()%></span></legend>
+                    <legend><a href=""><span class="username"><%=entry.username%></span></a> <span class="date"><%=entry.date.toDateString()%></span></legend>
                     <label for="strain">Strain: <span class="strain"><%= entry.strain%></span></label> <br>
                         <!-- This content is moved to Show page -->
                         <!-- <label for="type">What type of Cannabis: <span class="type"><%#= entry.type%></span></label> <br>
@@ -30,8 +30,8 @@
                         <label for="likes"><input type="submit" value="Like"></label>
                     </form>
                         <label for="show"><a href="/cannanote/<%=entry._id%>" class="show">More</a></label>
-                        <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="edit">Edit</a></label>
-                    <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST">
+                        <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="edit" <%# (entry.username !== session.username) ? 'hidden' : null %>>Edit</a></label>
+                    <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST" <%# (entry.username !== session.username) ? 'hidden' : null  %>>
                         <label for="delete"><input type="submit" value="Delete"></label>
                     </form>
                 </fieldset>

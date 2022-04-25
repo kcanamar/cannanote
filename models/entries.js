@@ -6,7 +6,7 @@ const { Schema, model } = mongoose;
 
 const entrySchema = new Schema(
     {
-    author: String,
+    username: String,
     strain: String,
     type: String,
     amount: String,

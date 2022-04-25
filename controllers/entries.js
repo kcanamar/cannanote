@@ -26,6 +26,7 @@ module.exports = {
 async function index(req, res) {
     try {
         let entryDocuments = await Entry.find({});
+        // console.log(req.models)
         res.render('index.ejs', {
             entries: entryDocuments
         });
@@ -74,9 +75,10 @@ async function update(req, res) {
 // Create
 async function create(req, res) {
     try {
+        req.body.username = req.session.username
         let freshEntry = await Entry.create(req.body);
         freshEntry.save()
-        res.redirect(`/cannanote/${freshEntry._id}`)
+        res.redirect(`/cannanote`)
     } catch(err) {
         res.send(err);
     }
