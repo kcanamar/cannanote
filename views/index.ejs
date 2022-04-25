@@ -7,14 +7,15 @@
 <body>
 <%- include('./partials/nav.ejs') %>
     <div class="user-dash">
-        <a href="/cannanote/new" class="create">Make a New Entry</a>
-        <div class="new"></div>
+        <a  class="create" hx-get="/cannanote/new" hx-trigger="click" hx-target="#new" hx-swap="outerHTML">Make a New Entry</a>
+        <div id="new">
+        </div>
     </div>
     <main>
         <% entries.forEach(entry => { %>
             <div class="entry-container">
                 <fieldset>
-                    <legend><a href=""><span class="username"><%=entry.username%></span></a> <span class="date"><%=entry.date.toDateString()%></span></legend>
+                    <legend><a href="/cannanote/<%=entry._id%>"><span class="username"><%=entry.username%></span></a> <span class="date"><%=entry.date.toDateString()%></span></legend>
                     <label for="strain">Strain: <span class="strain"><%= entry.strain%></span></label> <br>
                     <label for="description"> <span>What it was like: </span> <br>
                         <textarea name="description" id="" cols="100" rows="1" readonly style="resize:none"><%= entry.description%></textarea>
@@ -24,12 +25,16 @@
                         <input type="hidden" name="favs" value="1">
                         <label for="likes"><input type="submit" value="Like"></label>
                     </form>
-                        <label for="show"><a href="/cannanote/<%=entry._id%>" class="show">More</a></label>
-                        <!-- todo looking for a way to properly compare and hidden functionality unless owned by the current User -->
-                        <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="edit" <%# hidden() %>>Edit</a></label>
-                    <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST" <%# hidden() %>>
-                        <label for="delete"><input type="submit" value="Delete"></label>
-                    </form>
+            <!-- todo looking for a way to properly compare and hidden functionality unless owned by the current User -->
+                    <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="edit" <%# hidden() %>>Edit</a></label>
+                <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST" <%# hidden() %>>
+                    <label for="delete"><input type="submit" value="Delete"></label>
+                </form>
+                <div class="more" x-data="{show:false}">
+                    <label for="more"><span x-on:click="show = !show">More</span></label>
+                    <label for="show-more"> <span x-show="show" ><%=entry.username%> enjoyed this much Cannabis <%=entry.amount%> from <%=entry.consumption%>.</span></label>
+                </div>
+
                 </fieldset>
             </div>
         <% })%>
