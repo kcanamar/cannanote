@@ -7,6 +7,7 @@
 <body>
 <%- include('./partials/nav.ejs')%>
     <div class="new-entry">
+        <!-- todo add htmx click to edit functionality -->
         <form action="/cannanote/<%=entry._id%>?_method=PUT" method="POST">
             <fieldset>
                 <legend><span>Updating</span></legend>

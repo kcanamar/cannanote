@@ -14,6 +14,7 @@
     <main>
         <% entries.forEach(entry => { %>
             <div class="entry-container">
+            <!-- todo add htmx click to edit functionality -->
                 <fieldset>
                     <legend><a href="/cannanote/<%=entry._id%>"><span class="username"><%=entry.username%></span></a> <span class="date"><%=entry.date.toDateString()%></span></legend>
                     <label for="strain">Strain: <span class="strain"><%= entry.strain%></span></label> <br>

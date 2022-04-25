@@ -6,23 +6,27 @@
     <title>Main</title>
 </head>
 <body>
-    <div id="login">
-        <h2>Login Form</h2>
-        <form action="/login" method="POST">
-            <input type="text" name="username" id="" placeholder="username">
-            <input type="password" name="password" id="" placeholder="password">
-            <input type="submit" value="Login">
-        </form>
-    </div>
-</body>
-<body>
-    <div id="signup">
-        <h2>Signup Form</h2>
-        <form action="/signup" method="POST">
-            <input type="text" name="username" id="" placeholder="username">
-            <input type="password" name="password" id="" placeholder="password">
-            <input type="submit" value="signup">
-        </form>
-    </div>
+    <h1>Welcome To CannaNote</h1>
+    <h3>Are you already a Member?</h3>
+    <fieldset x-data="{ yes: false, no: false }">
+        <button x-on:click="yes = !yes">Yes</button>
+        <div id="login" x-show="yes">
+            <h2>Login Form</h2>
+            <form action="/login" method="POST">
+                <input type="text" name="username" id="" placeholder="username">
+                <input type="password" name="password" id="" placeholder="password">
+                <input type="submit" value="Login">
+            </form>
+        </div>
+        <button x-on:click="no = !no">No</button>
+        <div id="signup" x-show="no">
+            <h2>Signup Form</h2>
+            <form action="/signup" method="POST">
+                <input type="text" name="username" id="" placeholder="username">
+                <input type="password" name="password" id="" placeholder="password">
+                <input type="submit" value="signup">
+            </form>
+        </div>
+    </fieldset>
 </body>
 </html>
