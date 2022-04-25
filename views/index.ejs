@@ -4,7 +4,7 @@
 <%- include('./partials/head.ejs')%>
     <title>CannaNote</title>
 </head>
-<body>
+<body id="index">
 <%- include('./partials/nav.ejs') %>
     <div class="user-dash">
         <a  class="create" hx-get="/cannanote/new" hx-trigger="click" hx-target="#new" hx-swap="outerHTML">Make a New Entry</a>
