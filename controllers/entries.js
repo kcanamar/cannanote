@@ -1,6 +1,7 @@
 ////////////////////////
 // Setup - Import deps
 ////////////////////////
+const session = require('express-session');
 const Entry = require('../models/entries');
 const entrySeed = require('../models/seed')
 ///////////////////////
@@ -26,10 +27,20 @@ module.exports = {
 async function index(req, res) {
     try {
         let entryDocuments = await Entry.find({});
-        // console.log(req.models)
+        console.log(req.session.username)
         res.render('index.ejs', {
-            entries: entryDocuments
-        });
+            entries: entryDocuments,
+            currentUser: req.session.username
+            // todo looking for a way to hide button not owned in the post of the logged in User
+            // hidden: function () {
+            //     if (entry.username !== currentUser) {
+            //         return "hidden"
+            //     } else {
+            //         return null
+            //     }
+            // } 
+        }
+        );
     } catch(err) {
         res.send(err);
     }
