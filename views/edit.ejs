@@ -8,9 +8,9 @@
     <%- include('./partials/nav.ejs')%>
     <div class="edit-entry">
         <!-- todo add htmx 'click to edit' functionality -->
-        <form action="/cannanote/<%=entry._id%>?_method=PUT" method="POST">
+        <form class="edit-form" action="/cannanote/<%=entry._id%>?_method=PUT" method="POST">
                 <fieldset>
-                    <legend>What strain was used?</legend>
+                    <legend>Was it ... or ...*click* <br> Now I remember, it was called!</legend>
                     <label for="strain"><input type="text" name="strain" id="" value="<%= entry.strain%>"></label> 
                 </fieldset>
                 <fieldset>
@@ -18,16 +18,16 @@
                         <label for="type"><input type="text" name="type" id="" value="<%= entry.type %>"></label> 
                 </fieldset>
                 <fieldset>
-                    <legend>So how much was used? (<span class="metric" >Please use Metric</span> ex. "3.5g, 10ml, 1000mg, etc...")</legend>
-                    <label for="amount">Dosage: <input type="text" name="amount" id="" value="<%= entry.amount %>"></label>
+                    <legend>How much did you really enjoy?</legend>
+                    <label for="amount"><input type="text" name="amount" id="" value="<%= entry.amount %>"></label>
                 </fieldset>
                 <fieldset>
-                    <legend>What method of consumption was used?</legend>
+                    <legend>Tell the truth! No shame in what you really used. We have all been there.</legend>
                     <label for="consumptiom">Joint, Bong, Vape, Pipe, Ediblie, Tincture, etc... <input type="text" name="consumption" id="" value="<%= entry.consumption%>"></label> 
                 </fieldset>
                 <fieldset>
-                    <legend>Describe your experience.</legend>
-                    <label for="description"> <span>What was your experience like? What did you taste? <br> What was the aroma like? How long did the experience last? </span> <br>
+                    <legend>How do you remember your experience now?</legend>
+                    <label for="description"><br>
                         <textarea name="description" id="" cols="50" rows="10"  style="resize:none"><%= entry.description %></textarea>
                     </label> 
                 </fieldset>

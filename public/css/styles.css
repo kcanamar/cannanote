@@ -37,10 +37,12 @@ nav .nav-wrapper .brand-logo {
 #main #auth #login input[type=submit], 
 #main #auth #signup input[type=submit],
 #edit .edit-entry input[type=submit],
+#new .new-entry input[type=submit],
 #show .show button {
     font-weight: bold;
     font-size: 16px;
     letter-spacing: 0.5px;
+    margin: 10px;
     padding: 10px 40px 10px 40px;
     border: 3px solid green;
     border-radius: 15px;
@@ -59,48 +61,58 @@ nav .nav-wrapper .brand-logo {
 /* todo style index.ejs */
 /* todo style new.ejs */
 /* todo stlye edit.ejs */
-#edit, #show {
+#edit, #show, #new {
     max-width: 80%;
     margin: auto;
 }
 
-#edit .edit-entry {
+#edit .edit-entry , #new .new-entry{
     max-width: 75%;
     margin: auto;
     padding-bottom: 30px;
 }
-#edit fieldset {
-    border: none;
-    border-left: 5px solid green;
-    border-bottom: 5px solid green;
-    font-size: 20px;
+#edit fieldset, #new fieldset {
+    border: 2px solid black;
+    background-color: white;
+    border-right: 3px solid green;
+    border-bottom: 3px solid green;
+    border-radius: 5px;
+    font-size: 18px;
     padding: 10px;
-    margin: 15px;
-    display: flex;
-    justify-content: space-around;
+    margin: 20px;
+    box-shadow: 5px 5px 10px 3px rgba(0, 128, 0, 0.69)
 }
-#edit fieldset legend {
+#edit fieldset legend, #new fieldset legend {
     font-weight: bold;
     letter-spacing: 0.5px;
+    padding: 5px;
+    border-radius: 5px;
+    text-align: center;
+    width:100%;
 }
-#edit label {
+#edit label, #new label {
     font-size: 16px;
     text-align: center;
     max-width: max-content;
     margin: auto;
+    align-content: center;
 }
-#edit input {
-    padding: 5px
+#edit input[type=text], #new input[type=text] {
+    padding: 5px;
+    width: 50%;
+    margin: auto;
 }
-#edit textarea {
+#edit textarea, #new textarea {
     height: 8rem;
     padding: 10px;
     font-size: 16px;
+    background-color: white;
 }
-#edit .edit-entry .cancel-btn {
+#edit .edit-entry .cancel-btn, #new .new-entry .cancel-btn {
     font-weight: bold;
     font-size: 16px;
     letter-spacing: 0.5px;
+    margin: 10px;
     padding: 10px 40px 10px 40px;
     border: 3px solid green;
     border-radius: 15px;
@@ -110,4 +122,15 @@ nav .nav-wrapper .brand-logo {
 /* todo style show.ejs */
 #show .show{
     text-align: center;
+}
+#new .new-entry .new-form, #edit .edit-entry .edit-form {
+    text-align: center;
+}
+#nav .logout input[type=submit]{
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin: 10px;
+    border-radius: 15px;
+    color:white;
+    background-color: rgb(190, 0, 0);
 }

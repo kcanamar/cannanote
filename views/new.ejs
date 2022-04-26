@@ -5,35 +5,32 @@
     <title>New Entry</title>
 </head>
 <body id="new">
-<%#- include('./partials/nav.ejs') %>
+<%- include('./partials/nav.ejs') %>
     <div class="new-entry">
-        <form action="/cannanote" method="POST">
-            <fieldset>
-                <legend><span>Create A New CannaNote Entry</span></legend>
+        <form class="new-form" action="/cannanote" method="POST">
                 <fieldset>
-                    <legend>What strain was used?</legend>
-                       <label for="strain">Strain: <input type="text" name="strain" id="" placeholder="OG Kush" required></label> 
+                    <legend>What strain did you choose?</legend>
+                       <label for="strain"><input type="text" name="strain" id="" placeholder="OG Kush" required></label> 
                 </fieldset>
                 <fieldset>
-                    <legend>Was it Indica Sativa or Hybrid?</legend>
-                        <label for="type">Type/Types: <input type="text" name="type" id="" placeholder="Indica/Hybrid"></label> 
+                    <legend>Which way does it lean? <span class="indica">Indica</span>, <span class="sativa">Sativa</span> or <span class="hybrid">Hybrid</span>?</legend>
+                        <label for="type">Maybe a Indica/Hybrid 70/30? Or a Sativa/Hybrid 60/40?<input type="text" name="type" id="" placeholder="Indica/Hybrid"></label> 
                 </fieldset>
                 <fieldset>
-                    <legend>So how much was used? (<span class="metric" >Please use Metric</span> ex. "3.5g, 10ml, 1000mg, etc...")</legend>
-                    <label for="amount">Dosage: <input type="text" name="amount" id="" placeholder="1g" required></label>
+                    <legend>How much was enjoyed? </legend>
+                    <label for="amount">(<span class="metric" >Please use Metric</span> ex. "3.5g, 10ml, 1000mg, etc...")<input type="text" name="amount" id="" placeholder="1g" required></label>
                 </fieldset>
                 <fieldset>
                     <legend>What method of consumption was used?</legend>
-                    <label for="consumptiom">Method: <input type="text" name="consumption" id="" placeholder="Pipe" required></label> 
+                    <label for="consumptiom">Joint, Bong, Vape, Pipe, Ediblie, Tincture, etc...<input type="text" name="consumption" id="" placeholder="Pipe" required></label> 
                 </fieldset>
                 <fieldset>
                     <legend>Describe your experience.</legend>
-                    <label for="description"> <span>What was your experience like? What did you taste? What was the aroma like? How long did the experience last? </span> <br>
+                    <label for="description"> <span>What was your experience like? What did you taste? <br> What was the aroma like? How long did the experience last? </span> <br>
                         <textarea name="description" id="" cols="100" rows="10"  style="resize:none" required></textarea>
                     </label> 
                 </fieldset>
                 <input type="submit" value="Create"><a href="/cannanote"><span class="cancel-btn">Cancel</span></a>
-            </fieldset>
         </form>
     </div>
 </body>
