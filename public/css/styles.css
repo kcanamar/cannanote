@@ -1,0 +1,45 @@
+/* todo style main.ejs */
+#main .spacing {
+    margin-top: 10px;
+    padding: 15px;
+}
+#main {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+#main h1{
+    background-color: white;
+    color: green;
+    font-size: 60px;
+}
+#main h3 {
+    font-size: xx-large;
+}
+#main #auth {
+    border: none;
+    padding: 0px 30px 30px 30px;
+    margin: 10px;
+}
+#main #auth button, #main #auth #login .btn, #main #auth #signup .btn {
+    margin: 5px;
+    padding: 10px 40px 10px 40px;
+    border: 3px solid green;
+    border-radius: 15px;
+    font-size: 24px;
+    color:white;
+    background-color: rgba(0, 128, 0, 0.523);
+}
+#main #auth #login, #main #auth #signup {
+    margin: 0px 10px 10px 10px;
+    padding: 0px 10px 10px 10px;
+}
+#main #auth #login input, #main #auth #signup input {
+    padding: 5px;
+    margin: 3px
+}
+
+/* todo style index.ejs */
+/* todo style new.ejs */
+/* todo stlye edit.ejs */
+/* todo style show.ejs */

@@ -6,28 +6,34 @@
     <title>Main</title>
 </head>
 <body id="main">
+    <div class="spacing">
+        <h1></h1>
+    </div>
     <!-- todo need to add Age verify funcitonality -->
     <h1>Welcome To CannaNote</h1>
     <h3>Are you already a Member?</h3>
-    <fieldset x-data="{ yes: false, no: false }">
-        <button x-on:click="yes = !yes">Yes</button>
+    <fieldset id="auth" x-data="{ yes: false, no: false }">
         <div id="login" x-show="yes">
-            <h2>Login Form</h2>
+            <h2>Login</h2>
             <form action="/login" method="POST">
-                <input type="text" name="username" id="" placeholder="username">
-                <input type="password" name="password" id="" placeholder="password">
-                <input type="submit" value="Login">
+                <input type="text" name="username" class="username" placeholder="username" required > <br>
+                <input type="password" name="password" class="password" placeholder="password" required > <br>
+                <input class="btn" type="submit" value="Login">
             </form>
         </div>
-        <button x-on:click="no = !no">No</button>
         <div id="signup" x-show="no">
-            <h2>Signup Form</h2>
+            <h2>Sign-Up</h2>
             <form action="/signup" method="POST">
-                <input type="text" name="username" id="" placeholder="username">
-                <input type="password" name="password" id="" placeholder="password">
-                <input type="submit" value="signup">
+                <input type="text" name="username" class="username" placeholder="username" required > <br>
+                <input type="password" name="password" class="password" placeholder="password" required > <br>
+                <input class="btn" type="submit" value="Sign-Up">
             </form>
         </div>
+        <button x-on:click="yes = !yes">Yes</button>
+        <button x-on:click="no = !no">No</button>
     </fieldset>
+    <div class="spacing">
+        <h1></h1>
+    </div>
 </body>
 </html>
