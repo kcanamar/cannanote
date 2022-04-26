@@ -8,9 +8,8 @@
 <%- include('./partials/nav.ejs') %>
 <div class="show">
 
-    <h1><%=entry.username%></h1>
-    <a href="/cannanote"><button>Go Back</button></a>
-    <table>
+    <h1><%=entry.username%>'s Post About:</h1>
+    <table class="centered responsive-table striped">
         <thead>
             <th>Strain</th><th>Type</th><th>Amount</th><th>Method</th>
         </thead>
@@ -25,6 +24,8 @@
         <h3>The Wisdom Gained</h3>
         <p><%= entry.description %></p>
     </div>
+    <a href="/cannanote"><button>Go Back</button></a>
+
 </div>
 <script type="text/javascript" src="/static/js/materialize.min.js"></script>
 </body>

@@ -36,7 +36,8 @@ nav .nav-wrapper .brand-logo {
 #main #auth button, 
 #main #auth #login input[type=submit], 
 #main #auth #signup input[type=submit],
-#edit .edit-entry input[type=submit] {
+#edit .edit-entry input[type=submit],
+#show .show button {
     font-weight: bold;
     font-size: 16px;
     letter-spacing: 0.5px;
@@ -58,13 +59,11 @@ nav .nav-wrapper .brand-logo {
 /* todo style index.ejs */
 /* todo style new.ejs */
 /* todo stlye edit.ejs */
-#edit {
-    display: block;
-    padding: 10px;
+#edit, #show {
+    max-width: 80%;
     margin: auto;
-    max-width: 100%;
-    align-content: center;
 }
+
 #edit .edit-entry {
     max-width: 75%;
     margin: auto;
@@ -109,3 +108,6 @@ nav .nav-wrapper .brand-logo {
     background-color: rgba(255, 0, 0, 0.69);
 }
 /* todo style show.ejs */
+#show .show{
+    text-align: center;
+}

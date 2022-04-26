@@ -6,7 +6,6 @@ require('./config/db')
 const express = require('express')
 const middleware = require('./middleware/mid')
 const CannaRouter = require('./routes/entires')
-const indexRouter = require('./routes/index')
 const UnauthRouter = require('./routes/unauth')
 const app = express()
 const PORT = process.env.PORT

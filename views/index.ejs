@@ -19,7 +19,7 @@
                     <legend><a href="/cannanote/<%=entry._id%>"><span class="username"><%=entry.username%></span></a> <span class="date"><%=entry.date.toDateString()%></span></legend>
                     <label for="strain">Strain: <span class="strain"><%= entry.strain%></span></label> <br>
                     <label for="description"> <span>What it was like: </span> <br>
-                        <textarea name="description" id="" cols="100" rows="1" readonly style="resize:none"><%= entry.description%></textarea>
+                        <textarea class="materialize-textarea" name="description" id="" cols="100" rows="1" readonly style="resize:none"><%= entry.description%></textarea>
                     </label> <br>
                     <label for="favs"><span>Likes:</span> <%= entry.meta.favs%></label>
                     <form action="/cannanote/<%=entry._id%>/like?_method=PUT" method="POST">
@@ -33,7 +33,7 @@
                 </form>
                 <div class="more" x-data="{show:false}">
                     <label for="more"><span x-on:click="show = !show">More</span></label>
-                    <label for="show-more"> <span x-show="show" ><%=entry.username%> enjoyed this much Cannabis <%=entry.amount%> from <%=entry.consumption%>.</span></label>
+                    <label for="show-more"> <span x-show="show" ><%=entry.username%> enjoyed <%=entry.amount%> from <%=entry.consumption%>.</span></label>
                 </div>
 
                 </fieldset>
