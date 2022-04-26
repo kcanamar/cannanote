@@ -1,3 +1,15 @@
+.indica {
+    color: purple;
+}
+.sativa {
+    color: red;
+}
+.hybrid {
+    color: green;
+}
+nav .nav-wrapper .brand-logo {
+    padding-left: 15px;
+}
 /* todo style main.ejs */
 #main .spacing {
     margin-top: 10px;
@@ -21,14 +33,18 @@
     padding: 0px 30px 30px 30px;
     margin: 10px;
 }
-#main #auth button, #main #auth #login .btn, #main #auth #signup .btn {
-    margin: 5px;
+#main #auth button, 
+#main #auth #login input[type=submit], 
+#main #auth #signup input[type=submit],
+#edit .edit-entry input[type=submit] {
+    font-weight: bold;
+    font-size: 16px;
+    letter-spacing: 0.5px;
     padding: 10px 40px 10px 40px;
     border: 3px solid green;
     border-radius: 15px;
-    font-size: 24px;
     color:white;
-    background-color: rgba(0, 128, 0, 0.523);
+    background-color: rgba(0, 128, 0, 0.69);
 }
 #main #auth #login, #main #auth #signup {
     margin: 0px 10px 10px 10px;
@@ -42,4 +58,54 @@
 /* todo style index.ejs */
 /* todo style new.ejs */
 /* todo stlye edit.ejs */
+#edit {
+    display: block;
+    padding: 10px;
+    margin: auto;
+    max-width: 100%;
+    align-content: center;
+}
+#edit .edit-entry {
+    max-width: 75%;
+    margin: auto;
+    padding-bottom: 30px;
+}
+#edit fieldset {
+    border: none;
+    border-left: 5px solid green;
+    border-bottom: 5px solid green;
+    font-size: 20px;
+    padding: 10px;
+    margin: 15px;
+    display: flex;
+    justify-content: space-around;
+}
+#edit fieldset legend {
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+#edit label {
+    font-size: 16px;
+    text-align: center;
+    max-width: max-content;
+    margin: auto;
+}
+#edit input {
+    padding: 5px
+}
+#edit textarea {
+    height: 8rem;
+    padding: 10px;
+    font-size: 16px;
+}
+#edit .edit-entry .cancel-btn {
+    font-weight: bold;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    padding: 10px 40px 10px 40px;
+    border: 3px solid green;
+    border-radius: 15px;
+    color:white;
+    background-color: rgba(255, 0, 0, 0.69);
+}
 /* todo style show.ejs */

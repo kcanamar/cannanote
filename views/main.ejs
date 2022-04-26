@@ -18,7 +18,7 @@
             <form action="/login" method="POST">
                 <input type="text" name="username" class="username" placeholder="username" required > <br>
                 <input type="password" name="password" class="password" placeholder="password" required > <br>
-                <input class="btn" type="submit" value="Login">
+                <input type="submit" value="Login">
             </form>
         </div>
         <div id="signup" x-show="no">
@@ -26,7 +26,7 @@
             <form action="/signup" method="POST">
                 <input type="text" name="username" class="username" placeholder="username" required > <br>
                 <input type="password" name="password" class="password" placeholder="password" required > <br>
-                <input class="btn" type="submit" value="Sign-Up">
+                <input type="submit" value="Sign-Up">
             </form>
         </div>
         <button x-on:click="yes = !yes">Yes</button>

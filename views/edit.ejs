@@ -5,19 +5,17 @@
     <title>Edit Entry</title>
 </head>
 <body id="edit">
-<%- include('./partials/nav.ejs')%>
-    <div class="new-entry">
-        <!-- todo add htmx click to edit functionality -->
+    <%- include('./partials/nav.ejs')%>
+    <div class="edit-entry">
+        <!-- todo add htmx 'click to edit' functionality -->
         <form action="/cannanote/<%=entry._id%>?_method=PUT" method="POST">
-            <fieldset>
-                <legend><span>Updating</span></legend>
                 <fieldset>
                     <legend>What strain was used?</legend>
-                    <label for="strain">Strain: <input type="text" name="strain" id="" value="<%= entry.strain%>"></label> 
+                    <label for="strain"><input type="text" name="strain" id="" value="<%= entry.strain%>"></label> 
                 </fieldset>
                 <fieldset>
-                    <legend>Was it Indica Sativa or Hybrid?</legend>
-                        <label for="type">Type/Types: <input type="text" name="type" id="" value="<%= entry.type %>"></label> 
+                    <legend>Was it <span class="indica">Indica</span>, <span class="sativa">Sativa</span>, or maybe a <span class="hybrid">Hybrid</span>?</legend>
+                        <label for="type"><input type="text" name="type" id="" value="<%= entry.type %>"></label> 
                 </fieldset>
                 <fieldset>
                     <legend>So how much was used? (<span class="metric" >Please use Metric</span> ex. "3.5g, 10ml, 1000mg, etc...")</legend>
@@ -25,17 +23,18 @@
                 </fieldset>
                 <fieldset>
                     <legend>What method of consumption was used?</legend>
-                    <label for="consumptiom">Method: <input type="text" name="consumption" id="" value="<%= entry.consumption%>"></label> 
+                    <label for="consumptiom">Joint, Bong, Vape, Pipe, Ediblie, Tincture, etc... <input type="text" name="consumption" id="" value="<%= entry.consumption%>"></label> 
                 </fieldset>
                 <fieldset>
                     <legend>Describe your experience.</legend>
-                    <label for="description"> <span>What was your experience like? What did you taste? What was the aroma like? How long did the experience last? </span> <br>
-                        <textarea name="description" id="" cols="100" rows="10"  style="resize:none"><%= entry.description %></textarea>
+                    <label for="description"> <span>What was your experience like? What did you taste? <br> What was the aroma like? How long did the experience last? </span> <br>
+                        <textarea name="description" id="" cols="50" rows="10"  style="resize:none"><%= entry.description %></textarea>
                     </label> 
                 </fieldset>
                 <input type="submit" value="Update"><a href="/cannanote"><span class="cancel-btn">Cancel</span></a>
             </fieldset>
         </form>
     </div>
+    <script type="text/javascript" src="/static/js/materialize.min.js"></script>
 </body>
 </html>
