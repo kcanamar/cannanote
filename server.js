@@ -20,13 +20,13 @@ app.use("/", UnauthRouter)
 // app.use("/", indexRouter)
 app.use("/cannanote", CannaRouter)
 // todo not sure where to put this to prevent access to site while not being logged in
-CannaRouter.use((req, res, next) => {
-    if (req.session.loggedIn) {
-        next()
-    } else {
-        res.redirect("/")
-    }
-})
+// CannaRouter.use((req, res, next) => {
+//     if (req.session.loggedIn) {
+//         next()
+//     } else {
+//         res.redirect("/")
+//     }
+// })
 ///////////////////////////
 // Server Listener
 ///////////////////////////
