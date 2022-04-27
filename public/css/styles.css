@@ -1,3 +1,6 @@
+#hidden {
+    display: none;
+}
 .indica {
     color: purple;
 }
@@ -128,8 +131,6 @@ nav .nav-wrapper .brand-logo {
     color:white;
     background-color: rgb(190, 0, 0);
 }
-/* todo style show.ejs */
-/* todo style index.ejs */
 #index main#feed {
     display: flex;
     flex-direction: column-reverse;

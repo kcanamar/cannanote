@@ -22,24 +22,15 @@ module.exports = {
 ///////////////////////
 // Declare Routes 
 ///////////////////////
-// todo find a way to sort mongodb
 // Index
 async function index(req, res) {
     try {
         let entryDocuments = await Entry.find({});
-        // console.log(req.session.username)
+        console.log(req.session.username)
         res.render('index.ejs', {
             entries: entryDocuments,
-            currentUser: req.session.username
-            // todo looking for a way to hide button not owned in the post of the logged in User
-            // hidden: function () {
-            //     if (entry.username !== currentUser) {
-            //         return "hidden"
-            //     } else {
-            //         return null
-            //     }
-            // } 
-        }
+            currentUser: req.session.username 
+            }
         );
     } catch(err) {
         res.send(err);
@@ -129,6 +120,7 @@ async function like(req, res) {
         let foundEntry = await Entry.findById(req.params.id);
         foundEntry.meta.favs += 1
         foundEntry.save()
+        
         res.redirect(`/cannanote`)
     } catch(err) {
         res.send(err)

@@ -8,6 +8,14 @@ const entryCtrl = require('../controllers/entries')
 // Declare Routes and Routers 
 ///////////////////////
 // INDUCES - Index, New, Delete, Update, Create, Edit, Show
+router.use((req, res, next) => {
+    console.log("canna router middle ware" + req.session.loggedIn)
+    if (req.session.loggedIn) {
+        next()
+    } else {
+        res.redirect("/")
+    }
+})
 router.get("/", entryCtrl.index)
 router.get("/new", entryCtrl.new)
 router.get("/seed", entryCtrl.seed)

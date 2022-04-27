@@ -26,18 +26,16 @@
                             <label for="description"> <span class="description">What it was like: </span> <br>
                                 <textarea class="materialize-textarea" name="description" id="" cols="100" rows="1" readonly style="resize:none"><%= entry.description%></textarea>
                             </label> <br>
-                <!-- todo looking for a way to properly compare and hidden functionality when owned by the current User -->
-                <!-- todo looking for a way to properly compare and hidden functionality unless owned by the current User -->
                             <span class="extra-container">
                                 <span class="extra1">
                                     <label for="more"><a href="/cannanote/<%=entry._id%>" class="waves-effect btn waves-light more">More</a></label>
-                                    <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="waves-effect waves-light btn edit #ff5252 red accent-2" <%# hidden() %>>Edit</a></label>
+                                    <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="waves-effect waves-light btn edit #ff5252 red accent-2" id="<%= entry.username !== currentUser ? "hidden" : null %>">Edit</a></label>
                                 </span>
                                 <span class="extra2 valign-wrapper">
-                                    <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST" <%# hidden() %>>
+                                    <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST" id="<%= entry.username !== currentUser ? "hidden" : null%>">
                                         <label for="delete"><input class="waves-effect waves-light btn #b388ff deep-purple accent-1" type="submit" value="Delete"></label>
                                     </form>
-                                    <form class="like" <%# hidden() %> action="/cannanote/<%=entry._id%>/like?_method=PUT" method="POST">
+                                    <form class="like" id="<%= %>" action="/cannanote/<%=entry._id%>/like?_method=PUT" method="POST">
                                         <input type="hidden" name="favs" value="1">
                                         <label for="likes"><input class="waves-effect waves-light btn #8bc34a light-green" type="submit" value="Like"></label>
                                     </form>
