@@ -26,7 +26,6 @@ module.exports = {
 async function index(req, res) {
     try {
         let entryDocuments = await Entry.find({});
-        console.log(req.session.username)
         res.render('index.ejs', {
             entries: entryDocuments,
             currentUser: req.session.username 
@@ -77,14 +76,12 @@ async function update(req, res) {
 // Create
 async function create(req, res) {
     try {
-        // todo make sure created post has favs set to 0
         req.body.username = req.session.username
         let freshEntry = await Entry.create(req.body);
         freshEntry.meta = {
             votes: 0,
             favs: 0,
         };
-        console.log(freshEntry)
         freshEntry.save()
         res.redirect(`/cannanote`)
     } catch(err) {
@@ -120,7 +117,6 @@ async function like(req, res) {
         let foundEntry = await Entry.findById(req.params.id);
         foundEntry.meta.favs += 1
         foundEntry.save()
-        
         res.redirect(`/cannanote`)
     } catch(err) {
         res.send(err)

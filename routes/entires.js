@@ -9,7 +9,7 @@ const entryCtrl = require('../controllers/entries')
 ///////////////////////
 // INDUCES - Index, New, Delete, Update, Create, Edit, Show
 router.use((req, res, next) => {
-    console.log("canna router middle ware" + req.session.loggedIn)
+    console.log(req.body)
     if (req.session.loggedIn) {
         next()
     } else {

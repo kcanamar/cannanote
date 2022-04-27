@@ -131,12 +131,12 @@ nav .nav-wrapper .brand-logo {
     color:white;
     background-color: rgb(190, 0, 0);
 }
-#index main#feed {
+#index #feed {
     display: flex;
     flex-direction: column-reverse;
     align-self: center;
     padding: 30px; 
-    margin: auto;
+    margin: 0;
 }
 #index #feed #entry-container .row {
     width: 100%;
@@ -147,6 +147,7 @@ nav .nav-wrapper .brand-logo {
 #index #entry-container .card .content span legend.valign-wrapper {
     display:flex;
     justify-content: space-between;
+    padding: 0 5px 0 5px;
 }
 #index #entry-container .card .content span legend.valign-wrapper .username {
     text-decoration: none;
@@ -156,6 +157,12 @@ nav .nav-wrapper .brand-logo {
     font-size: 16px;
     color: black;
     letter-spacing: 0.25px;
+}
+#index #entry-container .card .content span legend.valign-wrapper .date-like .date-posted{
+    margin-right: 10px;
+}
+#index #entry-container .card .content span legend.valign-wrapper .date-like i {
+    margin-right: 5px;
 }
 #index #entry-container .card .content .extra-container {
     display: flex;

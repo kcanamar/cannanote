@@ -1,9 +1,17 @@
 <header>
     <nav id="nav">
         <div class="nav-wrapper #43a047 green darken-1">
-            <a href="/cannanote" class="brand-logo">CannaNote</a>
+            <a href="/cannanote" class="center brand-logo">CannaNote</a>
+            
+            <ul id="nav-mobile">
+                <li><a href="/cannanote/new" class="left sidenav-trigger #00c853 green accent-4"><i class="small material-icons">add_box</i></a></li>
+            </ul>
+                <a href="/cannanote" data-target="side-bar" class="right sidenav-trigger">
+                    <form class="logout" action="/logout" method="post">
+                        <input type="submit" value="Logout">
+                    </form>
+                </a>
             <ul id="nav-mobile" class="right hide-on-med-and-down #00c853 green accent-4">
-                <li><a href="/cannanote">Home</a></li>
                 <li><a href="/cannanote/new">Create</a></li>
                 <li>
                     <form class="logout" action="/logout" method="post">
