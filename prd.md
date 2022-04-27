@@ -7,12 +7,19 @@
 | Project Name | CannaNote |
 | Description | Journal for Cannabis Users |
 | Developers | Kyle Canamar |
-| Live Website | {website of deployed application} |
-| Repo | {Link to git repository} |
+| Live Website | [CannaNote](https://karc-cannanote.herokuapp.com) |
+| Repo | [GitHub](https://github.com/kcanamar/cannanote) |
 
 ## Problem Being Solved and Target Market
 
-CannaNote is a social site where you can share your experience with Cannabis. Everyone is different and cannabis affects us each in different ways, this service will allow users to share posts and share experiences.
+CannaNote is a social site where you can share your experience with Cannabis. Everyone is different and cannabis affects us each in different ways, this service will allow users to share thier unique experiences.
+
+## On the Horizion
+
+- Inhanced user experience
+- Seach functionality
+- Sort functionality
+- Noticifcations
 
 ## User Stories
 
@@ -21,48 +28,33 @@ List of stories users should experience when using your application.
 - Users should be able to see the site on desktop and mobile
 - Users can create an account
 - Users can sign in to their account
-- Users can create a new item
-- Users can see all their items on the dashboard
-- Users can update items
-- User can delete items
+- Users can create a new Entry
+- Users can see all Entries in the Feed
+- Users can update Entries
+- User can delete Entries
 
 ## Route Tables
-
-For backend Applications you'll want to detail the different routes and types of your request your server can receive. There are three main things to define.
 
 - The endpoint: the URL to which the request must be made
 - The method: the type of http method the request should be
 - The response: what the response should be, a web page, json data, etc.
 
-You should also include any additional notes on any special headers that may be used and so forth.
-
 | Endpoint | Method | Response | Other |
 | -------- | ------ | -------- | ----- |
-| /item | GET | JSON of all items | |
-| /item | POST | Create new item return JSON of new item | body must include data for new item |
-| /item/:id | GET | JSON of item with matching id number | |
-| /item/:id | PUT | update item with matching idea, return its JSON | body must include updated data |
-| /item/:id | DELETE | delete the item with the matching id | |
-| /auth/signup | POST | creates new user account returns user JSON | new user info must be included in body |
-| /auth/login | POST | logs in user and returns user JSON with JWT token | username and password must be included in body |
-
-## Component Architecture
-
-You can use the [Mermaid Markdown Syntax](https://mermaid-js.github.io/mermaid/#/flowchart) to create a chart of how the parts of your frontend website relate to each other. Units should represent components of your page. The following is an example you may see in a Single Page Application like a React App.
-
-```mermaid
-flowchart LR
-  App-->Header
-  App-->Main
-  App-->Footer
-  Main-->Router
-  Router-->Home
-  Router-->Login
-  Router-->Dashboard
-```
+| /Cannanote | GET | Brings up the Feed  | |
+| /Cannanote | POST | Create new Entry Posting to the top of Feed | body must include data for new item |
+| /Cannanote/:id/edit | GET | Shows the Entry edit page | |
+| /Cannanote/:id | GET | Shows the Entry in greater detail | |
+| /Cannanote/:id | PUT | update item with matching idea, return to the Feed | body must include updated data |
+| /Cannanote/:id/like | PUT | Adds one like, return to the Feed | |
+| /Cannanote/:id | DELETE | delete the Enrty with the matching mongoDB id | |
+| / | GET | Displays the Entrance to app | |
+| /signup | POST | creates new user account returns back to login screen | new user info must be included in body |
+| /login | POST | logs in user and returns user with session cookie | username and password must be included in body |
 
 ## User Interface Mockups
 
-Use tooks like [Figma](https://www.figma.com/), [Mockflow](https://www.mockflow.com/) or [UXPIN](https://www.uxpin.com/). If you need inspiration visit a site like [Behance](https://www.behance.net/?tracking_source=typeahead_search_direct&search=web%20mockup). 
-
-![Web Mockup](https://zippypixels.com/wp-content/uploads/2015/09/01-Free-perspective-website-mockup-824x542.jpg)
+| | | | | |
+|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|
+|[Main](./public/screenshots/main.png) |[New User](./public/screenshots/show.png) |[Existing User](./public/screenshots/existing-user.png) |[Feed](./public/screenshots/feed.png) |[New Entry](./public/screenshots/new.png) |
+|[Create](./public/screenshots/create.png) |[Show](./public/screenshots/show.png) |[Before Delete](./public/screenshots/before-delete.png) |[After Delete](./public/screenshots/after-delete.png) |[Mobile Test](./public/screenshots/mobile-test.png) |

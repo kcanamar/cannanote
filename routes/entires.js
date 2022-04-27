@@ -18,7 +18,7 @@ router.use((req, res, next) => {
 })
 router.get("/", entryCtrl.index)
 router.get("/new", entryCtrl.new)
-router.get("/seed", entryCtrl.seed)
+// router.get("/seed", entryCtrl.seed)
 router.get("/:id/edit", entryCtrl.edit)
 router.get("/:id", entryCtrl.show)
 router.put("/:id/like", entryCtrl.like)
