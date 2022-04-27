@@ -56,5 +56,5 @@ List of stories users should experience when using your application.
 
 | | | | | |
 |:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|
-|[Main](./public/screenshots/main.png) |[New User](./public/screenshots/show.png) |[Existing User](./public/screenshots/existing-user.png) |[Feed](./public/screenshots/feed.png) |[New Entry](./public/screenshots/new.png) |
-|[Create](./public/screenshots/create.png) |[Show](./public/screenshots/show.png) |[Before Delete](./public/screenshots/before-delete.png) |[After Delete](./public/screenshots/after-delete.png) |[Mobile Test](./public/screenshots/mobile-test.png) |
+|Main <img src="./public/screenshots/main.png" alt=""></img> | New User<img src="./public/screenshots/new-user.png" alt=""></img> | Existing User <img src="./public/screenshots/existing-user.png" alt=""></img> | Feed <img src="./public/screenshots/feed.png" alt=""></img> | New Entry <img src="./public/screenshots/new.png" alt=""></img> |
+| Create <img src="./public/screenshots/create.png" alt=""></img> | Show <img src="./public/screenshots/show.png" alt=""></img> | Before Delete <img src="./public/screenshots/before-delete.png" alt=""></img> | After Delete <img src="./public/screenshots/after-delete.png" alt=""></img> | Mobile Test <img src="./public/screenshots/mobile-test.png" alt=""></img> |
