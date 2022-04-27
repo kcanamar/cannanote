@@ -56,7 +56,7 @@ nav .nav-wrapper .brand-logo {
     padding: 5px;
     margin: 3px
 }
-#edit, #show, #new, #feed{
+#edit, #show, #new, #index{
     max-width: 80%;
     margin: auto;
 }
@@ -130,10 +130,18 @@ nav .nav-wrapper .brand-logo {
 }
 /* todo style show.ejs */
 /* todo style index.ejs */
-#index #feed {
+#index main#feed {
     display: flex;
     flex-direction: column-reverse;
-    justify-content: center;
+    align-self: center;
+    padding: 30px; 
+    margin: auto;
+}
+#index #feed #entry-container .row {
+    width: 100%;
+}
+.card-width{
+    width: 100%;
 }
 #index #entry-container .card .content span legend.valign-wrapper {
     display:flex;
