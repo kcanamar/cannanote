@@ -10,7 +10,6 @@
 nav .nav-wrapper .brand-logo {
     padding-left: 15px;
 }
-/* todo style main.ejs */
 #main .spacing {
     margin-top: 10px;
     padding: 15px;
@@ -57,11 +56,7 @@ nav .nav-wrapper .brand-logo {
     padding: 5px;
     margin: 3px
 }
-
-/* todo style index.ejs */
-/* todo style new.ejs */
-/* todo stlye edit.ejs */
-#edit, #show, #new {
+#edit, #show, #new, #feed{
     max-width: 80%;
     margin: auto;
 }
@@ -119,7 +114,6 @@ nav .nav-wrapper .brand-logo {
     color:white;
     background-color: rgba(255, 0, 0, 0.69);
 }
-/* todo style show.ejs */
 #show .show{
     text-align: center;
 }
@@ -133,4 +127,42 @@ nav .nav-wrapper .brand-logo {
     border-radius: 15px;
     color:white;
     background-color: rgb(190, 0, 0);
+}
+/* todo style show.ejs */
+/* todo style index.ejs */
+#index #feed {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: center;
+}
+#index #entry-container .card .content span legend.valign-wrapper {
+    display:flex;
+    justify-content: space-between;
+}
+#index #entry-container .card .content span legend.valign-wrapper .username {
+    text-decoration: none;
+    color: rgb(36, 116, 35);
+}
+#index #entry-container .card .content span legend.valign-wrapper .strain {
+    font-size: 16px;
+    color: black;
+    letter-spacing: 0.25px;
+}
+#index #entry-container .card .content .extra-container {
+    display: flex;
+    justify-content: space-evenly;
+}
+#index #entry-container .card .content .extra-container .extra1, 
+#index #entry-container .card .content .extra-container .extra2 {
+    width: 50%;
+    display: flex;
+    justify-content: space-evenly;
+}
+#index #entry-container .card .content span.description {
+    font-size: 14px;
+}
+#index #entry-container .card .content .extra-container .btn {
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
 }
