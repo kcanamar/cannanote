@@ -8,7 +8,7 @@ const middleware = require('./middleware/mid')
 const CannaRouter = require('./routes/entires')
 const UnauthRouter = require('./routes/unauth')
 const app = express()
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 3001
 //////////////////////
 // Declare Middleware
 //////////////////////
