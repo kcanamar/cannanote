@@ -16,6 +16,7 @@ CannaNote is a social site where you can share your experience with Cannabis. Ev
 
 ## On the Horizion
 
+- Age Verification
 - Inhanced user experience
 - Seach functionality
 - Sort functionality
@@ -53,8 +54,10 @@ List of stories users should experience when using your application.
 | /login | POST | logs in user and returns user with session cookie | username and password must be included in body |
 
 ## User Interface Mockups
-
-| | | | | |
-|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|
+|:-------------------------|:-------------------------|:--------Wire Frames--------|:-------------------------|:-------------------------|
+|Login/Signup Pages <img src="./public/wireframes/Meen Project Login-signup.png" alt=""></img> |Home Page <img src="./public/wireframes/Meen Project Home page.png" alt=""></img> |Create/Update Pages <img src="./public/wireframes/Meen Project Create-Update.png" alt=""></img> | | |
+|:-------------------------|:-------------------------|:--------Model Schema's--------|:-------------------------|:-------------------------|
+|User And Entries <img src="./public/wireframes/Model Schema's.png" alt=""></img> | | | | |
+|:-------------------------|:-------------------------|:--------Screen Shots--------|:-------------------------|:-------------------------|
 |Main <img src="./public/screenshots/main.png" alt=""></img> | New User<img src="./public/screenshots/new-user.png" alt=""></img> | Existing User <img src="./public/screenshots/existing-user.png" alt=""></img> | Feed <img src="./public/screenshots/feed.png" alt=""></img> | New Entry <img src="./public/screenshots/new.png" alt=""></img> |
 | Create <img src="./public/screenshots/create.png" alt=""></img> | Show <img src="./public/screenshots/show.png" alt=""></img> | Before Delete <img src="./public/screenshots/before-delete.png" alt=""></img> | After Delete <img src="./public/screenshots/after-delete.png" alt=""></img> | Mobile Test <img src="./public/screenshots/mobile-test.png" alt=""></img> |
