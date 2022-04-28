@@ -6,16 +6,19 @@ const express = require('express')
 const methodOverride = require('method-override')
 const morgan = require('morgan')
 const session = require("express-session")
-const CannaRouter = require('../routes/entires')
 const MongoStore = require("connect-mongo")
 const Entry = require("../models/entries")
 const User = require("../models/user")
+
 const sessionConfig = {
     secret: process.env.SECRET,
     store: MongoStore.create({mongoUrl: process.env.DATABASE_URL}),
     resave: false,
     saveUninitialized: true
 }
+///////////////////////
+// Custom Middelware
+///////////////////////
 const models = (req, res, next) => {
     req.models = {
         Entry,

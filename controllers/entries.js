@@ -1,7 +1,6 @@
 ////////////////////////
 // Setup - Import deps
 ////////////////////////
-const session = require('express-session');
 const Entry = require('../models/entries');
 const entrySeed = require('../models/seed')
 ///////////////////////
@@ -110,7 +109,7 @@ async function seed(req, res) {
     }
 }
 
-// todo work out functionality of like button
+// todo single use functionality of like button
 // Like
 async function like(req, res) {
     try {
