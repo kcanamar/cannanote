@@ -3,13 +3,32 @@
 <head>
 <%- include('./partials/head.ejs')%>
 
-    <title>Main</title>
+    <title>Marketing</title>
 </head>
-<body id="main">
-    <div class="spacing">
-        <h1></h1>
-    </div>
+<body>
+    <!-- TODO: Marketing Nav Bar -->
+    <%- include('./partials/marketing/nav.ejs') %>
+
+    <!-- Hero -->
+    <%- include('./partials/marketing/hero.ejs') %>
+
+    <!-- Benefits -->
+    <%- include('./partials/marketing/benefits.ejs') %>
+
+    <!-- Founder Testimonial -->
+    <%- include('./partials/marketing/testimonials.ejs') %>
+
+    <!-- Strong CTA -->
+     <%- include('./partials/marketing/cta.ejs') %>
+
+    <!-- Footer -->
+    <%- include('./partials/footer.ejs') %>  
+
+
     <!-- todo need to add Age verify functionality -->
+    <!-- TODO add the following to two separate modals -->
+    <!-- One for Login -->
+    <!-- One for Sign UP -->
     <h1 class="text-red-500">Welcome To CannaNote</h1>
     <h3>Are you already a Member?</h3>
     <fieldset id="auth" x-data="{ yes: false, no: false }">
@@ -32,8 +51,6 @@
         <button x-on:click="yes = !yes">Yes</button>
         <button x-on:click="no = !no">No</button>
     </fieldset>
-    <div class="spacing">
-        <h1></h1>
-    </div>
+
 </body>
 </html>
