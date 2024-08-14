@@ -7,6 +7,28 @@
 <body id="show">
 <%- include('./partials/nav.ejs') %>
 <div class="show">
+    <!-- TODO: The UD functionality will be moved to show -->
+                            <!-- <span class="extra-container"> -->
+                                <!-- <span class="extra1"> -->
+                                    <!-- <label for="edit"> -->
+                                        <!-- <a href="/cannanote/<%#=entry._id%>/edit" class="waves-effect waves-light btn edit #ff5252 red accent-2" id="<%#= entry.username !== currentUser ? " hidden" : null%>"> -->
+                                            <!-- Edit -->
+                                        <!-- </a> -->
+                                    <!-- </label> -->
+                                <!-- </span> -->
+                                <!-- <span class="extra2 valign-wrapper"> -->
+                                    <!-- <form action="/cannanote/<%#=entry._id%>?_method=DELETE" method="POST" id="<%#= entry.username !== currentUser ? " hidden" : null%>"> -->
+                                        <!-- <label for="delete"><input class="waves-effect waves-light btn #b388ff deep-purple accent-1" type="submit" value="Delete"> -->
+                                        <!-- </label> -->
+                                    <!-- </form> -->
+                                    <!-- <form class="like" id="<%#= %>" action="/cannanote/<%#=entry._id%>/like?_method=PUT" method="POST"> -->
+                                        <!-- <input type="hidden" name="favs" value="1"> -->
+                                        <!-- <label for="likes"> -->
+                                            <!-- <input class="waves-effect waves-light btn #8bc34a light-green" type="submit" value="Like"> -->
+                                        <!-- </label> -->
+                                    <!-- </form> -->
+                                <!-- </span> -->
+                            <!-- </span> -->
 
     <h1><%=entry.username%>'s Post About:</h1>
     <table class="centered responsive-table striped">
@@ -27,6 +49,5 @@
     <a href="/cannanote"><button>Go Back</button></a>
 
 </div>
-<script type="text/javascript" src="/static/js/materialize.min.js"></script>
 </body>
 </html>
