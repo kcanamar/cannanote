@@ -10,7 +10,9 @@ module.exports = {
     main,
     signup,
     login,
-    logout
+    logout,
+    newSignup,
+    returnLogin,
 }
 ///////////////////////
 // Routes
@@ -20,16 +22,19 @@ function main(req, res) {
     res.render("main.ejs")
 }
 
-function signup(req, res) {
+async function signup(req, res) {
         const {username} = req.body
         const password = bcrypt.hashSync(req.body.password, 10)
-        User.create({username, password}, (err, user) => {
-            if (err) {
-                res.status(400).send(err)
-            } else {
-                res.redirect("/")
-            }
-        })
+        try {
+            let newUser = await User.create({username, password})
+
+            // login the new user
+            login(req, res)
+
+        } catch (error) {
+            // handle non unique usernames
+            res.render('signup.ejs', {notUnique: true})
+        }
 }
 
 function login(req, res) {
@@ -48,7 +53,8 @@ function login(req, res) {
                     res.status(400).send({error: "Wrong Password"})
                 }
             } else {
-                res.status(400).send({error: "User Doesnt Exist"})
+                // redirect to signup
+                res.status(400).send({error: "User Doesn't Exist"})
             }
         }
     })
@@ -58,4 +64,12 @@ function logout(req, res) {
     req.session.destroy((err) => {
         res.redirect("/")
     })
+}
+
+function returnLogin(req, res) {
+    res.render('login.ejs')
+}
+
+function newSignup(req, res) {
+    res.render('signup.ejs', {notUnique: false})
 }
