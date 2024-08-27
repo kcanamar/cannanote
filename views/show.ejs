@@ -4,50 +4,73 @@
 <%- include ('./partials/head.ejs') %>
     <title>Show Entry</title>
 </head>
-<body id="show">
-<%- include('./partials/nav.ejs') %>
-<div class="show">
-    <!-- TODO: The UD functionality will be moved to show -->
-                            <!-- <span class="extra-container"> -->
-                                <!-- <span class="extra1"> -->
-                                    <!-- <label for="edit"> -->
-                                        <!-- <a href="/cannanote/<%#=entry._id%>/edit" class="waves-effect waves-light btn edit #ff5252 red accent-2" id="<%#= entry.username !== currentUser ? " hidden" : null%>"> -->
-                                            <!-- Edit -->
-                                        <!-- </a> -->
-                                    <!-- </label> -->
-                                <!-- </span> -->
-                                <!-- <span class="extra2 valign-wrapper"> -->
-                                    <!-- <form action="/cannanote/<%#=entry._id%>?_method=DELETE" method="POST" id="<%#= entry.username !== currentUser ? " hidden" : null%>"> -->
-                                        <!-- <label for="delete"><input class="waves-effect waves-light btn #b388ff deep-purple accent-1" type="submit" value="Delete"> -->
-                                        <!-- </label> -->
-                                    <!-- </form> -->
-                                    <!-- <form class="like" id="<%#= %>" action="/cannanote/<%#=entry._id%>/like?_method=PUT" method="POST"> -->
-                                        <!-- <input type="hidden" name="favs" value="1"> -->
-                                        <!-- <label for="likes"> -->
-                                            <!-- <input class="waves-effect waves-light btn #8bc34a light-green" type="submit" value="Like"> -->
-                                        <!-- </label> -->
-                                    <!-- </form> -->
-                                <!-- </span> -->
-                            <!-- </span> -->
+<body>
+<%- include('./partials/appNav.ejs') %>
 
-    <h1><%=entry.username%>'s Post About:</h1>
-    <table class="centered responsive-table striped">
-        <thead>
-            <th>Strain</th><th>Type</th><th>Amount</th><th>Method</th>
-        </thead>
-        <tbody>
-            <td><%= entry.strain %></td>
-            <td><%= entry.type %></td>
-            <td><%= entry.amount %></td>
-            <td><%= entry.consumption %></td>
-        </tbody>
-    </table>
-    <div class="description">
-        <h3>The Wisdom Gained</h3>
-        <p><%= entry.description %></p>
-    </div>
-    <a href="/cannanote"><button>Go Back</button></a>
 
-</div>
+    <section class="body-font overflow-hidden bg-white text-gray-400">
+      <div class="container mx-auto px-5 py-24">
+        <div class="mx-auto flex flex-wrap md:w-4/5">
+          <div class="mb-6 w-full lg:mb-0 lg:py-6 lg:pr-10">
+            <h2 class="title-font text-sm tracking-widest text-gray-500">Brand Name</h2>
+            <h1 class="title-font mb-4 text-3xl font-medium text-orange-500"><%= entry.strain %></h1>
+            <h2 class="title-font mb-4 text-sm tracking-widest text-gray-500"><%= entry.username %></h2>
+
+            <!-- This is the anchor tag for the information connected to the entry -->
+            <div id="tabs" hx-get="/tab1" hx-trigger="load delay:100ms" hx-target="#tabs" hx-swap="innerHTML"></div>
+
+            <!-- This will be the response to the endpoint `/tab1` -->
+            <div class="tab-list mb-4 flex">
+              <button hx-get="/:id/description" role="tab" aria-selected="true" class="selected flex-grow border-b-2 px-1 py-2 text-lg border-lime-500 " aria-controls="tab-content">Description</button>
+              <button hx-get="/:id/relfection" role="tab" aria-selected="false" aria-controls="tab-content" class="flex-grow border-b-2 border-gray-800 px-1 py-2 text-lg">Reflection</button>
+            </div>
+
+            <div class="tab-content" id="tab-content" role="tabpanel">
+              <p class="mb-4 leading-relaxed"><%= entry.description %></p>
+              <div class="flex border-t border-gray-200 py-2">
+                <span class="text-gray-500">Method</span>
+                <span class="ml-auto text-gray-900"><%= entry.consumption %></span>
+              </div>
+              <div class="flex border-t border-gray-200 py-2">
+                <span class="text-gray-500">Indica / Sativa</span>
+                <span class="ml-auto text-gray-900"><%= entry.type %></span>
+              </div>
+              <div class="mb-6 flex border-b border-t border-gray-200 py-2">
+                <span class="text-gray-500">Amount Consumed</span>
+                <span class="ml-auto text-gray-900"><%= entry.amount %></span>
+              </div>
+
+              <!-- Add more information upfront such as cannabinoid/terpene profile  -->
+            </div>
+            <div class="flex">
+
+              
+            <!-- TODO: The UD functionality will be moved to show, use htmx to render edit view on this note -->
+                <!-- <span class="extra-container"> -->
+                    <!-- <span class="extra1"> -->
+                        <!-- <label for="edit"> -->
+                            <!-- <a href="/cannanote/<%#=entry._id%>/edit" class="waves-effect waves-light btn edit #ff5252 red accent-2" id="<%#= entry.username !== currentUser ? " hidden" : null%>"> -->
+                                <!-- Edit -->
+                            <!-- </a> -->
+                        <!-- </label> -->
+                    <!-- </span> -->
+                    <!-- <span class="extra2 valign-wrapper"> -->
+                        <!-- <form action="/cannanote/<%#=entry._id%>?_method=DELETE" method="POST" id="<%#= entry.username !== currentUser ? " hidden" : null%>"> -->
+                            <!-- <label for="delete"><input class="waves-effect waves-light btn #b388ff deep-purple accent-1" type="submit" value="Delete"> -->
+                            <!-- </label> -->
+                        <!-- </form> -->
+              <form action="/cannanote/<%= entry._id%>/like?_method=PUT" method="POST">
+                  <input type="hidden" name="favs" value="1">
+                  <button type="submit" class="ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border-0 bg-gray-200 p-0 text-gray-500 focus:bg-red-500 focus:text-white">
+                    <svg fill="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="h-5 w-5" viewBox="0 0 24 24">
+                      <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
+                    </svg>
+                  </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 </body>
 </html>
