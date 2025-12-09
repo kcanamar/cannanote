@@ -7,6 +7,7 @@ const express = require('express')
 const middleware = require('./middleware/mid')
 const CannaRouter = require('./routes/entires')
 const UnauthRouter = require('./routes/unauth')
+const HTMXRouter = require('./routes/htmx')
 const app = express()
 const PORT = process.env.PORT || 3001
 //////////////////////
@@ -18,6 +19,7 @@ middleware(app)
 ///////////////////////
 app.use("/", UnauthRouter)
 app.use("/cannanote", CannaRouter)
+app.use("/htmx", HTMXRouter)
 ///////////////////////////
 // Server Listener
 ///////////////////////////

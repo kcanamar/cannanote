@@ -9,6 +9,8 @@ const unauthCtrl = require('../controllers/unauth')
 ///////////////////////
 // INDUCES - Index, New, Delete, Update, Create, Edit, Show
 router.get("/", unauthCtrl.main)
+router.get("/login", unauthCtrl.returnLogin)
+router.get("/signup", unauthCtrl.newSignup)
 router.post("/signup", unauthCtrl.signup)
 router.post("/login", unauthCtrl.login)
 router.post("/logout", unauthCtrl.logout)

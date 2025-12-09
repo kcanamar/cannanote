@@ -1,52 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<%- include('./partials/head.ejs')%>
-    <title>CannaNote</title>
+    <%- include('./partials/head.ejs')%>
+    <title>Feed</title>
 </head>
+
 <body id="index">
-<%- include('./partials/nav.ejs') %>
+    <%- include('./partials/appNav.ejs') %>
     <main id="feed">
-        <% entries.forEach(entry => { %>
-            <div id="entry-container" class="row">
-            <!-- todo add htmx click to edit functionality -->
-                <div class="col m12">
-                    <div class="card hoverable blue-green darken-4">
-                        <fieldset class="card content Black-text">
-                            <span>
-                                <legend class="valign-wrapper">
-                                    <a class="left" href="/cannanote/<%=entry._id%>">
-                                        <span class="card-title username"><%=entry.username%></span>
-                                    </a> 
-                                    <label for="strain"><span class="strain"><%= entry.strain%></span></label>
-                                    <span class="date-like valign-wrapper"><p class="date-posted"><%=entry.date.toDateString()%></p><span class="valign-wrapper likes"><i class="material-icons">thumb_up_off_alt</i><%= entry.meta.favs%></span>
-                                    </span>
-                                </legend>
-                            </span>
-                            <label for="description"> <span class="description">What it was like: </span> <br>
-                                <textarea class="materialize-textarea" name="description" id="" cols="100" rows="1" readonly style="resize:none"><%= entry.description%></textarea>
-                            </label> <br>
-                            <span class="extra-container">
-                                <span class="extra1">
-                                    <label for="more"><a href="/cannanote/<%=entry._id%>" class="waves-effect btn waves-light more">More</a></label>
-                                    <label for="edit"><a href="/cannanote/<%=entry._id%>/edit" class="waves-effect waves-light btn edit #ff5252 red accent-2" id="<%= entry.username !== currentUser ? "hidden" : null %>">Edit</a></label>
-                                </span>
-                                <span class="extra2 valign-wrapper">
-                                    <form action="/cannanote/<%=entry._id%>?_method=DELETE" method="POST" id="<%= entry.username !== currentUser ? "hidden" : null%>">
-                                        <label for="delete"><input class="waves-effect waves-light btn #b388ff deep-purple accent-1" type="submit" value="Delete"></label>
-                                    </form>
-                                    <form class="like" id="<%= %>" action="/cannanote/<%=entry._id%>/like?_method=PUT" method="POST">
-                                        <input type="hidden" name="favs" value="1">
-                                        <label for="likes"><input class="waves-effect waves-light btn #8bc34a light-green" type="submit" value="Like"></label>
-                                    </form>
-                                </span>
-                            </span>
-                        </fieldset>
+        <section class="text-gray-600 body-font overflow-hidden">
+            <div class="container px-5 py-24 mx-auto">
+                <div class="-my-8 divide-y-2 divide-gray-100">
+                <% entries.forEach((entry) => { %>
+                    <div class="py-8 flex flex-wrap md:flex-nowrap">
+                    <div class="md:w-64 md:mb-0 mb-6 flex-shrink-0 flex flex-col">
+                        <span class="font-semibold title-font text-gray-700">
+                            <%= entry?.category %>
+                        </span>
+                        <span class="font-semibold title-font text-gray-700">
+                            <%= entry.username %>
+                        </span>
+                        <span class="mt-1 text-gray-500 text-sm">
+                            <%= entry.date.toDateString() %>
+                        </span>
+                        <span class="mt-1 flex max-w-min px-2 justify-center rounded-3xl border-2 border-gray-300 p-1 text-xl text-gray-500 hover:cursor-pointer hover:bg-gray-400 hover:text-white">
+                          <form action="/cannanote/<%= entry._id %>/like?_method=PUT" method="POST">
+                            <input type="number" value="1" hidden />
+                            <button class="flex items-center" type="submit">
+                              <%= entry.meta.favs%>
+                              <svg fill="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="h-5 w-5 pl-1" viewBox="0 0 24 24">
+                                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path> </svg>
+                            </button>
+                          </form>
+                        </span>
+
                     </div>
+                    <div class="md:flex-grow">
+                        <h2 class="text-2xl font-medium text-gray-900 title-font mb-2">
+                            <%= entry.strain %>
+                        </h2>
+                        <p class="leading-relaxed">
+                            <%= entry.description%>
+                        </p>
+                        <a class="text-lime-500 inline-flex items-center mt-4" href="/cannanote/<%=entry._id%>">
+                            Learn More
+                        </a>
+                    </div>
+                    </div>
+                <% })%>
                 </div>
             </div>
-        <% })%>
+        </section>
     </main>
-    <script type="text/javascript" src="/static/js/materialize.min.js"></script>
 </body>
+
 </html>

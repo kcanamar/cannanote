@@ -1,39 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<%- include('./partials/head.ejs')%>
+    <%- include('./partials/head.ejs')%>
 
-    <title>Main</title>
+    <title>Marketing</title>
 </head>
-<body id="main">
-    <div class="spacing">
-        <h1></h1>
-    </div>
-    <!-- todo need to add Age verify funcitonality -->
-    <h1>Welcome To CannaNote</h1>
-    <h3>Are you already a Member?</h3>
-    <fieldset id="auth" x-data="{ yes: false, no: false }">
-        <div id="login" x-show="yes">
-            <h2>Login</h2>
-            <form action="/login" method="POST">
-                <input type="text" name="username" class="username" placeholder="username" required > <br>
-                <input type="password" name="password" class="password" placeholder="password" required > <br>
-                <input type="submit" value="Login">
-            </form>
-        </div>
-        <div id="signup" x-show="no">
-            <h2>Sign-Up</h2>
-            <form action="/signup" method="POST">
-                <input type="text" name="username" class="username" placeholder="username" required > <br>
-                <input type="password" name="password" class="password" placeholder="password" required > <br>
-                <input type="submit" value="Sign-Up">
-            </form>
-        </div>
-        <button x-on:click="yes = !yes">Yes</button>
-        <button x-on:click="no = !no">No</button>
-    </fieldset>
-    <div class="spacing">
-        <h1></h1>
-    </div>
+<body>
+    <%- include('./partials/marketing/hero.ejs') %>
+    <%- include('./partials/marketing/benefits.ejs') %>
+    <%- include('./partials/marketing/testimonials.ejs') %>
+    <%- include('./partials/marketing/cta.ejs') %>
+    <%- include('./partials/footer.ejs') %>  
+    
 </body>
 </html>
