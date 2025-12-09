@@ -3,7 +3,7 @@
 ////////////////////////
 const express = require('express')
 const router = express.Router()
-const entryCtrl = require('../controllers/entries')
+const htmxCtrl = require('../controllers/htmx')
 ///////////////////////
 // Declare Routes and Routers 
 ///////////////////////
@@ -15,15 +15,7 @@ router.use((req, res, next) => {
         res.redirect("/")
     }
 })
-router.get("/", entryCtrl.index)
-router.get("/new", entryCtrl.new)
-// router.get("/seed", entryCtrl.seed)
-router.get("/:id/edit", entryCtrl.edit)
-router.get("/:id", entryCtrl.show)
-router.put("/:id/like", entryCtrl.like)
-router.put("/:id", entryCtrl.update)
-router.post("/", entryCtrl.create)
-router.delete("/:id", entryCtrl.delete)
+router.get("/deleteConfirm", htmxCtrl.deleteConfirm)
 ///////////////////////
 // Exports
 ///////////////////////
