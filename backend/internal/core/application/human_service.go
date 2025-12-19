@@ -81,8 +81,10 @@ func (s *HumanService) CreateHuman(ctx context.Context, req CreateHumanRequest) 
 	}
 
 	// Assign default role
-	if err := s.roleRepo.AssignRole(ctx, human.ID, domain.RoleHuman, human.ID); err != nil {
-		return nil, err
+	if s.roleRepo != nil {
+		if err := s.roleRepo.AssignRole(ctx, human.ID, domain.RoleHuman, human.ID); err != nil {
+			return nil, err
+		}
 	}
 
 	return human, nil
@@ -154,6 +156,10 @@ func (s *HumanService) UpdateConsent(ctx context.Context, humanID uuid.UUID, req
 
 // AuthenticateHuman validates human credentials
 func (s *HumanService) AuthenticateHuman(ctx context.Context, token string) (*domain.Human, error) {
+	if s.authSvc == nil {
+		return nil, domain.ErrUnauthorized
+	}
+
 	// Validate token through auth service port
 	claims, err := s.authSvc.ValidateToken(ctx, token)
 	if err != nil {

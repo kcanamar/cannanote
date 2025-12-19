@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"cannanote-go/internal/server"
+	"backend/internal/server"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/http/httptest"

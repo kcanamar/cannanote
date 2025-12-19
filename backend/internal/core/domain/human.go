@@ -2,73 +2,53 @@ package domain
 
 import (
 	"time"
-
 	"github.com/google/uuid"
 )
 
-// Human represents a person using the CannaNote platform
-// This is the core entity for human management domain
+// Human represents a human in the CannaNote system
+// This is a pure domain entity with no I/O dependencies
 type Human struct {
-	ID          uuid.UUID `json:"id"`
-	Username    string    `json:"username"`
-	Email       string    `json:"email"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	
-	// Profile information
-	Profile     HumanProfile `json:"profile"`
-	
-	// Privacy and consent settings
-	Consent     ConsentSettings `json:"consent"`
+	ID        uuid.UUID       `json:"id"`
+	Username  string          `json:"username"`
+	Email     string          `json:"email"`
+	Profile   HumanProfile    `json:"profile"`
+	Consent   ConsentSettings `json:"consent"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
-// HumanProfile contains non-PHI profile information safe to collect in Phase 1
+// HumanProfile contains cannabis preferences and profile information
 type HumanProfile struct {
-	// Cannabis preferences (recreational tracking)
-	PreferredStrains      []string `json:"preferred_strains"`
-	PreferredConsumption  []string `json:"preferred_consumption"` // flower, vape, edible, etc.
-	ExperienceLevel      string   `json:"experience_level"`      // beginner, intermediate, experienced
-	
-	// Social settings
+	PreferredStrains     []string `json:"preferred_strains"`
+	PreferredConsumption []string `json:"preferred_consumption"`
+	ExperienceLevel      string   `json:"experience_level"`
 	PublicProfile        bool     `json:"public_profile"`
 	ShareExperiences     bool     `json:"share_experiences"`
-	
-	// Dispensary affiliations (for B2B partnerships)
-	PreferredDispensary  string   `json:"preferred_dispensary,omitempty"`
+	PreferredDispensary  string   `json:"preferred_dispensary"`
 }
 
-// ConsentSettings manages privacy and data sharing permissions
+// ConsentSettings tracks HIPAA-ready consent management
 type ConsentSettings struct {
-	DataCollection      bool      `json:"data_collection"`       // Consent to data collection
-	MarketingEmails     bool      `json:"marketing_emails"`      // Marketing communications
-	DataSharing         bool      `json:"data_sharing"`          // Anonymous analytics sharing
-	ConsentDate         time.Time `json:"consent_date"`
-	ConsentVersion      string    `json:"consent_version"`       // Track consent version changes
-	
-	// Future HIPAA preparation
-	MedicalDataSharing  bool      `json:"medical_data_sharing"`  // For Phase 3
+	DataCollection     bool      `json:"data_collection"`
+	MarketingEmails    bool      `json:"marketing_emails"`
+	DataSharing        bool      `json:"data_sharing"`
+	MedicalDataSharing bool      `json:"medical_data_sharing"`
+	ConsentDate        time.Time `json:"consent_date"`
+	ConsentVersion     string    `json:"consent_version"`
 }
 
-// Role represents user authorization levels
+// Role represents system roles for humans
 type Role string
 
 const (
-	RoleHuman            Role = "human"              // Standard platform user
-	RoleAdmin            Role = "admin"              // Platform administrator  
-	RoleDispensaryPartner Role = "dispensary_partner" // B2B dispensary partner
-	RoleProvider         Role = "provider"           // Healthcare provider (Phase 3)
+	RoleHuman     Role = "human"
+	RoleModerator Role = "moderator"
+	RoleAdmin     Role = "admin"
 )
 
-// HumanRole links humans to their platform roles
-type HumanRole struct {
-	HumanID     uuid.UUID `json:"human_id"`
-	Role        Role      `json:"role"`
-	GrantedAt   time.Time `json:"granted_at"`
-	GrantedBy   uuid.UUID `json:"granted_by"`
-	Active      bool      `json:"active"`
-}
+// Domain methods - pure business logic with no I/O
 
-// Validate ensures the human entity is valid
+// Validate performs domain validation on the human entity
 func (h *Human) Validate() error {
 	if h.Username == "" {
 		return ErrInvalidUsername
@@ -79,37 +59,34 @@ func (h *Human) Validate() error {
 	return nil
 }
 
-// HasRole checks if human has a specific role
-func (h *Human) HasRole(role Role) bool {
-	// This would typically query the roles through a port interface
-	// For now, returning basic logic
-	return true // Implementation will use repository
-}
-
-// CanAccessFeature checks if human can access premium features
-func (h *Human) CanAccessFeature(feature string) bool {
-	// Freemium logic - expand as needed
-	switch feature {
-	case "unlimited_entries":
-		return h.HasRole(RoleAdmin) // Premium feature
-	case "analytics_export":
-		return h.HasRole(RoleAdmin) // Premium feature
-	case "basic_tracking":
-		return true // Free feature
-	default:
-		return false
-	}
-}
-
-// UpdateProfile updates human profile information
+// UpdateProfile updates the human's profile through domain rules
 func (h *Human) UpdateProfile(profile HumanProfile) {
 	h.Profile = profile
 	h.UpdatedAt = time.Now()
 }
 
-// GrantConsent updates consent settings
+// GrantConsent updates consent settings with timestamp
 func (h *Human) GrantConsent(consent ConsentSettings) {
 	consent.ConsentDate = time.Now()
 	h.Consent = consent
 	h.UpdatedAt = time.Now()
+}
+
+// CanAccessFeature checks if human can access a feature based on consent
+func (h *Human) CanAccessFeature(feature string) bool {
+	switch feature {
+	case "data_analytics":
+		return h.Consent.DataCollection
+	case "social_features":
+		return h.Profile.ShareExperiences
+	case "public_profile":
+		return h.Profile.PublicProfile
+	default:
+		return true
+	}
+}
+
+// IsExperienced returns true if human has significant cannabis experience
+func (h *Human) IsExperienced() bool {
+	return h.Profile.ExperienceLevel == "experienced" || h.Profile.ExperienceLevel == "expert"
 }
