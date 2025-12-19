@@ -276,17 +276,14 @@ cannanote-go/
 
 ## Development Commands (Updated)
 
-**Legacy System (Express/MongoDB) - DEPRECATED:**
-- `npm run dev` - Legacy development server (DO NOT USE for new development)
-- `npm start` - Legacy production server (for reference only)
-
-**Go Stack (Primary Development):**
+**Go Hexagonal Stack (Primary Development):**
 - `make dev` - Start Go development server with templ hot reload
-- `make build` - Build production binary
-- `make test` - Run Go test suite with coverage
-- `make lint` - Run Go linting and security checks (gosec + staticcheck)
+- `make build` - Build production binary with go-blueprint base
+- `make test` - Run Go test suite with 80%+ coverage requirement
+- `make lint` - Run golangci-lint with opinionated rules
+- `make security` - Run Trivy security scans
 - `make deploy` - Deploy to Fly.io
-- `docker-compose up` - Local development with Supabase + monitoring stack
+- `docker-compose up` - Local development with Supabase CLI + monitoring stack
 
 ## Architecture Evolution Path
 
@@ -357,4 +354,44 @@ Phase 3 (Month 4-8): $300-800/month
 └── Activated only when $20K MRR threshold hit
 ```
 
-This strategic document ensures our technical rewrite serves our business objectives while generating revenue throughout the development process. Each development milestone corresponds to a market-entry milestone, reducing financial risk while building toward full compliance.
+## Human Management Domain (Foundation)
+
+**Primary Domain Implementation:**
+```
+Human Management (core/domain):
+├── Authentication: Supabase Auth integration (email + OAuth ready)
+├── Profile Management: Cannabis preferences, privacy settings
+├── Authorization: Role-based access control (human/admin/provider)
+└── Consent Management: Privacy controls (future HIPAA compliance prep)
+```
+
+**HIPAA-Safe Data Collection (Phase 1):**
+```
+Safe to Collect (No PHI):
+├── Username, email (standard account info)
+├── Cannabis preferences (strains, consumption methods)
+├── Experience tracking (effects, mood - self-reported recreational use)
+├── Privacy settings (public profile, data sharing consent)
+├── Dispensary affiliations (for B2B partnerships)
+└── Usage analytics (anonymized for insights)
+
+Avoid Until HIPAA (Phase 3):
+├── Medical diagnoses or conditions
+├── Physician names or medical records
+├── Insurance information
+├── Prescription details
+└── Any data tied to "treatment" or "medical necessity"
+```
+
+**Dependency Injection Strategy:**
+- **No formal DI framework** (security best practice)
+- Simple constructor injection (pass interfaces as parameters)  
+- Manual wiring in cmd/server/main.go (explicit, secure)
+- Testable through interface mocking (no magic, no reflection)
+
+**External Auth Providers (Planned):**
+- Google OAuth integration (interfaces designed, implementation deferred)
+- Microsoft OAuth integration (interfaces designed, implementation deferred)  
+- Progressive implementation based on human demand
+
+This strategic document ensures our hexagonal architecture serves business objectives while maintaining lifelong maintainability and security. Each domain follows clean architecture principles with no I/O in core business logic.
