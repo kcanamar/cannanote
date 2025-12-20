@@ -1,0 +1,42 @@
+# CannaNote Backend Fly.io Configuration
+# This config deploys the Go backend with hexagonal architecture
+
+app = "cannanote-backend"
+primary_region = "dfw"  # Dallas - good central US location
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+# Build configuration
+[build]
+
+# HTTP service configuration
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  # HTTP checks for health monitoring
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/health"
+
+# Environment variables
+[env]
+  PORT = "3001"
+  # Database config will be set via fly secrets
+
+# VM configuration for cost efficiency
+[[vm]]
+  size = "shared-cpu-1x"  # Smallest instance for hello world
+  memory = "256mb"
+
+# Auto-scaling configuration
+[metrics]
+  port = 9091
+  path = "/metrics"

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,15 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
+	
+	// Add custom debug middleware
+	r.Use(gin.Logger())
+	r.Use(gin.Recovery())
+	r.Use(func(c *gin.Context) {
+		log.Printf("DEBUG: Incoming request: %s %s from %s", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+		c.Next()
+		log.Printf("DEBUG: Request completed: %s %s -> %d", c.Request.Method, c.Request.URL.Path, c.Writer.Status())
+	})
 
 	r.GET("/", s.HelloWorldHandler)
 
