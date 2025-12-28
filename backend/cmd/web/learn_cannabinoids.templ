@@ -1,0 +1,105 @@
+package web
+
+templ CannabinoidCard(cannabinoid map[string]interface{}) {
+	<div class="group cursor-pointer bg-white rounded-lg p-6 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200">
+		<div class="flex items-start justify-between">
+			<div class="flex-1">
+				<h3 class="font-semibold text-gray-900 text-lg mb-1">{ cannabinoid["name"].(string) }</h3>
+				<p class="text-sm text-gray-500 mb-3">{ cannabinoid["full_name"].(string) }</p>
+				<p class="text-gray-700 text-sm leading-relaxed mb-4">{ cannabinoid["description"].(string) }</p>
+			</div>
+			if cannabinoid["psychoactive"].(bool) {
+				<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ml-4">
+					Psychoactive
+				</span>
+			} else {
+				<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 ml-4">
+					Non-psychoactive
+				</span>
+			}
+		</div>
+		
+		<div class="mt-4 pt-4 border-t border-gray-50">
+			<button class="text-sm text-gray-500 hover:text-gray-700 transition-colors group-hover:text-gray-700">
+				Learn more →
+			</button>
+		</div>
+	</div>
+}
+
+templ CannabinoidsPage(cannabinoids []map[string]interface{}) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full">
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>Understanding Cannabinoids - CannaNote</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="/assets/js/htmx.min.js"></script>
+		<style>
+			body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+		</style>
+	</head>
+	<body class="min-h-full bg-gray-50">
+		
+		<!-- Navigation -->
+		<nav class="bg-white border-b border-gray-100">
+			<div class="max-w-4xl mx-auto px-6 py-4">
+				<div class="flex items-center justify-between">
+					<a href="/web" class="text-xl font-semibold text-gray-900">CannaNote</a>
+					<div class="flex space-x-6">
+						<a href="/learn/cannabinoids" class="text-gray-700 hover:text-gray-900 transition-colors">Cannabinoids</a>
+						<a href="/learn/terpenes" class="text-gray-500 hover:text-gray-700 transition-colors">Terpenes</a>
+						<a href="/learn/methods" class="text-gray-500 hover:text-gray-700 transition-colors">Methods</a>
+					</div>
+				</div>
+			</div>
+		</nav>
+
+		<!-- Hero Section -->
+		<div class="max-w-4xl mx-auto px-6 py-16">
+			<div class="text-center mb-16">
+				<h1 class="text-4xl font-bold text-gray-900 mb-4">Understanding Cannabinoids</h1>
+				<p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+					Explore the science behind cannabis compounds. Educational information for research and wellness exploration.
+				</p>
+			</div>
+
+			<!-- Filter Pills -->
+			<div class="flex justify-center mb-12">
+				<div class="inline-flex bg-white rounded-lg p-1 border border-gray-200">
+					<button class="px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 rounded-md">All</button>
+					<button class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">Psychoactive</button>
+					<button class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors">Non-psychoactive</button>
+				</div>
+			</div>
+
+			<!-- Cannabinoids Grid -->
+			<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-2 mb-16">
+				for _, cannabinoid := range cannabinoids {
+					@CannabinoidCard(cannabinoid)
+				}
+			</div>
+
+			<!-- Educational Disclaimer -->
+			<div class="bg-blue-50 border border-blue-100 rounded-lg p-6">
+				<div class="flex items-start">
+					<div class="flex-shrink-0">
+						<svg class="h-5 w-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+						</svg>
+					</div>
+					<div class="ml-3">
+						<h3 class="text-sm font-medium text-blue-800">Educational Information Only</h3>
+						<p class="mt-2 text-sm text-blue-700">
+							This content is for educational and research purposes only. Not intended as medical advice. 
+							Individual experiences may vary. Consult healthcare professionals for medical guidance.
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</body>
+	</html>
+}

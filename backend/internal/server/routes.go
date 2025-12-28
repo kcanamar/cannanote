@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"backend/cmd/web"
+	httpHandlers "backend/internal/adapters/http"
 	"github.com/a-h/templ"
 )
 
@@ -24,7 +25,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/", s.HelloWorldHandler)
 
-	r.GET("/health", s.healthHandler)
+	r.GET("/health", httpHandlers.HealthHandler)
 
 	r.Static("/assets", "./cmd/web/assets")
 
@@ -34,6 +35,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.POST("/hello", func(c *gin.Context) {
 		web.HelloWebHandler(c.Writer, c.Request)
+	})
+
+	// Educational content routes
+	r.GET("/learn/cannabinoids", func(c *gin.Context) {
+		web.CannabinoidsHandler(c)
 	})
 
 	return r
