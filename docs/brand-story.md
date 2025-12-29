@@ -30,7 +30,7 @@ Even with industry knowledge, I drowned in consumption methods: concentrates, va
 
 CannaNote solves one core problem: making cannabis consumption frictionless, repeatable, and science-backed. A digital journal with language precise enough to describe your needs anywhere cannabis is legal.
 
-Think of us as your knowledgeable uncle - casual, warm, educational without condescension. A little snark, always inclusive. Information accessible to anyone with an 8th-grade education.
+Think of us as that favorite family member who actually knows their stuff - casual, warm, educational without condescension. A little snark, always inclusive. Information accessible to anyone with an 8th-grade education.
 
 Our ideal user is "Steve" - 50+, former user now managing medical conditions through multiple consumption methods. Steve needs accurate tracking, often with caregiver support. CannaNote gives both the tools for complex wellness navigation.
 
