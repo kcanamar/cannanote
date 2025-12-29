@@ -1,188 +1,77 @@
-# CannaNote Brand Story - Interview Questions
+# CannaNote Brand Story
 
-**Instructions:** Please answer these questions directly in this document. After you've provided your responses, I'll use them to craft the authentic brand story. Be as specific and personal as possible - real experiences make the best stories.
+## The Personal Journey: From Industry Insider to Consumer Advocate
 
----
+Cannabis has been my companion through decades of life - teenage exploration to adult wellness. But like every user, I was frustrated by the impossible task of tracking what actually worked. I wanted a digital journal that was always there when I needed it.
 
-## Origin Story Questions
+That frustration crystallized during my years in Washington's legal industry as a budtender and dispensary manager. Every day, I watched the same broken dynamic: patients asking for specific relief while I scrambled through questions in a busy retail environment. Some wanted deep consultation, others just wanted their product and out. Nobody got what they needed.
 
-### 1. The Moment of Realization
-**What was the specific moment or experience that made you realize there was a problem with how people buy/use cannabis?** 
+The breaking point? Watching colleagues sell based on indica/sativa mythology despite having real terpene and cannabinoid data. Customers made expensive decisions from marketing folklore, not science. The information existed - the trust and accessibility didn't.
 
-*Was it a personal experience at a dispensary, watching friends struggle, or something else entirely? Describe the actual situation.*
+So I stepped outside to fix it. Enrolled in coding bootcamp not for a tech career, but to build what cannabis users actually need.
 
-**Your Response:**
-I have always been involved with cannabis as a teen to present day, and all the time I have consumed so much cannabis and had such amazing experiences that I wished that had a journal that kept track for me. 
-The thing that drive my conviction for this application comes from my time as a budtender and later as a dispensary manager with my Washington State Medical Consultant License, I would have guests and patients asking for specific use cases and the time that it would take for me to ask all of the right questions seemed to get in the way of their purchasing experience. Some seeing the need to have a comprehensive conversation others wanting to just have what we have and go on their way. I new that there had to be a better way so I decided to enroll in a Coding Bootcamp General Assembly so that I can develop my own skills to create the product that I desired.
-Having worked in the industry I have experienced the want to provide credible information to the public surrounding cannabis and its potential therapies. The issue that I found was that there was so much information and not enough trust, we had no way to lean on information that was changing daily and conflicting with the science. Some sources use the inaccurate indica/sativa narrative when there was already enough information available to educate on terpenes and cannabinoids my colleagues and management at the time had limited experience with selling in that fashion. I was then that I wanted to survey my clientele and see what they would want in an application and what came out of that was the idea for cannanote. So easy my elderly mother can use it and practical enough to help our industry provide and source plant to consumers based on their preferences and needs, not marketing or false hype.
----
+## The Problem: Industry Chaos Meets Consumer Reality
 
-### 2. Your Personal Cannabis Journey
-**Before you knew about the Ganjier concept, how were you personally approaching cannabis?** 
+Legalization brought chaos, not clarity. Instead of thoughtful rollout, we got conflicting regulations, inconsistent standards, and constantly shifting quality metrics. Cannabis mutated beyond recognition in just years.
 
-*Were you the person asking budtenders for advice, reading online reviews, just trying random stuff? What was your process?*
+The plant changes constantly - production, harvest, curing, packaging, transit, storage, consumption. Every variable affects experience. Heat, humidity, soil, shelf life compound into impossible complexity.
 
-**Your Response:**
-As a budtender I was devouring as much information as I could get my hands on, from youtube channels such as the growers network and from countless medical journals where I would consume the knowledge and use it to aid in my sales and consulting. Talking with as many people in the industry as I can an comparing notes and sharing resources, such as en.seedfinder.eu was a huge win, where I would spend hours on hours learning about genealogy of various strains.
+Yet the industry sells simplicity. Apps recommend by "mood." Dispensaries push THC percentages. Consumers spend thousands hunting their relief needle in an expensive haystack.
 
----
+## The Personal Stakes
 
-### 3. Discovering the Ganjier Approach
-**How did you first encounter the Ganjier certification/approach?** 
+This isn't business - it's healthcare. Diagnosed with AERD fifteen years ago, I'm allergic to all NSAIDs. When most pain relief is off-limits, cannabis becomes essential medicine.
 
-*Was it through a person, article, course, or just stumbled across it? What was your initial reaction?*
+Finding effective strains meant expensive trial and error. Paper journaling helped, but I needed digital patterns, always accessible, building intelligence from experience.
 
-**Your Response:**
-As my wife is a Cicerone and Sommelier, I wanted to learn if there was an equivalent for cannabis. This led me on the journey of acquiring my medical consultant license in WA state. I am actively seeking my Ganjier certification to bring further credibility to the platform, and plan on doing this once I have a working product to show off and further vet with industry professionals.
+Even with industry knowledge, I drowned in consumption methods: concentrates, vapes, flower, hash, rosin, kief, edibles, topicals. Managing tolerance, timing breaks, switching modalities overwhelmed someone with three years professional experience. How do regular consumers survive this maze?
 
----
+## The Vision: Your Digital Cannabis Guide
 
-## Problem Definition Questions
+CannaNote solves one core problem: making cannabis consumption frictionless, repeatable, and science-backed. A digital journal with language precise enough to describe your needs anywhere cannabis is legal.
 
-### 4. Industry Frustrations
-**What specific industry practices or misinformation frustrated you the most?**
+Think of us as your knowledgeable uncle - casual, warm, educational without condescension. A little snark, always inclusive. Information accessible to anyone with an 8th-grade education.
 
-*Think about concrete examples - bad budtender advice, misleading marketing, confusing products, etc.*
+Our ideal user is "Steve" - 50+, former user now managing medical conditions through multiple consumption methods. Steve needs accurate tracking, often with caregiver support. CannaNote gives both the tools for complex wellness navigation.
 
-**Your Response:**
-As a long time cannabis cultivator, distributor when we shifted to regulation we did not come with a solid foundation of what that will look like so instead of a well thought out rollout what we got was a rats nest of conflicting information.
-Everything from regulations varying state to state, to inconsistencies in the infrastructure of growing and what are we choosing as "desirable" qualities has changed and mutated this plant far beyond what we knew even 2 years ago. So with all of the new evidence and acknowledgements to the way our product changes in chemical composition every moment of every day and is compounded by environmental factors, heat, humidity, soil, storage, transit, shelf life. My goal is to have a application that can help remove some of the fog of war created by the industry to better educate the consumer with fact and science backed evidence.
+## The Philosophy: "You're Not Wrong"
 
----
+Cannabis education starts with radical acceptance: perfect repeatability is impossible. Every factor that makes cannabis unique also makes consistency challenging.
 
-### 5. Personal Pain Points
-**What were your biggest personal challenges as a cannabis consumer?**
+But we're not powerless. Terpenes and cannabinoids, combined with subjective reporting, guide consumers toward desired outcomes. Pattern recognition over time, not perfect predictions.
 
-*Consistency issues, wasted money, confusion, anxiety about purchases, etc.*
+"You're not wrong" - our core message. We fill gaps left by underground culture and commercial interests. Your personal canary in the coal mine, keeping you informed and proactive.
 
-**Your Response:**
-My biggest challenge as a consumer is dialing in my dosage and consumption method to fit my needs. I have to switch between concentrates, vapes, flower, hash, rosin, keif, edibles, topicals so frequently as the tolerance threshold lowers the longer we consume on modality and raises even further without tolerance breaks. I have had the hardest time with know when I can take a break, and when I should be doubling down based on my activity levels.
-I know what I know because I worked in this industry for 3 years and I am looking to make that journey a known path for those who follow in my wake.
+## Built By Community, For Community
 
----
+CannaNote is different: built by and for the community, not industry. How can you hit a target when you don't know what it looks like? We help each person build their own target.
 
-## Vision Questions
+We engage the industry without corruption from its business practices. Our goal: bridge the gap between information and consumption, empowering consumers with education about their personal responses.
 
-### 6. The "Why" Behind CannaNote
-**If you could solve one main problem for cannabis consumers, what would it be?**
+Success means dispensary and producer partnerships providing accurate information while maintaining our independence and consumer-first approach.
 
-*Be specific about the outcome you want to achieve.*
+## The Bigger Picture: Normalizing Cannabis
 
-**Your Response:**
-Build a cannabis journal that will make my consuming of cannabis frictionless, repeatable and backed by science.
-I want to be able to go anywhere in the world that distributes cannabis and have a journal with language to be able to describe what I am looking for as a consumer with as current information as possible. I want notes on my cannabis consumer journey.
+Cannabis should be treated like wine, beer, or spirits - agricultural products creating altered states. Stigma exists from decades of prohibition, but the fundamental process matches other regulated adult substances.
 
----
+I want to "get the ick out" about cannabis being both recreational AND medicinal. The difference matters. Consumers deserve understanding. The industry needs full legalization with proper regulation maintaining patient and provider confidence.
 
-### 7. Your Ideal User
-**Describe a real person (could be anonymous) who represents your ideal user.**
+Cannabis deserves respect as an agricultural product with psychoactive effects. Regulation should focus on safety, quality, and informed consent - not prohibition or stigmatization.
 
-*Think about someone specific you know or have encountered who would benefit from CannaNote.*
+## Our Commitment: Trusted Independence
 
-**Your Response:**
-I am going to keep the anonymity of this individual, we are going to call them Steve. Steve is a elderly man 50+, who consumed cannabis regularly as a youth and young adult. Recently Steve has developed a condition where his health care team has prescribed Medicinal Cannabis and he wants to track his consumption with more accuracy and efficiency. 
-Steve has to manage topical treatments, edible treatments, inhalation treatments, and tinctures with all of the various consumption methods and products it will be challenging for Steve to manage this without a caretaker. Now Steve has a caretaker as required by most medical cannabis qualifiers and this tool would then give aid to them during Steve's journey to wellness.
+CannaNote remains independent from commercial pressures that compromise consumer education. We don't sell products - we help people understand and track their experiences.
 
----
+Every piece of advice: grounded in science and personal data, never marketing incentives. We acknowledge cannabis complexity while providing practical tools to work within it.
 
-### 8. Success Vision
-**What would success look like for CannaNote users in 1-2 years?**
+Success means walking into dispensaries with confidence, describing needs precisely, making decisions from personal patterns - not budtender advice or marketing claims.
 
-*How would their cannabis experience be different? What would they be able to do that they can't do now?*
+## The Mission Continues
 
-**Your Response:**
-Our goal would be to have a platform that can empower consumers to have the education and nuance of their personal responses to the plant.
-Partnerships with Dispensaries and Producers to provided accurate information on products and upcoming products.
-The goal is to bridge the gap in the consumer market between information and consumption.
+This journey started with personal frustration - wanting better tracking for amazing cannabis experiences. Industry work revealed the massive gap between available information and consumer trust. Medical needs made it personal: spending thousands for relief shouldn't be necessary in our modern world.
 
----
+CannaNote bridges where consumers are to where they deserve to be: educated, independent, confident. We don't sell products - we teach everything needed for informed decisions.
 
-## Values & Approach Questions
+Cannabis has incredible potential to improve lives, but only with proper navigation tools. CannaNote is that tool - your personal educator, tracker, and advocate, built by someone who understands the industry's promises and problems.
 
-### 9. Core Principles
-**What principles guide how you think about cannabis education?**
-
-*What do you believe is important when teaching people about cannabis?*
-
-**Your Response:**
-There is no way anything can be repeatable in the current landscape, nothing as each decision in production, harvest, curing, packaging, transit, display, consumption will all impact the "effectiveness" of the plant.
-We have to learn that any and all factors that make cannabis unique and approachable are the same factors that make reliable repeatable consumption a true challenge.
-Terpenes and Cannabinoids are great markers and can be used intandom with subjective reporting to help guide consumers towards their desired end state.
-"You're not wrong" we want to help fill in the gaps left by the underground culture and commercialization of our plant, providing a canary in the coal mine so to speak of how we can stay informed and proactive in recording and monitoring our consumption.
-
----
-
-### 10. The Ganjier Influence
-**How specifically does the Ganjier approach influence CannaNote's mission?**
-
-*What elements of their philosophy do you want to incorporate? What makes them different from other cannabis education?*
-
-**Your Response:**
-I don't know if the ganjier approach is what we are looking for, rather I want to have the voice of the application to be that of a ganjier.
-Warm non-judgemental, educational with out the reddit "well askually". This is to add a layer of credibility.
-
----
-
-### 11. Independence Philosophy
-**Why is being independent from the industry important to you?**
-
-*Have you seen examples where commercial interests affected advice or education?*
-
-**Your Response:**
-I want to be included in the industry while not being subjected to the unorthodox business practices of it.
-
----
-
-## Differentiation Questions
-
-### 12. What Makes You Different
-**How is CannaNote different from other cannabis apps, websites, or resources you've seen?**
-
-*What do they get wrong that you want to get right?*
-
-**Your Response:**
-We get it right as we are built by and for the community not industry. How can you hit a target when you dont even know what it looks like? 
-We aim to help each person build their target.
-
----
-
-### 13. Your Unique Voice
-**How do you want to sound different from typical cannabis brands or educators?**
-
-*Think about tone, language, approach to education.*
-
-**Your Response:**
-Casual, like your uncle explaining how to do something. A little snark is okay, though inclusive and socially responsible.
-We are trying to better establish inclusivity by way of making the information accessible and digestible so that any person with a 8th grade education can self serve.
-
----
-
-## Future Vision Questions
-
-### 14. Cultural Impact
-**What change do you want to see in cannabis culture overall?**
-
-*How do you want the industry or consumer behavior to evolve?*
-
-**Your Response:**
-I would like to see the industry evolve into a legal market for the US. Regulated of course as this is a medicine, and those medicinal products need to be behind those barriers to maintain patient/provider confidence that the product being consumed is effective and as controlled as possible.
-I want to get the ick out of peoples mouths about cannabis and how it is a recreational AND a medicinal plant, and knowing what the differences are. How can we push the envelop forward in the conversation of this is no different than wine, beer, spirits making as those all come from agriculture, and are processed to give altering states of being.
-Cannabis is no different and thus should be treated as such.
-
----
-
-### 15. Personal Mission
-**Why does this matter to you personally?**
-
-*What drives your passion for this project beyond business success?*
-
-**Your Response:**
-I was diagnosed 15 years ago with a condition called Sampters Triad, later renamed AERD, and I am now allergic to all NSAIDs making pain, sickness management incredibly difficult as many over the counter products contain my allergies.
-I have always want to have a roladex of products or information that I can use to help me source various strains to assist me in my ailments.
-I constantly get frustrated when I have to go on the hunt and invest hundreds upon thousands of dollars to find the "needle in the haystack" that provides relief.
-In our modern world we should not have to succumb to this outdated way of wellness.
-I tried journaling and that was okay when I had my journal with me, I always wanted more and to have it digital always seemed like to correct approach.
-
----
-
-**Once you've answered these questions, let me know and I'll craft the brand story based on your authentic responses.**
+*Your cannabis experience should be guided by your patterns, not someone else's profits.*
