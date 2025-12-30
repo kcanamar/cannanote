@@ -3,59 +3,45 @@
 ## Mission Statement
 **What We Do:**
 
-CannaNote exists to solve our own cannabis tracking problem perfectly - building a personal wellness tool that compiles consumption data into comprehensible patterns for informed decision-making. If this solution helps others along the way, that's a bonus.
+CannaNote empowers individuals to understand their unique relationship with cannabis by transforming personal consumption data into clear, actionable insights—delivered through a seamless, private, and mindful journaling experience.
 
 *We are a service and hospitality company that makes products in the technology sector.*
 
 ## Vision Statement  
 **The Future We're Creating:**
 
-A world where every cannabis consumer can walk into any dispensary, anywhere, with the vocabulary and scientific understanding of their unique consumption patterns to buy with complete confidence. Where tracking every puff, sip, bite, and dose is as simple and stress-free as breathing.
-
-Where informed consumers drive industry accountability through data-powered choices, and personal wellness trumps marketing hype.
+A world where every cannabis consumer—starting with ourselves—moves through life with confidence, armed with personal data and scientific understanding to make informed choices that enhance wellness, reduce harm, and support regenerative, sustainable practices.
 
 ## Core Values
 **How We Operate:**
 
-### **1. Radical Integrity**
-*"Would this look good on the front page of The Washington Post?"*
+### **1. Radical Data Transparency**
+Users own and fully understand their data. We never hide, sell, or share without explicit, granular consent—no exceptions, no matter the financial incentive.
 
-We choose transparency over growth, honesty over hype. Every decision passes through three lenses: Trust Impact (Covey), Infinite Resilience (Sinek), and Ethical Flawlessness (Kina'ole). We'd rather stay small and true than scale at the cost of principles.
+### **2. User Safety & Harm Reduction First**
+Every feature, prompt, and partnership prioritizes well-being over engagement. We build safeguards, educate honestly, and reject anything that could encourage unsafe use.
 
-### **2. Privacy as Foundation**
-*"Your data belongs to you, period."*
+### **3. Environmental Responsibility**
+We minimize digital footprint, champion regenerative cannabis practices, and only align with partners who actively protect the planet.
 
-Privacy-first design is non-negotiable. Local-first storage, clear consent flows, and absolute transparency about data use. We walk away from millions rather than compromise user data privacy or engage in hidden practices.
+### **4. Truthful, Evidence-Based Insight**
+No hype, no exaggeration. We share only what science and personal data support, fostering genuine understanding over quick wins.
 
-### **3. Environmental Responsibility** 
-*"People, Planet, Profit - in that order."*
+### **5. Inclusive & Equitable Design**
+The app works for everyone—regardless of income, location, ability, or background. Accessibility and fairness are built in from day one.
 
-Every feature, partnership, and decision considers environmental impact. We audit server loads, partner only with regenerative growers, and refuse relationships with environmentally damaging practices. The planet's health enables human health.
-
-### **4. Harm Reduction Over Growth**
-*"Safety trumps engagement metrics."*
-
-We build tools that promote mindful consumption, not addictive engagement. Dosage reminders over endless scrolling. Educational safeguards over viral features. We decline any pressure to optimize for metrics that could encourage unsafe cannabis use.
-
-### **5. Evidence-Based Education**
-*"Science, not sales."*
-
-All content stems from peer-reviewed research, not marketing claims. We admit limitations, share uncertainties, and never exaggerate benefits. Evidence-based representation means saying "we don't know" when we don't know.
-
-### **6. Inclusive Excellence**
-*"DEI above all else."*
-
-Diversity, Equity, and Inclusion guide every hire, feature, and partnership. We design for accessibility from day one and refuse opportunities that systematically exclude any group. Excellence includes everyone or it isn't excellent.
+### **6. Kina'ole (Flawless Integrity)**
+We do the right thing, in the right way, for the right reason—guided by trust (Covey), infinite-minded resilience (Sinek), and righteous action, even when no one is watching.
 
 ## Operational Principles
 
-### **Decision-Making Hierarchy**
-When analytics can't decide, use this order:
-1. **Trust Impact** → Which builds most long-term trust?
-2. **Infinite Resilience** → Which keeps us strongest for the long game?  
-3. **Ethical Flawlessness** → Which aligns with doing things perfectly?
-4. **Reversibility** → Which is easiest to correct if wrong?
-5. **Learning Potential** → Which teaches us most, even if it fails?
+### **Decision-Making North Star**
+When choices are tough, ask in this order:
+1. Does this build unbreakable trust?
+2. Does this strengthen our long-term resilience in the infinite game?
+3. Is this the flawless, righteous path (Kina'ole)?
+4. If we're wrong, can we reverse it without lasting harm?
+5. What will we learn?
 
 ### **Partnership Criteria**
 **Work with:** Regenerative growers, evidence-based researchers, harm-reduction advocates, privacy-forward tech companies, inclusive wellness brands prioritizing people and planet over profit.
