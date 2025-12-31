@@ -4,59 +4,74 @@
 
 ### **Who We Are**
 
-CannaNote is your personal Ganjier - a knowledgeable cannabis guide that cuts through industry misinformation and helps you become an educated, independent consumer.
+CannaNote empowers individuals to understand their unique relationship with cannabis by transforming personal consumption data into clear, actionable insights—delivered through a seamless, private, and mindful journaling experience.
 
-**Brand Promise:** Build your cannabis knowledge so you never have to rely on inconsistent budtender advice again.
+**Brand Promise:** Your patterns, not their profits. We help you build personal cannabis wisdom through evidence-based tracking and radical privacy protection.
+
+### **Mission & Vision**
+
+**Mission:** CannaNote empowers individuals to understand their unique relationship with cannabis by transforming personal consumption data into clear, actionable insights—delivered through a seamless, private, and mindful journaling experience.
+
+**Vision:** A world where every cannabis consumer—starting with ourselves—moves through life with confidence, armed with personal data and scientific understanding to make informed choices that enhance wellness, reduce harm, and support regenerative, sustainable practices.
 
 ### **Brand Personality**
 
-**Educated Guide** - We have Ganjier-level knowledge but speak in real language
-**Myth-Buster** - We call out cannabis folklore with peer-reviewed facts
-**Consumer Advocate** - We help you navigate a market full of misinformation
-**Independence Builder** - We give you tools to make your own informed decisions
+**Wise** - Evidence-based guidance without condescension  
+**Calm** - Steady presence in a chaotic industry  
+**Trustworthy** - Uncompromising data transparency  
+**Approachable** - Warm family member, not corporate entity  
+**Non-judgmental** - "You're not wrong" philosophy  
+**Grounded** - Practical solutions rooted in real experience  
+**Protective** - Harm reduction and user safety first
 
 ## Voice & Tone
 
 ### **How We Talk**
 
-**We sound like:** The friend who actually read the research but still talks normal - educated stoner who drops real knowledge casually
+**We sound like:** Your calm, wise, non-judgmental family member explaining things—warm and grounded, never corporate. The one who cares about well-being and the planet.
 
 **We don't sound like:**
-- Academic researchers or medical professionals
-- Dispensary marketing hype
-- Know-it-all cannabis snobs
-- Corporate wellness speak
+- Medical professionals giving clinical advice
+- Corporate wellness marketing  
+- Cannabis industry hype or stereotypes
+- Academic researchers or textbooks
+- Know-it-all tech companies
 
 ### **Voice Examples**
 
 ✅ **Good:**
-- "Forget indica vs sativa - that's old school thinking. Track what actually works for YOU."
-- "Don't just ask 'what's good for sleep?' Ask about THC:CBD ratios and who grew it."
-- "Same strain name, different grower? Yeah, it's gonna hit different. Here's how to spot quality."
-- "Build your own cannabis knowledge so you're not guessing every time you shop."
+- "Here's what we know about tracking your patterns..."
+- "You deserve to understand what works for your body."
+- "A gentle reminder for your well-being and the earth."
+- "Your personal cannabis educator and tracking companion."
+- "Let's look at your data and see what story it tells."
 
 ❌ **Avoid:**
-- "Revolutionary terpene-based optimization platform"
-- "Unlock your endocannabinoid potential with AI insights"
-- "Next-generation cannabis analytics for wellness optimization"
-- "Clinical-grade cannabis consumption intelligence"
+- "Revolutionary cannabis analytics platform"
+- "Unlock your endocannabinoid potential" 
+- "AI-powered consumption optimization"
+- "Clinical-grade wellness insights"
+- "Disruptive cannabis technology"
 
 ### **Tone Guidelines**
 
-**Be Educational But Chill**
-- Drop knowledge casually, not like a textbook
-- Explain the "why" behind advice
-- Use real cannabis language, not corporate speak
+**Be Evidence-Based but Warm**
+- Lead with what science actually supports
+- Explain insights in plain language
+- Never exaggerate or hype benefits
+- Always honest about limitations
 
-**Be Real About Industry Problems**
-- Call out misinformation when you see it
-- Acknowledge that cannabis is complicated
-- Don't pretend we have all the answers
+**Be Protective without Being Preachy**
+- Prioritize harm reduction in every interaction
+- Offer safeguards without judgment
+- Support informed decision-making
+- Respect personal autonomy
 
-**Be Practical**
-- Focus on what people can actually do
-- Give actionable steps for better purchases
-- Help them ask better questions at dispensaries
+**Be Transparent and Trustworthy**
+- Clear about data practices (radical transparency)
+- Honest about what we do and don't know
+- Never hide information or make false claims
+- Build unbreakable trust through consistency
 
 ## Writing Guidelines
 
@@ -120,62 +135,175 @@ experience through comprehensive strain analysis.
 
 ### **Color Palette**
 
+Our color palette reflects trustworthiness, calm professionalism, and subtle natural connection while maintaining strict app store compliance. We avoid cannabis clichés and focus on sophisticated, desaturated tones that convey evidence-based wellness.
+
 **Primary Colors:**
-- Deep Forest Green: #1F2937 (main brand color)
-- Natural Green: #059669 (accent, buttons)
-- Warm White: #FAFAFA (backgrounds)
+- **Deep Navy:** `#1a1f36` - Primary brand color, headers, high-trust elements
+- **Midnight:** `#0f1419` - Dark backgrounds, depth, premium feel  
+- **Charcoal:** `#2d3748` - Secondary text, borders, subtle structure
 
-**Supporting Colors:**
-- Charcoal Gray: #374151 (text)
-- Light Gray: #F3F4F6 (borders, inactive states)
-- Alert Red: #DC2626 (errors)
-- Success Green: #10B981 (confirmations)
+**Natural Colors:**
+- **Soft Sage:** `#7a9b8e` - Subtle natural accent, wellness indicators
+- **Muted Forest:** `#4a6358` - Secondary natural accent, environmental themes
+- **Warm Earth:** `#8b7d6b` - Tertiary organic tone, comfort elements
 
-**Why these colors:**
-- Avoid cliché "cannabis green" 
-- Professional but warm
-- Good contrast for accessibility
-- Works across different contexts
+**Neutral Colors:**
+- **Clean White:** `#ffffff` - Light backgrounds, cards, clean space
+- **Off White:** `#f8f9fa` - Subtle backgrounds, reduced glare
+- **Light Gray:** `#e8eaed` - Borders, dividers, subtle structure
+
+**Accent Colors:**
+- **Insight Blue:** `#5b8db8` - Data insights, links, informational elements
+- **Success Green:** `#6b9080` - Confirmations, progress, positive states
+- **Warning Amber:** `#c9a86a` - Alerts, cautions, attention needed
+- **Error Crimson:** `#a85857` - Errors, danger states, critical alerts
 
 ### **Typography**
 
-**Headings:** Inter (clean, modern, readable)
-**Body:** Inter (consistent, web-friendly)
-**Code/Data:** JetBrains Mono (when showing data/logs)
+Our typography combines modern geometric sans-serif with subtle technical monospace touches, creating sophistication that conveys both data precision and human warmth.
 
-**Hierarchy:**
-- H1: 32px, Bold
-- H2: 24px, Semibold  
-- H3: 20px, Medium
-- Body: 16px, Regular
-- Small: 14px, Regular
+**Primary Font: Space Grotesk**
+- **Regular (400):** Body text, secondary content
+- **Medium (500):** Emphasized text, navigation  
+- **Semi-Bold (600):** Subheadings, important information
+- **Bold (700):** Headlines, primary emphasis
 
-### **Logo Usage**
+**Technical Font: JetBrains Mono**
+- **Regular (400):** Data displays, technical information
+- **Medium (500):** Emphasized technical content, labels
 
-**Logo Elements:**
-- Wordmark: "CannaNote" in Inter Bold
-- Icon: Simple leaf or note icon (TBD)
+**Wordmark Treatment:**
+- **Font:** Space Grotesk
+- **Structure:** "Canna" (Regular 400) + "Note" (Medium 500)
+- **Styling:** Tight tracking (-0.02em), camel case emphasis
+
+**Typography Hierarchy:**
+- **H1:** Space Grotesk Bold (700), 32-48px
+- **H2:** Space Grotesk Semi-Bold (600), 24-32px  
+- **H3:** Space Grotesk Medium (500), 20-24px
+- **Body:** Space Grotesk Regular (400), 16px
+- **Small:** Space Grotesk Regular (400), 14px
+- **Data/Code:** JetBrains Mono Regular (400), 14-16px
+
+### **Logo Concepts**
+
+We have developed two primary logo concepts that embody our brand personality while ensuring app store compliance:
+
+**Logo Concept 1: Abstract Notebook with Data Wave Pattern (`logo-book.svg`)**
+- Combines clean notebook silhouette with flowing data wave
+- Represents intersection of personal journaling and emerging insights
+- Best for immediate concept communication and educational contexts
+- **Location:** `/backend/cmd/web/assets/images/logos/logo-book.svg`
+
+**Logo Concept 4: Minimalist "C" + "N" Monogram with Data Accent (`logo-square.svg`)**
+- Sophisticated monogram with geometric letterforms and subtle data dots
+- Professional appearance suitable for medical contexts
+- Best for brand recognition and minimal applications
+- **Location:** `/backend/cmd/web/assets/images/logos/logo-square.svg`
+
+**Logo Implementation:**
+- **Primary brand color:** Deep Navy (#1a1f36)
+- **Secondary option:** Charcoal (#2d3748)  
+- **Accent contexts:** Insight Blue (#5b8db8)
+- **Minimum size:** 16x16 pixels for favicons
+- **App icon sizes:** 20x20 to 1024x1024 pixels
 
 **Logo Don'ts:**
-- Don't use cannabis leaf stereotypes
-- Don't use green gradients
-- Don't use script/decorative fonts
+- No direct cannabis imagery or leaf references
+- No bright "cannabis greens" that could trigger platform restrictions
+- No overly complex details that don't scale to small sizes
+- No stereotypical cannabis cultural references
+
+### **Logo Usage Guidelines**
+
+**Format Variations Required:**
+- **Horizontal layout:** Logo + wordmark side by side
+- **Vertical/stacked layout:** Icon above wordmark
+- **Icon-only version:** For app icons and small spaces
+- **Simplified version:** Reduced detail for very small sizes
+- **Monochrome version:** Single color applications
+- **Reversed version:** White on dark backgrounds
+
+**File Format Requirements:**
+- **Vector files:** SVG for web, AI/EPS for print
+- **High-res PNG:** For digital applications
+- **JPG files:** For photography/marketing
+- **PDF files:** For brand guidelines and presentations
+- **Favicon (.ico):** For web browsers
+
+**Color Applications:**
+- **Primary:** Deep Navy (#1a1f36) on light backgrounds
+- **Reversed:** White on Deep Navy or dark backgrounds
+- **Accent:** Insight Blue (#5b8db8) for digital contexts
+- **Monochrome:** Black or single brand color when needed
+
+**Clear Space & Sizing:**
+- **Minimum clear space:** Equal to the height of the logo
+- **Minimum size:** 16x16 pixels for favicons, 20x20 for mobile
+- **Recommended minimum:** 32x32 pixels for clarity
+- **Maximum size:** No limit, but maintain proportions
+
+**App Store Compliance:**
+- No direct cannabis references in visual imagery
+- Professional appearance suitable for health apps
+- Clear scalability from 20x20 to 1024x1024 pixels
+- Appropriate for medical wellness category
+
+### **CSS Implementation**
+
+**Font Integration:**
+```css
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --font-primary: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+}
+```
+
+**Color Variables:**
+```css
+:root {
+  /* Primary */
+  --color-deep-navy: #1a1f36;
+  --color-midnight: #0f1419;
+  --color-charcoal: #2d3748;
+  
+  /* Natural */
+  --color-soft-sage: #7a9b8e;
+  --color-muted-forest: #4a6358;
+  --color-warm-earth: #8b7d6b;
+  
+  /* Neutral */
+  --color-clean-white: #ffffff;
+  --color-off-white: #f8f9fa;
+  --color-light-gray: #e8eaed;
+  
+  /* Accent */
+  --color-insight-blue: #5b8db8;
+  --color-success-green: #6b9080;
+  --color-warning-amber: #c9a86a;
+  --color-error-crimson: #a85857;
+}
+```
 
 ### **Photography & Imagery**
 
-**Style:** Clean, minimal, authentic
+**Style:** Clean, minimal, authentic, evidence-based
 
 **Use:**
-- Real people (not stock photo perfect)
-- Clean product shots
-- Natural lighting
-- Honest documentation (real notes, real phones)
+- Real people in natural settings (not stock photo perfect)
+- Clean product documentation photography
+- Natural lighting that feels honest and warm
+- Authentic usage scenarios (real phones, real environments)
+- Environmental and sustainability themes when appropriate
 
 **Avoid:**
-- Stereotypical cannabis imagery
-- Perfect lifestyle shots
-- Heavy filters/effects
-- Models who look like they've never used cannabis
+- Stereotypical cannabis imagery (leaves, smoke, paraphernalia)
+- Perfect lifestyle shots that feel inauthentic
+- Heavy filters or artificial effects
+- Models or scenarios that perpetuate cannabis stereotypes
+- Any imagery that could trigger app store restrictions
 
 ## UI/UX Guidelines
 
