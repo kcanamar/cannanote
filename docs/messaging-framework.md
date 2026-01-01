@@ -3,7 +3,7 @@
 ## Core Value Propositions
 
 ### **Primary Value Proposition**
-**Your personal cannabis educator and tracking companion** - built by industry insiders, designed for real consumers who want consistent experiences backed by science, not marketing hype.
+**Your personal cannabis educator and tracking companion** - transforming consumption data into clear, actionable insights through seamless, private, and mindful journaling backed by evidence-based science, not marketing hype.
 
 ### **Supporting Value Propositions**
 
@@ -62,24 +62,24 @@ Learn cannabis science in plain language. Make informed decisions without relyin
 - Real user data driving better industry practices
 
 **Supporting Messages:**
-- "Built by former industry insiders who understand the problems"
-- "Fighting cannabis misinformation with science"
-- "Consumer independence benefits everyone"
+- "Evidence-based insights without corporate pressure"
+- "Fighting cannabis misinformation with peer-reviewed science"
+- "Consumer empowerment through radical data transparency"
 
 ## Elevator Pitches
 
 ### **30-Second Version**
-"CannaNote is your personal cannabis journal and educator. Track what works, learn the science, make better decisions. Built by former dispensary professionals who got tired of watching customers waste money on trial and error."
+"CannaNote is your personal cannabis journal and educator. Track what works, learn the science, make better decisions. We prioritize your privacy and wellness over profits, helping you understand your unique relationship with cannabis."
 
 ### **60-Second Version**  
-"CannaNote solves the biggest problem in cannabis - consistency. I spent years as a dispensary manager watching patients and customers struggle to find relief because nobody was tracking what actually worked. So I built a digital journal that learns your patterns and teaches you cannabis science in plain language. No marketing hype, just your data and peer-reviewed research helping you make better decisions."
+"CannaNote solves the biggest problem in cannabis - consistency. After years in the industry, I built a digital journal that learns your patterns and teaches you cannabis science in plain language. We transform your personal consumption data into clear, actionable insights with radical privacy protection. No marketing hype, just your data and peer-reviewed research helping you make better decisions."
 
 ### **2-Minute Version**
-"Cannabis is incredibly complex - every decision from growing to consumption affects your experience. But the industry sells simplicity through outdated indica/sativa categories and marketing folklore. I worked in Washington's legal market for years and watched this disconnect daily.
+"Cannabis is incredibly complex - every decision from growing to consumption affects your experience. But the industry sells simplicity through outdated indica/sativa categories and marketing folklore, while your personal data gets monetized without your knowledge.
 
-CannaNote bridges that gap. It's your personal cannabis educator and tracker, designed by someone who understands both industry promises and consumer reality. We help you build patterns from your experiences, learn cannabis science without academic jargon, and make confident decisions based on your data - not someone else's sales goals.
+CannaNote bridges that gap. It's your personal cannabis educator and tracker, built on the principle that your patterns matter more than their profits. We help you build insights from your experiences, learn cannabis science without academic jargon, and make confident decisions based on your data with radical privacy protection - never selling or sharing your information.
 
-Whether you're managing medical conditions with multiple consumption methods or just tired of forgetting which strains help, CannaNote turns expensive trial and error into informed cannabis consumption."
+Whether you're managing medical conditions with multiple consumption methods or just tired of forgetting which strains help, CannaNote transforms personal consumption data into clear, actionable insights through seamless, private, and mindful journaling."
 
 ## Tagline and Slogan Options
 
@@ -114,10 +114,10 @@ Personal tracking + science-based education + independent perspective = better c
 - Independence from industry sales pressure
 
 ### **Level 4: Proof Points**
-- Built by former dispensary professionals
+- Radical data transparency - never sell or share user data
 - Content based on peer-reviewed research
 - No product partnerships influencing recommendations
-- "Favorite family member explaining things" educational approach
+- "Wise family member explaining things" educational approach
 
 ## Competitive Differentiators
 
@@ -140,10 +140,10 @@ Personal tracking + science-based education + independent perspective = better c
 ## Proof Points and Evidence
 
 ### **Credibility Markers**
-- Former dispensary manager with Medical Consultant License
-- Actively pursuing Ganjier certification
-- 3+ years cannabis industry experience
-- Built after surveying actual customer needs
+- Founded by industry professional with deep cannabis knowledge
+- Content sourced from peer-reviewed medical journals
+- Built from real consumer needs and frustrations
+- Radical commitment to user privacy and data ownership
 
 ### **Science-Based Approach**
 - Content sourced from peer-reviewed medical journals
@@ -153,20 +153,20 @@ Personal tracking + science-based education + independent perspective = better c
 
 ### **Consumer-First Philosophy**
 - Independent platform with no product partnerships
-- Built by former industry insider who saw the problems firsthand
-- Focus on consumer education over sales conversion
-- "Built by and for the community, not industry"
+- Built from real consumer needs and industry experience
+- Focus on consumer education and privacy over profit
+- "Your patterns, not their profits" core philosophy
 
 ## Handling Objections
 
 ### **"Another cannabis app?"**
-**Response:** "CannaNote isn't built by tech companies guessing what users need - it's built by former industry professionals who lived the daily frustration of watching customers waste money on trial and error."
+**Response:** "CannaNote isn't built by tech companies guessing what users need - it's built from real cannabis industry experience and consumer frustration. We prioritize your privacy and wellness over profit, never selling your data."
 
 ### **"Too complicated for casual users?"**  
-**Response:** "We make it as simple as that favorite family member explaining something. Start with basic tracking, add complexity as you learn. Designed so anyone with an 8th-grade education can self-serve."
+**Response:** "We make it as simple as that wise family member explaining something. Start with basic tracking, add complexity as you learn. Designed so anyone with an 8th-grade education can self-serve."
 
 ### **"Privacy concerns with cannabis data?"**
-**Response:** "Your data belongs to you. We're not selling to dispensaries or sharing with anyone. Independent platform means independent data control."
+**Response:** "Your data belongs to you - period. We practice radical data transparency and never sell or share your information. Your personal cannabis data stays private with local-first storage and uncompromising privacy protection."
 
 ### **"Why not just ask budtenders?"**
 **Response:** "Great budtenders exist, but they have 30 seconds and sales goals. You need personal patterns built over time, not point-of-sale recommendations."
@@ -242,6 +242,6 @@ Personal tracking + science-based education + independent perspective = better c
 - Personal tone from founder perspective
 - Focus on helping users get more value
 - Share relevant research findings
-- Maintain "favorite family member explaining things" voice
+- Maintain "wise family member explaining things" voice
 
 This messaging framework provides the foundation for all CannaNote communications, ensuring consistent voice and clear value proposition across every touchpoint.
