@@ -40,18 +40,83 @@ templ Base(title string, currentPath string) {
 			}
 			</script>
 			
+			<link rel="preconnect" href="https://fonts.googleapis.com">
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+			
 			<script src="https://cdn.tailwindcss.com"></script>
 			<script>
 				tailwind.config = {
+					darkMode: 'class',
 					theme: {
 						extend: {
 							colors: {
-								'navy': '#1a1f36',
-								'sage': '#7a9b8e',
+								// Brand Core Colors
+								'navy': {
+									50: '#f8f9fb',
+									100: '#f1f3f7',
+									500: '#5b6b8a',
+									600: '#4a5773',
+									700: '#3a4459',
+									800: '#2a3140',
+									900: '#1a1f36', // Primary navy
+									950: '#0f1220'
+								},
+								'sage': {
+									50: '#f6f8f7',
+									100: '#e8f0ed',
+									200: '#d1e1db',
+									300: '#adc9c0',
+									400: '#7a9b8e', // Primary sage
+									500: '#658a7e',
+									600: '#527066',
+									700: '#435a53',
+									800: '#374944',
+									900: '#2e3d39'
+								},
+								// Supporting Colors  
+								'neutral': {
+									50: '#ffffff',
+									100: '#f8f9fa',
+									200: '#e8eaed',
+									300: '#dadce0',
+									400: '#bdc1c6',
+									500: '#9aa0a6',
+									600: '#80868b',
+									700: '#5f6368',
+									800: '#3c4043',
+									900: '#202124'
+								},
+								// Accent Colors
+								'insight': '#5b8db8',
+								'success': '#6b9080',
+								'warning': '#c9a86a',
+								'error': '#a85857'
 							},
 							fontFamily: {
-								'sans': ['Space Grotesk', 'system-ui', 'sans-serif'],
-								'mono': ['JetBrains Mono', 'monospace'],
+								'brand': ['Space Grotesk', 'system-ui', '-apple-system', 'sans-serif'],
+								'mono': ['JetBrains Mono', 'ui-monospace', 'monospace']
+							},
+							fontSize: {
+								'h1': ['3rem', { lineHeight: '1.125', fontWeight: '700' }],
+								'h2': ['2rem', { lineHeight: '1.25', fontWeight: '600' }],
+								'h3': ['1.5rem', { lineHeight: '1.333', fontWeight: '500' }],
+								'body': ['1rem', { lineHeight: '1.6', fontWeight: '400' }],
+								'small': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }]
+							},
+							animation: {
+								'fade-in': 'fadeIn 0.5s ease-in-out',
+								'slide-up': 'slideUp 0.6s ease-out',
+							},
+							keyframes: {
+								fadeIn: {
+									'0%': { opacity: '0' },
+									'100%': { opacity: '1' }
+								},
+								slideUp: {
+									'0%': { transform: 'translateY(20px)', opacity: '0' },
+									'100%': { transform: 'translateY(0)', opacity: '1' }
+								}
 							}
 						}
 					}
@@ -60,7 +125,7 @@ templ Base(title string, currentPath string) {
 			<script src="assets/js/htmx.min.js"></script>
 			<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 		</head>
-		<body class="font-sans antialiased">
+		<body class="font-brand antialiased bg-white dark:bg-navy-950">
 			@components.Navigation(currentPath)
 			<main role="main">
 				{ children... }

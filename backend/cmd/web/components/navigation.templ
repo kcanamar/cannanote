@@ -7,7 +7,7 @@ templ navLink(href, label, currentPath string) {
   if (href == "/" && currentPath == "/") || (href != "/" && strings.HasPrefix(currentPath, href)) {
     <a
       href={ href }
-      class="text-lg transition font-semibold text-slate-900"
+      class="text-lg transition font-semibold text-slate-900 dark:text-white"
       aria-current="page"
     >
       { label }
@@ -15,7 +15,7 @@ templ navLink(href, label, currentPath string) {
   } else {
     <a
       href={ href }
-      class="text-lg transition text-slate-700 hover:text-slate-900"
+      class="text-lg transition text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
       aria-current="false"
     >
       { label }
@@ -25,12 +25,12 @@ templ navLink(href, label, currentPath string) {
 
 // Main Navigation Component
 templ Navigation(currentPath string) {
-  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50" aria-label="Main navigation">
+  <nav class="bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-700 sticky top-0 z-50" aria-label="Main navigation">
     <div class="container mx-auto px-6 py-4 flex items-center justify-between">
       <!-- Logo / Home Link -->
       <a href="/" class="flex items-center space-x-3 group" aria-label="CannaNote home">
-        <img src="/assets/images/logos/logo-square.svg" alt="" class="w-10 h-10 transition-transform group-hover:scale-105"/>
-        <span class="text-2xl font-medium text-slate-900">CannaNote</span>
+        <img src="/assets/images/logos/logo-book.svg" alt="" class="w-10 h-10 transition-transform group-hover:scale-105 dark:invert"/>
+        <span class="text-2xl font-medium text-slate-900 dark:text-white">CannaNote</span>
       </a>
 
       <!-- Desktop Navigation -->
@@ -43,13 +43,30 @@ templ Navigation(currentPath string) {
           href="https://github.com/kcanamar/cannanote"
           target="_blank"
           rel="noopener"
-          class="text-lg text-slate-700 hover:text-slate-900 transition flex items-center"
+          class="text-lg text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center"
         >
           Open Source
           <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
         </a>
+        
+        <!-- Dark/Light Mode Toggle -->
+        <button
+          x-data="{ dark: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+          @click="dark = !dark; localStorage.setItem('theme', dark ? 'dark' : 'light'); document.documentElement.classList.toggle('dark', dark)"
+          x-init="document.documentElement.classList.toggle('dark', dark)"
+          class="p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors"
+          aria-label="Toggle dark mode"
+        >
+          <svg x-show="!dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg x-show="dark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+        
         <a href="/#beta" class="bg-slate-800 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-slate-900 transition">
           Request Beta
         </a>
@@ -59,7 +76,7 @@ templ Navigation(currentPath string) {
       <div class="md:hidden" x-data="{ open: false }">
         <button
           @click="open = !open"
-          class="text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 rounded p-2"
+          class="text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-400 rounded p-2"
           aria-label="Toggle menu"
         >
           <svg x-show="!open" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +92,7 @@ templ Navigation(currentPath string) {
           x-show="open"
           @click.away="open = false"
           x-transition
-          class="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg"
+          class="absolute top-full left-0 right-0 bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-700 shadow-lg"
         >
           <div class="flex flex-col py-4">
             @navLink("/", "Home", currentPath)
@@ -86,13 +103,30 @@ templ Navigation(currentPath string) {
               href="https://github.com/kcanamar/cannanote"
               target="_blank"
               rel="noopener"
-              class="px-6 py-3 text-lg text-slate-700 hover:bg-slate-50 flex items-center"
+              class="px-6 py-3 text-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center"
             >
               Open Source
               <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
               </svg>
             </a>
+            
+            <!-- Mobile Dark/Light Mode Toggle -->
+            <button
+              x-data="{ dark: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+              @click="dark = !dark; localStorage.setItem('theme', dark ? 'dark' : 'light'); document.documentElement.classList.toggle('dark', dark)"
+              x-init="document.documentElement.classList.toggle('dark', dark)"
+              class="px-6 py-3 text-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center"
+            >
+              <svg x-show="!dark" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+              </svg>
+              <svg x-show="dark" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+              </svg>
+              <span x-text="dark ? 'Light Mode' : 'Dark Mode'"></span>
+            </button>
+            
             <a href="/#beta" class="px-6 py-4 bg-slate-800 text-white text-lg font-medium hover:bg-slate-900">
               Request Beta
             </a>
