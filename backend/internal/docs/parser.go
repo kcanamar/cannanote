@@ -49,6 +49,7 @@ type SidebarItem struct {
 	Order    int           `json:"order"`
 	Section  string        `json:"section"`
 	Children []SidebarItem `json:"children"`
+	IsFolder bool          `json:"is_folder"`
 	Active   bool          `json:"active"`
 }
 
@@ -188,21 +189,25 @@ func (c *DocsCache) parseFile(filePath string) (*Doc, error) {
 func (c *DocsCache) extractTOC(html string) []TOCItem {
 	var toc []TOCItem
 	
-	// Regex to match headings with IDs
-	headingRegex := regexp.MustCompile(`<h([2-6])[^>]*id="([^"]*)"[^>]*>([^<]*)</h[2-6]>`)
+	// More flexible regex to match headings with IDs (handles various attributes)
+	headingRegex := regexp.MustCompile(`<h([2-6])(?:[^>]*?)id="([^"]*)"(?:[^>]*?)>(.*?)</h[2-6]>`)
 	matches := headingRegex.FindAllStringSubmatch(html, -1)
 
 	for _, match := range matches {
 		if len(match) == 4 {
 			level := int(match[1][0] - '0') // Convert '2'-'6' to 2-6
 			id := match[2]
-			text := strings.TrimSpace(match[3])
+			// Strip any HTML tags from text content
+			text := regexp.MustCompile(`<[^>]*>`).ReplaceAllString(match[3], "")
+			text = strings.TrimSpace(text)
 			
-			toc = append(toc, TOCItem{
-				ID:    id,
-				Text:  text,
-				Level: level,
-			})
+			if text != "" { // Only add non-empty headings
+				toc = append(toc, TOCItem{
+					ID:    id,
+					Text:  text,
+					Level: level,
+				})
+			}
 		}
 	}
 
@@ -219,11 +224,12 @@ func (c *DocsCache) buildSidebar() {
 		}
 
 		item := SidebarItem{
-			Title:   doc.Title,
-			Label:   doc.SidebarLabel,
-			Href:    "/docs/" + doc.Path,
-			Order:   doc.SidebarOrder,
-			Section: doc.Section,
+			Title:    doc.Title,
+			Label:    doc.SidebarLabel,
+			Href:     "/docs/" + doc.Path,
+			Order:    doc.SidebarOrder,
+			Section:  doc.Section,
+			IsFolder: false,
 		}
 
 		if item.Label == "" {
@@ -240,7 +246,7 @@ func (c *DocsCache) buildSidebar() {
 		})
 	}
 
-	// Build final sidebar structure
+	// Build hierarchical sidebar structure
 	var sidebar []SidebarItem
 
 	// Add root items first (like index page)
@@ -248,15 +254,55 @@ func (c *DocsCache) buildSidebar() {
 		sidebar = append(sidebar, rootItems...)
 	}
 
-	// Define section order
-	sectionOrder := []string{"getting-started", "guides", "privacy", "reference", "community"}
+	// Define section order with display names
+	sectionConfig := map[string]struct {
+		name  string
+		order int
+	}{
+		"getting-started": {"Getting Started", 1},
+		"guides":          {"Guides", 2},
+		"privacy":         {"Privacy", 3},
+		"reference":       {"Reference", 4},
+		"community":       {"Community", 5},
+	}
 	
-	for _, sectionName := range sectionOrder {
-		if items, exists := sections[sectionName]; exists {
-			// Create section header if there are items
-			if len(items) > 0 {
-				sidebar = append(sidebar, items...)
+	// Create ordered list of sections
+	type sectionInfo struct {
+		key   string
+		name  string
+		order int
+	}
+	
+	var orderedSections []sectionInfo
+	for key, config := range sectionConfig {
+		if _, exists := sections[key]; exists {
+			orderedSections = append(orderedSections, sectionInfo{
+				key:   key,
+				name:  config.name,
+				order: config.order,
+			})
+		}
+	}
+	
+	// Sort sections by order
+	sort.Slice(orderedSections, func(i, j int) bool {
+		return orderedSections[i].order < orderedSections[j].order
+	})
+	
+	// Build hierarchical structure with folder headers
+	for _, section := range orderedSections {
+		if items, exists := sections[section.key]; exists && len(items) > 0 {
+			// Create folder header
+			folderItem := SidebarItem{
+				Title:    section.name,
+				Label:    section.name,
+				Href:     "",
+				Order:    section.order,
+				Section:  section.key,
+				IsFolder: true,
+				Children: items,
 			}
+			sidebar = append(sidebar, folderItem)
 		}
 	}
 

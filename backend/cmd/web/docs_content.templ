@@ -11,3 +11,8 @@ templ DocsContent(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string)
 		@components.DocsContentLayout(doc, sidebar, currentPath)
 	}
 }
+
+// DocsContentPartial renders just the main content for HTMX swaps
+templ DocsContentPartial(doc *docs.Doc) {
+	@components.DocsContentPartial(doc)
+}

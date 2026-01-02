@@ -74,15 +74,20 @@ func (h *DocsHandler) HandleDocsRequest(c *gin.Context) {
 		return
 	}
 
-	// Get sidebar navigation
-	sidebar := h.cache.GetSidebar()
+	// Check if this is an HTMX request
+	isHTMX := c.GetHeader("HX-Request") == "true"
 
-	// Create the current path for active state detection
-	currentPath := "/docs/" + requestPath
-
-	// Render the docs layout with content
-	component := web.DocsContent(doc, sidebar, currentPath)
-	templ.Handler(component).ServeHTTP(c.Writer, c.Request)
+	if isHTMX {
+		// Render partial content only for HTMX swaps
+		component := web.DocsContentPartial(doc)
+		templ.Handler(component).ServeHTTP(c.Writer, c.Request)
+	} else {
+		// Render full layout for direct visits (SSR)
+		sidebar := h.cache.GetSidebar()
+		currentPath := "/docs/" + requestPath
+		component := web.DocsContent(doc, sidebar, currentPath)
+		templ.Handler(component).ServeHTTP(c.Writer, c.Request)
+	}
 }
 
 // HandleDocsSearch handles search requests

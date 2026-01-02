@@ -1,0 +1,41 @@
+package components
+
+import "backend/internal/docs"
+
+// DocsContentPartial renders just the main content area for HTMX swapping
+templ DocsContentPartial(doc *docs.Doc) {
+	<!-- Article Content -->
+	<article class="px-6 py-8 lg:px-8 lg:py-12">
+		<!-- Article Header -->
+		<header class="mb-8">
+			<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
+			if doc.Description != "" {
+				<p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">{ doc.Description }</p>
+			}
+		</header>
+
+		<!-- Article Body -->
+		<div class="prose prose-lg prose-slate dark:prose-invert max-w-none prose-headings:text-navy-900 dark:prose-headings:text-white prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-a:text-sage-600 dark:prose-a:text-sage-400 prose-a:no-underline hover:prose-a:text-sage-800 dark:hover:prose-a:text-sage-300 prose-strong:text-navy-900 dark:prose-strong:text-white prose-code:text-sage-700 dark:prose-code:text-sage-300 prose-code:bg-neutral-100 dark:prose-code:bg-navy-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-neutral-900 prose-pre:text-neutral-100 prose-blockquote:border-sage-300 dark:prose-blockquote:border-sage-600 prose-blockquote:text-neutral-600 dark:prose-blockquote:text-neutral-400">
+			@templ.Raw(doc.ContentHTML)
+		</div>
+
+		<!-- Article Footer -->
+		if len(doc.RelatedPages) > 0 {
+			<footer class="mt-12 pt-8 border-t border-neutral-200 dark:border-navy-700">
+				<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Related Pages</h3>
+				<div class="grid md:grid-cols-2 gap-4">
+					for _, related := range doc.RelatedPages {
+						<a href={ "/docs/" + related } class="block p-4 border border-neutral-200 dark:border-navy-700 rounded-lg hover:border-sage-300 dark:hover:border-sage-600 transition">
+							<span class="text-sage-600 dark:text-sage-400 font-medium">{ related }</span>
+						</a>
+					}
+				</div>
+			</footer>
+		}
+	</article>
+	
+	<!-- Out-of-band swap for TOC sidebar -->
+	<div hx-swap-oob="outerHTML:#docs-toc-sidebar">
+		@docsTOCSidebar(doc)
+	</div>
+}

@@ -6,6 +6,52 @@ import (
 	"strings"
 )
 
+// shouldFolderBeOpen determines if a folder should be open based on current path
+func shouldFolderBeOpen(folder docs.SidebarItem, currentPath string) bool {
+	// Open folder if current path is within this section
+	for _, child := range folder.Children {
+		if child.Href == currentPath || strings.Contains(currentPath, "/"+folder.Section+"/") {
+			return true
+		}
+	}
+	return false
+}
+
+// docsTOCSidebar renders the table of contents sidebar
+templ docsTOCSidebar(doc *docs.Doc) {
+	if len(doc.TOC) > 0 {
+		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden xl:block">
+			<div class="p-6">
+				<h3 class="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider mb-4">
+					On This Page
+				</h3>
+				<nav class="space-y-1">
+					<ul class="space-y-1 text-sm">
+						for _, item := range doc.TOC {
+							<li class={ "ml-" + strconv.Itoa((item.Level - 2) * 4) }>
+								<a
+									href={ "#" + item.ID }
+									class="block py-1 text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition truncate"
+								>
+									{ item.Text }
+								</a>
+							</li>
+						}
+					</ul>
+				</nav>
+			</div>
+		</aside>
+	} else {
+		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden xl:block">
+			<div class="p-6">
+				<div class="text-sm text-neutral-500 dark:text-neutral-400">
+					No headings on this page
+				</div>
+			</div>
+		</aside>
+	}
+}
+
 // DocsContentLayout creates the three-column layout for documentation
 templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
 	<div class="flex min-h-screen bg-white dark:bg-navy-950">
@@ -69,62 +115,43 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 					</button>
 				</div>
 
-				<!-- Article Content -->
-				<article class="px-6 py-8 lg:px-8 lg:py-12">
-					<!-- Article Header -->
-					<header class="mb-8">
-						<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
-						if doc.Description != "" {
-							<p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">{ doc.Description }</p>
+				<!-- Main Content Container - HTMX Target -->
+				<div id="main-content">
+					<!-- Article Content -->
+					<article class="px-6 py-8 lg:px-8 lg:py-12">
+						<!-- Article Header -->
+						<header class="mb-8">
+							<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
+							if doc.Description != "" {
+								<p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">{ doc.Description }</p>
+							}
+						</header>
+
+						<!-- Article Body -->
+						<div class="prose prose-lg prose-slate dark:prose-invert max-w-none prose-headings:text-navy-900 dark:prose-headings:text-white prose-p:text-neutral-700 dark:prose-p:text-neutral-300 prose-a:text-sage-600 dark:prose-a:text-sage-400 prose-a:no-underline hover:prose-a:text-sage-800 dark:hover:prose-a:text-sage-300 prose-strong:text-navy-900 dark:prose-strong:text-white prose-code:text-sage-700 dark:prose-code:text-sage-300 prose-code:bg-neutral-100 dark:prose-code:bg-navy-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-neutral-900 prose-pre:text-neutral-100 prose-blockquote:border-sage-300 dark:prose-blockquote:border-sage-600 prose-blockquote:text-neutral-600 dark:prose-blockquote:text-neutral-400">
+							@templ.Raw(doc.ContentHTML)
+						</div>
+
+						<!-- Article Footer -->
+						if len(doc.RelatedPages) > 0 {
+							<footer class="mt-12 pt-8 border-t border-neutral-200 dark:border-navy-700">
+								<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Related Pages</h3>
+								<div class="grid md:grid-cols-2 gap-4">
+									for _, related := range doc.RelatedPages {
+										<a href={ "/docs/" + related } class="block p-4 border border-neutral-200 dark:border-navy-700 rounded-lg hover:border-sage-300 dark:hover:border-sage-600 transition">
+											<span class="text-sage-600 dark:text-sage-400 font-medium">{ related }</span>
+										</a>
+									}
+								</div>
+							</footer>
 						}
-					</header>
-
-					<!-- Article Body -->
-					<div class="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-sage-600 dark:prose-a:text-sage-400 hover:prose-a:text-sage-800 dark:hover:prose-a:text-sage-300">
-						<div id="content-body" innerHTML={ doc.ContentHTML }></div>
-					</div>
-
-					<!-- Article Footer -->
-					if len(doc.RelatedPages) > 0 {
-						<footer class="mt-12 pt-8 border-t border-neutral-200 dark:border-navy-700">
-							<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Related Pages</h3>
-							<div class="grid md:grid-cols-2 gap-4">
-								for _, related := range doc.RelatedPages {
-									<a href={ "/docs/" + related } class="block p-4 border border-neutral-200 dark:border-navy-700 rounded-lg hover:border-sage-300 dark:hover:border-sage-600 transition">
-										<span class="text-sage-600 dark:text-sage-400 font-medium">{ related }</span>
-									</a>
-								}
-							</div>
-						</footer>
-					}
-				</article>
+					</article>
+				</div>
 			</div>
 		</main>
 
 		<!-- Right Sidebar - Table of Contents -->
-		if len(doc.TOC) > 0 {
-			<aside class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden xl:block">
-				<div class="p-6">
-					<h3 class="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider mb-4">
-						On This Page
-					</h3>
-					<nav class="space-y-1">
-						<ul class="space-y-1 text-sm">
-							for _, item := range doc.TOC {
-								<li class={ "ml-" + strconv.Itoa((item.Level - 2) * 4) }>
-									<a
-										href={ "#" + item.ID }
-										class="block py-1 text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition truncate"
-									>
-										{ item.Text }
-									</a>
-								</li>
-							}
-						</ul>
-					</nav>
-				</div>
-			</aside>
-		}
+		@docsTOCSidebar(doc)
 
 		<!-- Mobile Navigation Overlay -->
 		<div
@@ -155,17 +182,42 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 // Helper template for navigation tree
 templ docsNavigationTree(items []docs.SidebarItem, currentPath string) {
 	for _, item := range items {
-		@docsNavigationItem(item, currentPath)
+		if item.IsFolder {
+			@docsNavigationFolder(item, currentPath)
+		} else {
+			@docsNavigationItem(item, currentPath)
+		}
 	}
 }
 
-// Helper template for individual navigation items
+// Helper template for folder navigation items (collapsible sections)
+templ docsNavigationFolder(folder docs.SidebarItem, currentPath string) {
+	<details class="group" open={ shouldFolderBeOpen(folder, currentPath) }>
+		<summary class="flex items-center justify-between px-3 py-2 text-sm font-semibold text-neutral-900 dark:text-white cursor-pointer hover:bg-neutral-100 dark:hover:bg-navy-800 rounded-md transition list-none">
+			<span>{ folder.Label }</span>
+			<svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+			</svg>
+		</summary>
+		<div class="ml-6 mt-1 space-y-1">
+			for _, child := range folder.Children {
+				@docsNavigationItem(child, currentPath)
+			}
+		</div>
+	</details>
+}
+
+// Helper template for individual navigation items (files)
 templ docsNavigationItem(item docs.SidebarItem, currentPath string) {
 	if item.Href == currentPath || (currentPath != "" && currentPath == strings.TrimPrefix(item.Href, "/docs/")) {
 		<a
 			href={ item.Href }
 			class="flex items-center px-3 py-2 text-sm font-medium text-sage-700 dark:text-sage-300 bg-sage-50 dark:bg-sage-900/30 border-r-2 border-sage-600 dark:border-sage-400 rounded-l-md transition"
 			aria-current="page"
+			hx-get={ item.Href }
+			hx-target="#main-content"
+			hx-swap="innerHTML"
+			hx-push-url="true"
 		>
 			<span class="truncate">{ item.Label }</span>
 		</a>
@@ -173,6 +225,10 @@ templ docsNavigationItem(item docs.SidebarItem, currentPath string) {
 		<a
 			href={ item.Href }
 			class="flex items-center px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:text-sage-700 dark:hover:text-sage-300 hover:bg-neutral-50 dark:hover:bg-navy-800 rounded-md transition"
+			hx-get={ item.Href }
+			hx-target="#main-content"
+			hx-swap="innerHTML"
+			hx-push-url="true"
 		>
 			<span class="truncate">{ item.Label }</span>
 		</a>
