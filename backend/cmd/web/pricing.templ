@@ -1,0 +1,168 @@
+package web
+
+templ Pricing() {
+  @Base("Pricing – CannaNote", "/pricing") {
+    <div class="min-h-screen bg-white dark:bg-navy-950">
+      <!-- Header -->
+      <header class="bg-white dark:bg-navy-950 py-16 border-b border-neutral-200 dark:border-navy-800">
+        <div class="container mx-auto px-6 max-w-6xl text-center">
+          <h1 class="text-4xl font-bold text-navy-900 dark:text-white mb-4">Find What Actually Works For You</h1>
+          <p class="text-xl text-neutral-600 dark:text-neutral-300 max-w-3xl mx-auto">Start tracking your cannabis patterns for free. As we add features, you choose what feels right. Your data stays yours, always.</p>
+        </div>
+      </header>
+
+      <!-- Pricing Tiers -->
+      <main class="py-20">
+        <div class="container mx-auto px-6 max-w-6xl">
+          <!-- Pricing Toggle -->
+          // <div class="text-center mb-12" x-data="{ annual: false }">
+          //   <div class="inline-flex bg-neutral-100 dark:bg-navy-800 rounded-lg p-1">
+          //     <button 
+          //       @click="annual = false" 
+          //       :class="annual ? 'text-neutral-600 dark:text-neutral-400' : 'bg-white dark:bg-navy-700 text-navy-900 dark:text-white shadow-sm'"
+          //       class="py-3 px-6 rounded-md text-sm font-medium transition"
+          //     >
+          //       Monthly
+          //     </button>
+          //     <button 
+          //       @click="annual = true"
+          //       :class="annual ? 'bg-white dark:bg-navy-700 text-navy-900 dark:text-white shadow-sm' : 'text-neutral-600 dark:text-neutral-400'" 
+          //       class="py-3 px-6 rounded-md text-sm font-medium transition"
+          //     >
+          //       Annual
+          //       <span class="ml-2 text-xs bg-sage-600 dark:bg-sage-500 text-white px-2 py-0.5 rounded-full">Save 30%</span>
+          //     </button>
+          //   </div>
+          // </div>
+
+          <div class="flex justify-center">
+            <div class="w-full max-w-md">
+            
+            <!-- Beta/Free Tier -->
+            <div class="bg-white dark:bg-navy-900 border-2 border-sage-200 dark:border-sage-700 rounded-2xl p-8 relative">
+              <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span class="bg-sage-600 dark:bg-sage-500 text-white px-4 py-2 rounded-full text-sm font-medium">Currently Available</span>
+              </div>
+              <div class="text-center mb-8 mt-4">
+                <h3 class="text-2xl font-bold text-navy-900 dark:text-white mb-2">Beta (Free)</h3>
+                <div class="text-4xl font-bold text-navy-900 dark:text-white mb-2">$0</div>
+                <p class="text-neutral-600 dark:text-neutral-400">During beta testing</p>
+              </div>
+              
+              <ul class="space-y-4 mb-8">
+                <li class="flex">
+                  <svg class="w-5 h-5 text-sage-600 dark:text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-neutral-700 dark:text-neutral-300">Log sessions in under 30 seconds</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-sage-600 dark:text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-neutral-700 dark:text-neutral-300">Find which terpenes actually help</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-sage-600 dark:text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-neutral-700 dark:text-neutral-300">Your data stays on your device</span>
+                </li>
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-sage-600 dark:text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-neutral-700 dark:text-neutral-300">Export anytime, no lock-in</span>
+                </li>
+              </ul>
+              
+              <a href="/#beta" class="block w-full bg-sage-600 dark:bg-sage-500 text-white text-center py-3 rounded-lg font-medium hover:bg-sage-700 dark:hover:bg-sage-600 transition">
+                Start Noting
+              </a>
+            </div>
+
+            <!-- Premium Tier -->
+            // <div class="bg-gradient-to-br from-navy-900 to-navy-800 dark:from-navy-800 dark:to-navy-700 border-2 border-navy-600 dark:border-navy-500 rounded-2xl p-8 relative">
+            //   <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            //     <span class="bg-insight text-white px-4 py-2 rounded-full text-sm font-medium">Coming Soon</span>
+            //   </div>
+            //   <div class="text-center mb-8 mt-4">
+            //     <h3 class="text-2xl font-bold text-white mb-4">Premium</h3>
+            //     <div x-show="!$parent.annual">
+            //       <div class="text-4xl font-bold text-white mb-2">$4.20<span class="text-lg font-normal">/month</span></div>
+            //       <p class="text-neutral-300">Billed monthly</p>
+            //     </div>
+            //     <div x-show="$parent.annual">
+            //       <div class="text-4xl font-bold text-white mb-2">$71<span class="text-lg font-normal">/year</span></div>
+            //       <p class="text-neutral-300">Save $29.40 annually</p>
+            //     </div>
+            //   </div>
+              
+            //   <ul class="space-y-4 mb-8">
+            //     <li class="flex items-start">
+            //       <svg class="w-5 h-5 text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            //         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            //       </svg>
+            //       <span class="text-neutral-300">Everything in Beta, plus:</span>
+            //     </li>
+            //     <li class="flex items-start">
+            //       <svg class="w-5 h-5 text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            //         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            //       </svg>
+            //       <span class="text-white">Deeper pattern insights</span>
+            //     </li>
+            //     <li class="flex items-start">
+            //       <svg class="w-5 h-5 text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            //         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            //       </svg>
+            //       <span class="text-white">Sync across your devices</span>
+            //     </li>
+            //     <li class="flex items-start">
+            //       <svg class="w-5 h-5 text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            //         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            //       </svg>
+            //       <span class="text-white">Advanced export formats</span>
+            //     </li>
+            //     <li class="flex items-start">
+            //       <svg class="w-5 h-5 text-sage-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            //         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            //       </svg>
+            //       <span class="text-white">Priority support</span>
+            //     </li>
+            //   </ul>
+              
+            //   <button disabled class="block w-full bg-neutral-600 text-neutral-400 text-center py-3 rounded-lg font-medium cursor-not-allowed">
+            //     Get Early Access
+            //   </button>
+            // </div>
+            </div>
+          </div>
+
+          <!-- FAQ Section -->
+          <div class="mt-20">
+            <div class="text-center mb-12">
+              <h2 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">Frequently Asked Questions</h2>
+            </div>
+            
+            <div class="max-w-3xl mx-auto space-y-6">
+              // <div class="bg-neutral-50 dark:bg-navy-900/50 rounded-lg p-6">
+              //   <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2">Why $4.20/month?</h3>
+              //   <p class="text-neutral-700 dark:text-neutral-300">We wanted pricing that made sense for our community. Plus, we're building features that actually save you money—no more forgetting which strain helped your sleep.</p>
+              // </div>
+              
+              <div class="bg-neutral-50 dark:bg-navy-900/50 rounded-lg p-6">
+                <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2">What happens when Premium launches?</h3>
+                <p class="text-neutral-700 dark:text-neutral-300">Beta testers get grandfathered pricing and early access. You helped us build this—we remember who was here from the beginning.</p>
+              </div>
+              
+              <div class="bg-neutral-50 dark:bg-navy-900/50 rounded-lg p-6">
+                <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2">Why should I trust you with my cannabis data?</h3>
+                <p class="text-neutral-700 dark:text-neutral-300">Because we don't want it. Your journal stays on your device first. We built this for ourselves—people who value privacy and hate being the product.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  }
+}

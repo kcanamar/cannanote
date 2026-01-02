@@ -36,16 +36,16 @@ templ Navigation(currentPath string) {
       <!-- Desktop Navigation -->
       <div class="hidden md:flex items-center space-x-10">
         @navLink("/", "Home", currentPath)
-        @navLink("/#features", "Features", currentPath)
-        @navLink("/learn", "Learn", currentPath)
-        @navLink("/#privacy", "Privacy", currentPath)
+        @navLink("/pricing", "Pricing", currentPath)
+        @navLink("/docs", "Docs", currentPath)
+        @navLink("/privacy", "Privacy", currentPath)
         <a
           href="https://github.com/kcanamar/cannanote"
           target="_blank"
           rel="noopener"
           class="text-lg text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center"
         >
-          Open Source
+          Github
           <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
           </svg>
@@ -96,9 +96,9 @@ templ Navigation(currentPath string) {
         >
           <div class="flex flex-col py-4">
             @navLink("/", "Home", currentPath)
-            @navLink("/#features", "Features", currentPath)
-            @navLink("/learn", "Learn", currentPath)
-            @navLink("/#privacy", "Privacy", currentPath)
+            @navLink("/pricing", "Pricing", currentPath)
+            @navLink("/docs", "Docs", currentPath)
+            @navLink("/privacy", "Privacy", currentPath)
             <a
               href="https://github.com/kcanamar/cannanote"
               target="_blank"

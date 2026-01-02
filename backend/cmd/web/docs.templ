@@ -1,0 +1,136 @@
+package web
+
+templ Docs() {
+  @Base("Documentation – CannaNote", "/docs") {
+    <div class="min-h-screen bg-white dark:bg-navy-950">
+      <!-- Header -->
+      <header class="bg-white dark:bg-navy-950 py-12 border-b border-neutral-200 dark:border-navy-800">
+        <div class="container mx-auto px-6 max-w-6xl">
+          <h1 class="text-3xl font-medium text-navy-900 dark:text-white mb-2">Documentation</h1>
+          <p class="text-lg text-neutral-600 dark:text-neutral-300">Learn about cannabis, track your patterns, and understand your wellness journey.</p>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="py-12">
+        <div class="container mx-auto px-6 max-w-6xl">
+          <!-- Quick Navigation Cards -->
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            
+            <!-- Getting Started -->
+            <a href="/docs/getting-started" class="group bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-700 rounded-lg p-6 hover:border-sage-300 dark:hover:border-sage-600 transition">
+              <div class="bg-sage-600 dark:bg-sage-500 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-800 dark:group-hover:text-sage-300 transition">Getting Started</h3>
+              <p class="text-neutral-600 dark:text-neutral-400 text-sm">Quick start guide and your first journal entry</p>
+            </a>
+
+            <!-- Cannabis Guides -->
+            <a href="/docs/guides" class="group bg-neutral-50 dark:bg-navy-900/50 border border-neutral-200 dark:border-navy-700 rounded-lg p-6 hover:border-neutral-300 dark:hover:border-navy-600 transition">
+              <div class="bg-insight w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2 group-hover:text-insight transition">Cannabis Guides</h3>
+              <p class="text-neutral-600 dark:text-neutral-400 text-sm">Learn about cannabinoids, terpenes, and consumption methods</p>
+            </a>
+
+            <!-- Reference -->
+            <a href="/docs/reference" class="group bg-neutral-50 dark:bg-navy-900/50 border border-neutral-200 dark:border-navy-700 rounded-lg p-6 hover:border-neutral-300 dark:hover:border-navy-600 transition">
+              <div class="bg-success w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2 group-hover:text-success transition">Reference</h3>
+              <p class="text-neutral-600 dark:text-neutral-400 text-sm">Data formats, troubleshooting, and technical details</p>
+            </a>
+
+            <!-- Community -->
+            <a href="/docs/community" class="group bg-neutral-50 dark:bg-navy-900/50 border border-neutral-200 dark:border-navy-700 rounded-lg p-6 hover:border-neutral-300 dark:hover:border-navy-600 transition">
+              <div class="bg-warning w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-navy-900 dark:text-white mb-2 group-hover:text-warning transition">Community</h3>
+              <p class="text-neutral-600 dark:text-neutral-400 text-sm">Contributing, support, and staying connected</p>
+            </a>
+          </div>
+
+          <!-- Featured Content -->
+          <div class="grid lg:grid-cols-2 gap-12 mb-16">
+            <!-- Popular Guides -->
+            <div>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-6">Popular Guides</h2>
+              <div class="space-y-4">
+                <a href="/docs/guides/cannabinoids" class="block bg-white dark:bg-navy-900 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 hover:border-sage-300 dark:hover:border-sage-600 transition group">
+                  <h3 class="font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-700 dark:group-hover:text-sage-300">Understanding Cannabinoids</h3>
+                  <p class="text-neutral-600 dark:text-neutral-400 text-sm">Learn about THC, CBD, and other cannabis compounds</p>
+                </a>
+                
+                <a href="/docs/guides/harm-reduction" class="block bg-white dark:bg-navy-900 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 hover:border-sage-300 dark:hover:border-sage-600 transition group">
+                  <h3 class="font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-700 dark:group-hover:text-sage-300">Harm Reduction Best Practices</h3>
+                  <p class="text-neutral-600 dark:text-neutral-400 text-sm">Safe consumption practices and mindful usage</p>
+                </a>
+                
+                <a href="/docs/guides/patterns" class="block bg-white dark:bg-navy-900 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 hover:border-sage-300 dark:hover:border-sage-600 transition group">
+                  <h3 class="font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-700 dark:group-hover:text-sage-300">Understanding Your Patterns</h3>
+                  <p class="text-neutral-600 dark:text-neutral-400 text-sm">How to interpret your consumption data and insights</p>
+                </a>
+              </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-6">Quick Links</h2>
+              <div class="space-y-4">
+                <a href="/docs/getting-started/quick-start" class="block bg-white dark:bg-navy-900 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 hover:border-sage-300 dark:hover:border-sage-600 transition group">
+                  <h3 class="font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-700 dark:group-hover:text-sage-300">Quick Start Guide</h3>
+                  <p class="text-neutral-600 dark:text-neutral-400 text-sm">Get up and running in under 5 minutes</p>
+                </a>
+                
+                <a href="/docs/reference/export" class="block bg-white dark:bg-navy-900 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 hover:border-sage-300 dark:hover:border-sage-600 transition group">
+                  <h3 class="font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-700 dark:group-hover:text-sage-300">Data Export</h3>
+                  <p class="text-neutral-600 dark:text-neutral-400 text-sm">Export your data in multiple formats</p>
+                </a>
+                
+                <a href="/docs/community/support" class="block bg-white dark:bg-navy-900 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 hover:border-sage-300 dark:hover:border-sage-600 transition group">
+                  <h3 class="font-medium text-navy-900 dark:text-white mb-2 group-hover:text-sage-700 dark:group-hover:text-sage-300">Get Support</h3>
+                  <p class="text-neutral-600 dark:text-neutral-400 text-sm">Find help when you need it</p>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Educational Notice -->
+          <div class="bg-insight/10 dark:bg-insight/5 border border-insight/30 dark:border-insight/20 rounded-lg p-6">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-insight mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <p class="text-sm font-medium text-insight mb-1">Educational Content</p>
+                <p class="text-sm text-navy-900 dark:text-neutral-200">All information is for educational purposes only. Consult healthcare professionals for medical advice. Cannabis laws vary by location.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Back to Home -->
+          <div class="mt-12 text-center">
+            <a href="/" class="inline-flex items-center text-sage-600 dark:text-sage-400 hover:text-sage-800 dark:hover:text-sage-300 transition font-medium">
+              <svg class="w-5 h-5 mr-2 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+              Back to Home
+            </a>
+          </div>
+        </div>
+      </main>
+    </div>
+  }
+}

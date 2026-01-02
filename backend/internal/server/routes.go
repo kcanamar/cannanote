@@ -50,9 +50,18 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.HelloWebHandler(c.Writer, c.Request)
 	})
 
-	// Educational content routes
-	r.GET("/learn/cannabinoids", func(c *gin.Context) {
+	// Documentation routes
+	r.GET("/docs", func(c *gin.Context) {
+		templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
+	})
+
+	r.GET("/docs/guides/cannabinoids", func(c *gin.Context) {
 		web.CannabinoidsHandler(c)
+	})
+
+	// Pricing page
+	r.GET("/pricing", func(c *gin.Context) {
+		templ.Handler(web.Pricing()).ServeHTTP(c.Writer, c.Request)
 	})
 
 	// Beta signup API
