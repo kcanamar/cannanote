@@ -1,0 +1,162 @@
+package web
+
+templ Landing() {
+  @Base("CannaNote – Private Cannabis Wellness Journaling", "/") {
+    <!-- Hero Section -->
+    <section class="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white py-32" aria-labelledby="hero-heading">
+      <div class="container mx-auto px-6 max-w-7xl">
+        <div class="grid lg:grid-cols-2 gap-16 items-center">
+          <div class="order-2 lg:order-1">
+            <h1 id="hero-heading" class="text-5xl lg:text-6xl font-light text-slate-900 leading-tight mb-8">
+              A gentle place<br/>
+              <span class="font-semibold text-slate-700">to understand your own patterns</span>
+            </h1>
+            <p class="text-xl text-slate-600 mb-10 leading-relaxed max-w-2xl">
+              CannaNote is a private journal that helps you notice what cannabis feels like for you. 
+              It turns your own notes into simple, personal insights – always keeping your data yours.
+            </p>
+
+            <!-- Trust Signals -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              <div class="text-center">
+                <div class="text-4xl font-bold text-slate-800">100%</div>
+                <div class="text-sm text-slate-600 uppercase tracking-wider">Your data stays private</div>
+              </div>
+              <div class="text-center">
+                <div class="text-4xl font-bold text-slate-800">0</div>
+                <div class="text-sm text-slate-600 uppercase tracking-wider">Data sold</div>
+              </div>
+              <div class="text-center">
+                <div class="text-4xl font-bold text-slate-800">Local-first</div>
+                <div class="text-sm text-slate-600 uppercase tracking-wider">approach</div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="#beta" class="bg-slate-800 text-white px-8 py-4 rounded-lg text-lg font-medium hover:bg-slate-900 transition inline-flex items-center justify-center">
+                Request beta access
+                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+              </a>
+              <a href="#features" class="border border-slate-300 text-slate-800 px-8 py-4 rounded-lg text-lg font-medium hover:bg-slate-50 transition">
+                Learn more
+              </a>
+            </div>
+          </div>
+
+          <div class="order-1 lg:order-2 flex justify-center">
+            <!-- Abstract Illustration -->
+						<div class="relative">
+              <div class="bg-slate-100 rounded-3xl p-20 shadow-2xl flex items-center justify-center">
+    						<img src="/assets/images/logos/logo-book.svg" 
+									alt="CannaNote open book logo – symbol of personal journaling and insight" 
+									class="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl" 
+								/>
+  						</div>
+              <!-- Smaller dashboard mock floating below/left -->
+              <div class="absolute -bottom-8 -left-8 bg-sage-100 rounded-2xl p-8 shadow-xl hidden md:block">
+    						<img src="/assets/images/app-dashboard-mock.png" alt="Example of CannaNote showing your personal notes and patterns" class="w-64 rounded-xl shadow-lg"/>
+  						</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="py-32 bg-white" aria-labelledby="features-heading">
+      <div class="container mx-auto px-6 max-w-6xl">
+        <div class="text-center mb-20">
+          <h2 id="features-heading" class="text-4xl font-light text-slate-900 mb-6">Made with care</h2>
+          <p class="text-xl text-slate-600 max-w-3xl mx-auto">We created CannaNote to help you listen to your own experience – nothing more, nothing less.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-12">
+          <div class="text-center">
+            <div class="bg-sage-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-10 h-10 text-sage-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-medium text-slate-900 mb-4">Quick & gentle logging</h3>
+            <p class="text-slate-600">Record a session in moments. Designed to fit easily into your day.</p>
+          </div>
+
+          <div class="text-center">
+            <div class="bg-sage-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-10 h-10 text-sage-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-medium text-slate-900 mb-4">Your data stays yours</h3>
+            <p class="text-slate-600">Kept locally first, encrypted, and only synced if you choose. We never share or sell it.</p>
+          </div>
+
+          <div class="text-center">
+            <div class="bg-sage-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-10 h-10 text-sage-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-2xl font-medium text-slate-900 mb-4">Safety & mindfulness</h3>
+            <p class="text-slate-600">Quiet reminders and patterns that help you stay aware of how cannabis feels for you.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Beta CTA -->
+    <section id="beta" class="py-32 bg-slate-50" aria-labelledby="beta-heading">
+      <div class="container mx-auto px-6 max-w-4xl text-center">
+        <h2 id="beta-heading" class="text-4xl font-light text-slate-900 mb-8">Would you like to try it?</h2>
+        <p class="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">Sign up for private beta access. We’ll let you know when spots open – no newsletters or marketing emails.</p>
+
+        <form hx-post="/api/beta-signup" hx-target="#signup-response" hx-swap="innerHTML" class="max-w-md mx-auto" x-data="{ email: '', consent: false }">
+          <input type="email" x-model="email" required placeholder="your@email.com" class="w-full px-6 py-4 rounded-lg border border-slate-300 focus:border-slate-600 focus:outline-none mb-4"/>
+          <div class="flex items-start mb-6 text-left">
+            <input type="checkbox" x-model="consent" required class="mt-1 mr-3"/>
+            <label class="text-sm text-slate-600">I understand CannaNote keeps my data private and agree to occasional beta updates.</label>
+          </div>
+          <button type="submit" :disabled="!email || !consent" class="w-full bg-slate-800 text-white py-4 rounded-lg font-medium hover:bg-slate-900 disabled:bg-slate-400 disabled:cursor-not-allowed transition">
+            Request access
+          </button>
+        </form>
+        <div id="signup-response" class="mt-8" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-white border-t">
+      <div class="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+        <div class="flex items-center mb-4 md:mb-0">
+          <img src="/assets/images/logos/logo-book.svg" alt="CannaNote" class="w-8 h-8 mr-3"/>
+          <span class="text-xl font-medium text-slate-900">CannaNote</span>
+        </div>
+        <nav class="flex space-x-8 text-slate-600 mb-4 md:mb-0">
+          <a href="#features" class="hover:text-slate-900">Features</a>
+          <a href="#beta" class="hover:text-slate-900">Beta</a>
+          <a href="/learn" class="hover:text-slate-900">Learn</a>
+          <a href="#privacy" class="hover:text-slate-900">Privacy</a>
+          <a href="https://github.com/kcanamar/cannanote" target="_blank" class="hover:text-slate-900">Open Source</a>
+        </nav>
+        <p class="text-sm text-slate-500">© 2026 CannaNote. Made with care.</p>
+      </div>
+    </footer>
+
+    <!-- JSON-LD remains unchanged -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CannaNote",
+      "applicationCategory": "HealthApplication",
+      "operatingSystem": "iOS, Android, Web",
+      "description": "Private cannabis wellness journaling app focused on personal patterns and mindful insights.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+  }
+}

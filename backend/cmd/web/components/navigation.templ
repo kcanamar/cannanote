@@ -1,0 +1,104 @@
+package components
+
+import "strings"
+
+// Helper templ for navigation links with active state
+templ navLink(href, label, currentPath string) {
+  if (href == "/" && currentPath == "/") || (href != "/" && strings.HasPrefix(currentPath, href)) {
+    <a
+      href={ href }
+      class="text-lg transition font-semibold text-slate-900"
+      aria-current="page"
+    >
+      { label }
+    </a>
+  } else {
+    <a
+      href={ href }
+      class="text-lg transition text-slate-700 hover:text-slate-900"
+      aria-current="false"
+    >
+      { label }
+    </a>
+  }
+}
+
+// Main Navigation Component
+templ Navigation(currentPath string) {
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-50" aria-label="Main navigation">
+    <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+      <!-- Logo / Home Link -->
+      <a href="/" class="flex items-center space-x-3 group" aria-label="CannaNote home">
+        <img src="/assets/images/logos/logo-square.svg" alt="" class="w-10 h-10 transition-transform group-hover:scale-105"/>
+        <span class="text-2xl font-medium text-slate-900">CannaNote</span>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <div class="hidden md:flex items-center space-x-10">
+        @navLink("/", "Home", currentPath)
+        @navLink("/#features", "Features", currentPath)
+        @navLink("/learn", "Learn", currentPath)
+        @navLink("/#privacy", "Privacy", currentPath)
+        <a
+          href="https://github.com/kcanamar/cannanote"
+          target="_blank"
+          rel="noopener"
+          class="text-lg text-slate-700 hover:text-slate-900 transition flex items-center"
+        >
+          Open Source
+          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
+        <a href="/#beta" class="bg-slate-800 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-slate-900 transition">
+          Request Beta
+        </a>
+      </div>
+
+      <!-- Mobile Menu Toggle -->
+      <div class="md:hidden" x-data="{ open: false }">
+        <button
+          @click="open = !open"
+          class="text-slate-700 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 rounded p-2"
+          aria-label="Toggle menu"
+        >
+          <svg x-show="!open" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          <svg x-show="open" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+
+        <!-- Mobile Dropdown -->
+        <div
+          x-show="open"
+          @click.away="open = false"
+          x-transition
+          class="absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg"
+        >
+          <div class="flex flex-col py-4">
+            @navLink("/", "Home", currentPath)
+            @navLink("/#features", "Features", currentPath)
+            @navLink("/learn", "Learn", currentPath)
+            @navLink("/#privacy", "Privacy", currentPath)
+            <a
+              href="https://github.com/kcanamar/cannanote"
+              target="_blank"
+              rel="noopener"
+              class="px-6 py-3 text-lg text-slate-700 hover:bg-slate-50 flex items-center"
+            >
+              Open Source
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+              </svg>
+            </a>
+            <a href="/#beta" class="px-6 py-4 bg-slate-800 text-white text-lg font-medium hover:bg-slate-900">
+              Request Beta
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+}

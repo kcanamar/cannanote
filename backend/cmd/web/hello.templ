@@ -1,7 +1,7 @@
 package web
 
 templ HelloForm() {
-	@Base() {
+	@Base("CannaNote - Hello", "/hello") {
 		<form hx-post="/hello" method="POST" hx-target="#hello-container">
 			<input class="border" id="name" name="name" type="text"/>
 			<button type="submit">Submit</button>

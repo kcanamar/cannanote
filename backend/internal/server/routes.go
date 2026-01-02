@@ -23,7 +23,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		log.Printf("DEBUG: Request completed: %s %s -> %d", c.Request.Method, c.Request.URL.Path, c.Writer.Status())
 	})
 
-	r.GET("/", s.HelloWorldHandler)
+	// Landing page
+	r.GET("/", func(c *gin.Context) {
+		templ.Handler(web.Landing()).ServeHTTP(c.Writer, c.Request)
+	})
 
 	r.GET("/health", httpHandlers.HealthHandler)
 
@@ -42,6 +45,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.CannabinoidsHandler(c)
 	})
 
+	// Beta signup API
+	r.POST("/api/beta-signup", s.BetaSignupHandler)
+
 	return r
 }
 
@@ -54,4 +60,26 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 
 func (s *Server) healthHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, s.db.Health())
+}
+
+func (s *Server) BetaSignupHandler(c *gin.Context) {
+	email := c.PostForm("email")
+	consent := c.PostForm("consent")
+	
+	// Basic validation
+	if email == "" {
+		templ.Handler(web.BetaSignupError("Email is required")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+	
+	if consent != "on" {
+		templ.Handler(web.BetaSignupError("Privacy consent is required to join the beta")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+	
+	// TODO: Store in database with proper validation
+	// For now, just return success response
+	log.Printf("INFO: Beta signup request: %s (consent: %s)", email, consent)
+	
+	templ.Handler(web.BetaSignupSuccess(email)).ServeHTTP(c.Writer, c.Request)
 }

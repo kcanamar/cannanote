@@ -1,0 +1,38 @@
+package web
+
+templ BetaSignupSuccess(email string) {
+	<div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+		<div class="flex items-center">
+			<svg class="w-6 h-6 text-emerald-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+			</svg>
+			<div>
+				<h3 class="text-emerald-800 font-semibold">Welcome to the beta!</h3>
+				<p class="text-emerald-700 text-sm mt-1">
+					We've added { email } to our private beta list. You'll hear from us soon with access details.
+				</p>
+			</div>
+		</div>
+		
+		<div class="mt-4 pt-4 border-t border-emerald-200">
+			<p class="text-emerald-700 text-sm">
+				<strong>What happens next:</strong> Your email is stored locally-first with minimal server data. 
+				We'll send you beta access within 1-2 weeks along with our privacy documentation.
+			</p>
+		</div>
+	</div>
+}
+
+templ BetaSignupError(message string) {
+	<div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+		<div class="flex items-center">
+			<svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+			</svg>
+			<div>
+				<h3 class="text-red-800 font-semibold">Signup issue</h3>
+				<p class="text-red-700 text-sm mt-1">{ message }</p>
+			</div>
+		</div>
+	</div>
+}

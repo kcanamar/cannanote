@@ -1,16 +1,68 @@
 package web
 
-templ Base() {
+import "backend/cmd/web/components"
+
+templ Base(title string, currentPath string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
 			<meta charset="utf-8"/>
-			<title>Go Blueprint Hello</title>
-            <link href="assets/css/output.css" rel="stylesheet"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title }</title>
+			<meta name="description" content="Your personal cannabis educator and tracking companion. Transform consumption data into clear insights through private, mindful journaling."/>
+			
+			<!-- Open Graph / Social Media -->
+			<meta property="og:title" content="{ title }"/>
+			<meta property="og:description" content="Your patterns, not their profits. Private cannabis wellness journaling built for you."/>
+			<meta property="og:type" content="website"/>
+			<meta property="og:url" content="https://cannanote.app"/>
+			
+			<!-- Structured Data -->
+			<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "SoftwareApplication",
+				"name": "CannaNote",
+				"description": "Personal cannabis wellness journaling and tracking companion",
+				"applicationCategory": "HealthApplication",
+				"operatingSystem": "Web, iOS, Android",
+				"offers": {
+					"@type": "Offer",
+					"price": "0",
+					"priceCurrency": "USD"
+				},
+				"featureList": [
+					"Private cannabis consumption tracking",
+					"Pattern recognition and insights",
+					"Harm reduction guidance",
+					"Offline-first data storage"
+				]
+			}
+			</script>
+			
+			<script src="https://cdn.tailwindcss.com"></script>
+			<script>
+				tailwind.config = {
+					theme: {
+						extend: {
+							colors: {
+								'navy': '#1a1f36',
+								'sage': '#7a9b8e',
+							},
+							fontFamily: {
+								'sans': ['Space Grotesk', 'system-ui', 'sans-serif'],
+								'mono': ['JetBrains Mono', 'monospace'],
+							}
+						}
+					}
+				}
+			</script>
 			<script src="assets/js/htmx.min.js"></script>
+			<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 		</head>
-		<body>
-			<main>
+		<body class="font-sans antialiased">
+			@components.Navigation(currentPath)
+			<main role="main">
 				{ children... }
 			</main>
 		</body>
