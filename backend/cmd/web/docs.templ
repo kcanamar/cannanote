@@ -1,19 +1,25 @@
 package web
 
+import "backend/cmd/web/components"
+
 templ Docs() {
   @Base("Documentation – CannaNote", "/docs") {
-    <div class="min-h-screen bg-white dark:bg-navy-950">
-      <!-- Header -->
-      <header class="bg-white dark:bg-navy-950 py-12 border-b border-neutral-200 dark:border-navy-800">
-        <div class="container mx-auto px-6 max-w-6xl">
-          <h1 class="text-3xl font-medium text-navy-900 dark:text-white mb-2">Documentation</h1>
-          <p class="text-lg text-neutral-600 dark:text-neutral-300">Learn about cannabis, track your patterns, and understand your wellness journey.</p>
-        </div>
-      </header>
+    <div class="flex min-h-screen bg-white dark:bg-navy-950">
+      @components.DocsSidebar("/docs")
+      
+      <!-- Main Content Area -->
+      <main class="flex-1 overflow-y-auto">
+        <!-- Header -->
+        <header class="bg-white dark:bg-navy-950 py-12 border-b border-neutral-200 dark:border-navy-800">
+          <div class="container mx-auto px-6 max-w-4xl">
+            <h1 class="text-3xl font-medium text-navy-900 dark:text-white mb-2">Documentation</h1>
+            <p class="text-lg text-neutral-600 dark:text-neutral-300">Learn about cannabis, track your patterns, and understand your wellness journey.</p>
+          </div>
+        </header>
 
-      <!-- Content -->
-      <main class="py-12">
-        <div class="container mx-auto px-6 max-w-6xl">
+        <!-- Content -->
+        <div class="py-12">
+          <div class="container mx-auto px-6 max-w-4xl">
           <!-- Quick Navigation Cards -->
           <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             
@@ -128,6 +134,7 @@ templ Docs() {
               </svg>
               Back to Home
             </a>
+          </div>
           </div>
         </div>
       </main>
