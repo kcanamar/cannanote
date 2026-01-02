@@ -1,0 +1,180 @@
+package components
+
+import (
+	"backend/internal/docs"
+	"strconv"
+	"strings"
+)
+
+// DocsContentLayout creates the three-column layout for documentation
+templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
+	<div class="flex min-h-screen bg-white dark:bg-navy-950">
+		<!-- Left Sidebar - Navigation -->
+		<aside class="docs-sidebar w-72 bg-white dark:bg-navy-900 border-r border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden lg:block">
+			<div class="p-6">
+				<!-- Back to Main Site -->
+				<div class="mb-6 pb-6 border-b border-neutral-200 dark:border-navy-700">
+					<a href="/" class="flex items-center text-sm text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition group">
+						<svg class="w-4 h-4 mr-2 rotate-180 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+						Back to CannaNote
+					</a>
+				</div>
+				<!-- Search Box -->
+				<div class="mb-6">
+					<div class="relative">
+						<svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+						</svg>
+						<input
+							type="search"
+							placeholder="Search docs..."
+							class="w-full pl-10 pr-4 py-2 text-sm border border-neutral-200 dark:border-navy-700 rounded-lg bg-neutral-50 dark:bg-navy-800 text-navy-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+						/>
+					</div>
+				</div>
+				<!-- Navigation Tree -->
+				<nav class="space-y-1">
+					@docsNavigationTree(sidebar, currentPath)
+				</nav>
+				<!-- Footer -->
+				<div class="mt-8 pt-6 border-t border-neutral-200 dark:border-navy-700">
+					<div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+						<span>v1.0.0</span>
+						<a href="https://github.com/kcanamar/cannanote" target="_blank" rel="noopener" class="hover:text-sage-600 dark:hover:text-sage-400 transition">
+							<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+								<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+							</svg>
+						</a>
+					</div>
+				</div>
+			</div>
+		</aside>
+
+		<!-- Main Content Area -->
+		<main class="flex-1 min-w-0">
+			<div class="max-w-4xl mx-auto">
+				<!-- Mobile Navigation Toggle -->
+				<div class="lg:hidden sticky top-0 z-10 bg-white dark:bg-navy-950 border-b border-neutral-200 dark:border-navy-700 p-4">
+					<button
+						id="mobile-nav-toggle"
+						class="flex items-center text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition"
+						onclick="toggleMobileNav()"
+					>
+						<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+						</svg>
+						Navigation
+					</button>
+				</div>
+
+				<!-- Article Content -->
+				<article class="px-6 py-8 lg:px-8 lg:py-12">
+					<!-- Article Header -->
+					<header class="mb-8">
+						<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
+						if doc.Description != "" {
+							<p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">{ doc.Description }</p>
+						}
+					</header>
+
+					<!-- Article Body -->
+					<div class="prose prose-slate dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-sage-600 dark:prose-a:text-sage-400 hover:prose-a:text-sage-800 dark:hover:prose-a:text-sage-300">
+						<div id="content-body" innerHTML={ doc.ContentHTML }></div>
+					</div>
+
+					<!-- Article Footer -->
+					if len(doc.RelatedPages) > 0 {
+						<footer class="mt-12 pt-8 border-t border-neutral-200 dark:border-navy-700">
+							<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Related Pages</h3>
+							<div class="grid md:grid-cols-2 gap-4">
+								for _, related := range doc.RelatedPages {
+									<a href={ "/docs/" + related } class="block p-4 border border-neutral-200 dark:border-navy-700 rounded-lg hover:border-sage-300 dark:hover:border-sage-600 transition">
+										<span class="text-sage-600 dark:text-sage-400 font-medium">{ related }</span>
+									</a>
+								}
+							</div>
+						</footer>
+					}
+				</article>
+			</div>
+		</main>
+
+		<!-- Right Sidebar - Table of Contents -->
+		if len(doc.TOC) > 0 {
+			<aside class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden xl:block">
+				<div class="p-6">
+					<h3 class="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider mb-4">
+						On This Page
+					</h3>
+					<nav class="space-y-1">
+						<ul class="space-y-1 text-sm">
+							for _, item := range doc.TOC {
+								<li class={ "ml-" + strconv.Itoa((item.Level - 2) * 4) }>
+									<a
+										href={ "#" + item.ID }
+										class="block py-1 text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition truncate"
+									>
+										{ item.Text }
+									</a>
+								</li>
+							}
+						</ul>
+					</nav>
+				</div>
+			</aside>
+		}
+
+		<!-- Mobile Navigation Overlay -->
+		<div
+			id="mobile-nav-overlay"
+			class="fixed inset-0 z-50 lg:hidden hidden"
+			onclick="toggleMobileNav()"
+		>
+			<div class="absolute inset-0 bg-black/50"></div>
+			<div class="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-navy-900 overflow-y-auto" onclick="event.stopPropagation()">
+				<div class="p-6">
+					<div class="flex items-center justify-between mb-6">
+						<span class="text-lg font-semibold text-navy-900 dark:text-white">Navigation</span>
+						<button onclick="toggleMobileNav()" class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300">
+							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+							</svg>
+						</button>
+					</div>
+					<nav class="space-y-1">
+						@docsNavigationTree(sidebar, currentPath)
+					</nav>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// Helper template for navigation tree
+templ docsNavigationTree(items []docs.SidebarItem, currentPath string) {
+	for _, item := range items {
+		@docsNavigationItem(item, currentPath)
+	}
+}
+
+// Helper template for individual navigation items
+templ docsNavigationItem(item docs.SidebarItem, currentPath string) {
+	if item.Href == currentPath || (currentPath != "" && currentPath == strings.TrimPrefix(item.Href, "/docs/")) {
+		<a
+			href={ item.Href }
+			class="flex items-center px-3 py-2 text-sm font-medium text-sage-700 dark:text-sage-300 bg-sage-50 dark:bg-sage-900/30 border-r-2 border-sage-600 dark:border-sage-400 rounded-l-md transition"
+			aria-current="page"
+		>
+			<span class="truncate">{ item.Label }</span>
+		</a>
+	} else {
+		<a
+			href={ item.Href }
+			class="flex items-center px-3 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:text-sage-700 dark:hover:text-sage-300 hover:bg-neutral-50 dark:hover:bg-navy-800 rounded-md transition"
+		>
+			<span class="truncate">{ item.Label }</span>
+		</a>
+	}
+}

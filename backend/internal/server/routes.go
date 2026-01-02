@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 
@@ -51,11 +52,30 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 
 	// Documentation routes
-	r.GET("/docs", func(c *gin.Context) {
-		templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
-	})
+	contentDir := filepath.Join("..", "docs", "content")
+	docsHandler, err := httpHandlers.NewDocsHandler(contentDir)
+	if err != nil {
+		log.Printf("Failed to initialize docs handler: %v", err)
+		// Fallback to old docs page
+		r.GET("/docs", func(c *gin.Context) {
+			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
+		})
+	} else {
+		// Fallback docs page (original)
+		r.GET("/docs-fallback", func(c *gin.Context) {
+			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
+		})
+		
+		// Dynamic docs routing
+		r.GET("/docs/*path", docsHandler.HandleDocsRequest)
+		r.GET("/docs", docsHandler.HandleDocsRequest)
+		
+		// Search endpoint
+		r.GET("/api/docs/search", docsHandler.HandleDocsSearch)
+	}
 
-	r.GET("/docs/guides/cannabinoids", func(c *gin.Context) {
+	// Legacy route for existing cannabinoids handler (will be migrated)
+	r.GET("/learn/cannabinoids", func(c *gin.Context) {
 		web.CannabinoidsHandler(c)
 	})
 

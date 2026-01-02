@@ -1,0 +1,13 @@
+package web
+
+import (
+	"backend/cmd/web/components"
+	"backend/internal/docs"
+)
+
+// DocsContent renders a documentation page with the three-column layout
+templ DocsContent(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
+	@Base(doc.Title + " – CannaNote", currentPath) {
+		@components.DocsContentLayout(doc, sidebar, currentPath)
+	}
+}
