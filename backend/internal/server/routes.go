@@ -54,6 +54,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Documentation routes
 	contentDir := filepath.Join("..", "docs", "content")
 	docsHandler, err := httpHandlers.NewDocsHandler(contentDir)
+	
+	// Always add fallback route
+	r.GET("/docs-fallback", func(c *gin.Context) {
+		templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
+	})
+	
 	if err != nil {
 		log.Printf("Failed to initialize docs handler: %v", err)
 		// Fallback to old docs page
@@ -61,12 +67,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
 		})
 	} else {
-		// Fallback docs page (original)
-		r.GET("/docs-fallback", func(c *gin.Context) {
-			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
-		})
-		
-		// Dynamic docs routing
+		// Dynamic docs routing - try the new handler
 		r.GET("/docs/*path", docsHandler.HandleDocsRequest)
 		r.GET("/docs", docsHandler.HandleDocsRequest)
 		

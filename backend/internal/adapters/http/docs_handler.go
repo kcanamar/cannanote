@@ -2,9 +2,12 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
+	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
 
+	"backend/cmd/web"
 	"backend/internal/docs"
 )
 
@@ -31,8 +34,55 @@ func NewDocsHandler(contentDir string) (*DocsHandler, error) {
 
 // HandleDocsRequest handles documentation page requests
 func (h *DocsHandler) HandleDocsRequest(c *gin.Context) {
-	// For now, redirect to the fallback docs page until content loading is working
-	c.Redirect(http.StatusTemporaryRedirect, "/docs-fallback")
+	// Get the requested path, removing the /docs prefix
+	requestPath := strings.TrimPrefix(c.Request.URL.Path, "/docs")
+	
+	// Clean the path - remove leading/trailing slashes
+	requestPath = strings.Trim(requestPath, "/")
+	
+	// If path is empty, serve the index page
+	if requestPath == "" {
+		requestPath = "" // This will look for index.md in the root
+	}
+
+	// Debug: log what we're looking for
+	c.Header("X-Debug-Request-Path", requestPath)
+
+	// Try to get the document - first try exact path
+	doc, exists := h.cache.GetDoc(requestPath)
+	
+	// If not found, try with /index appended (for directory requests like /getting-started -> /getting-started/index)
+	if !exists && requestPath != "" {
+		indexPath := requestPath + "/index"
+		doc, exists = h.cache.GetDoc(indexPath)
+		if exists {
+			c.Header("X-Debug-Found-Path", indexPath)
+			requestPath = indexPath
+		}
+	}
+	
+	// If still not found, return debug info
+	if !exists {
+		// Get sidebar to see what docs are loaded
+		sidebar := h.cache.GetSidebar()
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Documentation page not found",
+			"requested_path": requestPath,
+			"available_docs": len(sidebar),
+			"debug": "Check server logs for content loading errors",
+		})
+		return
+	}
+
+	// Get sidebar navigation
+	sidebar := h.cache.GetSidebar()
+
+	// Create the current path for active state detection
+	currentPath := "/docs/" + requestPath
+
+	// Render the docs layout with content
+	component := web.DocsContent(doc, sidebar, currentPath)
+	templ.Handler(component).ServeHTTP(c.Writer, c.Request)
 }
 
 // HandleDocsSearch handles search requests
