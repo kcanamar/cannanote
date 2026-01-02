@@ -33,6 +33,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 		templ.Handler(web.Privacy()).ServeHTTP(c.Writer, c.Request)
 	})
 
+	// Terms of Service page
+	r.GET("/terms", func(c *gin.Context) {
+		templ.Handler(web.Terms()).ServeHTTP(c.Writer, c.Request)
+	})
+
 	r.GET("/health", httpHandlers.HealthHandler)
 
 	r.Static("/assets", "./cmd/web/assets")
