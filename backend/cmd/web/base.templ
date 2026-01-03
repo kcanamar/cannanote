@@ -134,6 +134,11 @@ templ Base(title string, currentPath string) {
 				}
 			</script>
 			<style>
+				/* Fix TOC scroll offset for sticky navigation */
+				h1, h2, h3, h4, h5, h6 {
+					scroll-margin-top: 8rem;
+				}
+				
 				/* Dark mode prose overrides */
 				.dark .prose {
 					color: #e5e7eb !important;
