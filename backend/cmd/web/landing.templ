@@ -135,13 +135,29 @@ templ Landing() {
         <h2 id="beta-heading" class="text-4xl font-light text-slate-900 dark:text-white mb-8">Would you like to try it?</h2>
         <p class="text-xl text-slate-600 dark:text-neutral-300 mb-12 max-w-2xl mx-auto">Sign up for private beta access. We'll let you know when spots open – no newsletters or marketing emails.</p>
 
-        <form hx-post="/api/beta-signup" hx-target="#signup-response" hx-swap="innerHTML" class="max-w-md mx-auto" x-data="{ email: '', consent: false }">
-          <input type="email" x-model="email" required placeholder="your@email.com" class="w-full px-6 py-4 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-navy-800 dark:text-white dark:placeholder-neutral-400 focus:border-slate-600 dark:focus:border-sage-400 focus:outline-none mb-4"/>
+        <form hx-post="/api/beta-signup" hx-target="#signup-response" hx-swap="innerHTML" class="max-w-md mx-auto">
+          <label for="email-input" class="sr-only">Email address</label>
+          <input 
+            type="email" 
+            id="email-input" 
+            required 
+            placeholder="your@email.com" 
+            class="w-full px-6 py-4 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-navy-800 dark:text-white dark:placeholder-neutral-400 focus:border-slate-600 dark:focus:border-sage-400 focus:outline-none mb-4"
+          />
           <div class="flex items-start mb-6 text-left">
-            <input type="checkbox" x-model="consent" required class="mt-1 mr-3"/>
-            <label class="text-sm text-slate-600 dark:text-neutral-300">I understand CannaNote keeps my data private and agree to occasional beta updates.</label>
+            <input 
+              type="checkbox" 
+              id="consent-checkbox" 
+              required 
+              class="mt-1 mr-3"
+            />
+            <label for="consent-checkbox" class="text-sm text-slate-600 dark:text-neutral-300">I understand CannaNote keeps my data private and agree to occasional beta updates.</label>
           </div>
-          <button type="submit" :disabled="!email || !consent" class="w-full bg-slate-800 dark:bg-sage-600 text-white py-4 rounded-lg font-medium hover:bg-slate-900 dark:hover:bg-sage-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition">
+          <button 
+            type="submit" 
+            id="submit-button"
+            disabled 
+            class="w-full bg-slate-800 dark:bg-sage-600 text-white py-4 rounded-lg font-medium hover:bg-slate-900 dark:hover:bg-sage-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition">
             Request access
           </button>
         </form>

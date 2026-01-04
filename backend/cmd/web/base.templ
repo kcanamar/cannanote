@@ -14,9 +14,41 @@ templ Base(title string, currentPath string) {
 				(function() {
 					const theme = localStorage.getItem('theme');
 					const prefersDark = !theme && window.matchMedia('(prefers-color-scheme: dark)').matches;
-					if (theme === 'dark' || prefersDark) {
+					const isDark = theme === 'dark' || prefersDark;
+					
+					if (isDark) {
 						document.documentElement.classList.add('dark');
 					}
+					
+					// Set initial icon visibility after DOM loads
+					document.addEventListener('DOMContentLoaded', function() {
+						// Desktop icons
+						const sunIcon = document.getElementById('sun-icon');
+						const moonIcon = document.getElementById('moon-icon');
+						// Mobile icons  
+						const mobileSunIcon = document.getElementById('mobile-sun-icon');
+						const mobileMoonIcon = document.getElementById('mobile-moon-icon');
+						const mobileDarkText = document.getElementById('mobile-dark-text');
+						const mobileLightText = document.getElementById('mobile-light-text');
+						
+						if (isDark) {
+							// Show moon icon, hide sun icon
+							if (sunIcon) sunIcon.classList.add('hidden');
+							if (moonIcon) moonIcon.classList.remove('hidden');
+							if (mobileSunIcon) mobileSunIcon.classList.add('hidden');
+							if (mobileMoonIcon) mobileMoonIcon.classList.remove('hidden');
+							if (mobileDarkText) mobileDarkText.classList.add('hidden');
+							if (mobileLightText) mobileLightText.classList.remove('hidden');
+						} else {
+							// Show sun icon, hide moon icon (default state)
+							if (sunIcon) sunIcon.classList.remove('hidden');
+							if (moonIcon) moonIcon.classList.add('hidden');
+							if (mobileSunIcon) mobileSunIcon.classList.remove('hidden');
+							if (mobileMoonIcon) mobileMoonIcon.classList.add('hidden');
+							if (mobileDarkText) mobileDarkText.classList.remove('hidden');
+							if (mobileLightText) mobileLightText.classList.add('hidden');
+						}
+					});
 				})();
 			</script>
 			<meta name="description" content="Your personal cannabis educator and tracking companion. Transform consumption data into clear insights through private, mindful journaling."/>
@@ -50,142 +82,34 @@ templ Base(title string, currentPath string) {
 			}
 			</script>
 			
+			<!-- Optimized font loading -->
 			<link rel="preconnect" href="https://fonts.googleapis.com">
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-			<link href="https://cdn.jsdelivr.net/npm/@tailwindcss/typography@0.5.x/dist/typography.min.css" rel="stylesheet"/>
-			
-			<script src="https://cdn.tailwindcss.com"></script>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+			<noscript><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
+			<!-- Local Tailwind CSS build with typography -->
+			<link href="/assets/css/output.css" rel="stylesheet"/>
 			<script>
-				tailwind.config = {
-					darkMode: 'class',
-					theme: {
-						extend: {
-							colors: {
-								// Brand Core Colors
-								'navy': {
-									50: '#f8f9fb',
-									100: '#f1f3f7',
-									500: '#5b6b8a',
-									600: '#4a5773',
-									700: '#3a4459',
-									800: '#2a3140',
-									900: '#1a1f36', // Primary navy
-									950: '#0f1220'
-								},
-								'sage': {
-									50: '#f6f8f7',
-									100: '#e8f0ed',
-									200: '#d1e1db',
-									300: '#adc9c0',
-									400: '#7a9b8e', // Primary sage
-									500: '#658a7e',
-									600: '#527066',
-									700: '#435a53',
-									800: '#374944',
-									900: '#2e3d39'
-								},
-								// Supporting Colors  
-								'neutral': {
-									50: '#ffffff',
-									100: '#f8f9fa',
-									200: '#e8eaed',
-									300: '#dadce0',
-									400: '#bdc1c6',
-									500: '#9aa0a6',
-									600: '#80868b',
-									700: '#5f6368',
-									800: '#3c4043',
-									900: '#202124'
-								},
-								// Accent Colors
-								'insight': '#5b8db8',
-								'success': '#6b9080',
-								'warning': '#c9a86a',
-								'error': '#a85857'
-							},
-							fontFamily: {
-								'brand': ['Space Grotesk', 'system-ui', '-apple-system', 'sans-serif'],
-								'mono': ['JetBrains Mono', 'ui-monospace', 'monospace']
-							},
-							fontSize: {
-								'h1': ['3rem', { lineHeight: '1.125', fontWeight: '700' }],
-								'h2': ['2rem', { lineHeight: '1.25', fontWeight: '600' }],
-								'h3': ['1.5rem', { lineHeight: '1.333', fontWeight: '500' }],
-								'body': ['1rem', { lineHeight: '1.6', fontWeight: '400' }],
-								'small': ['0.875rem', { lineHeight: '1.5', fontWeight: '400' }]
-							},
-							animation: {
-								'fade-in': 'fadeIn 0.5s ease-in-out',
-								'slide-up': 'slideUp 0.6s ease-out',
-							},
-							keyframes: {
-								fadeIn: {
-									'0%': { opacity: '0' },
-									'100%': { opacity: '1' }
-								},
-								slideUp: {
-									'0%': { transform: 'translateY(20px)', opacity: '0' },
-									'100%': { transform: 'translateY(0)', opacity: '1' }
-								}
-							}
-						}
+				// Mobile navigation toggle
+				function toggleMobileNav() {
+					const overlay = document.getElementById('mobile-nav-overlay');
+					if (overlay) {
+						overlay.classList.toggle('hidden');
 					}
 				}
-			</script>
-			<style>
-				/* Fix TOC scroll offset for sticky navigation */
-				h1, h2, h3, h4, h5, h6 {
-					scroll-margin-top: 8rem;
-				}
 				
-				/* Dark mode prose overrides */
-				.dark .prose {
-					color: #e5e7eb !important;
-				}
-				.dark .prose h1,
-				.dark .prose h2,
-				.dark .prose h3,
-				.dark .prose h4,
-				.dark .prose h5,
-				.dark .prose h6 {
-					color: #ffffff !important;
-				}
-				.dark .prose a {
-					color: #7a9b8e !important;
-				}
-				.dark .prose a:hover {
-					color: #adc9c0 !important;
-				}
-				.dark .prose strong {
-					color: #ffffff !important;
-				}
-				.dark .prose code {
-					color: #e5e7eb !important;
-					background-color: rgba(31, 41, 55, 0.5) !important;
-				}
-				.dark .prose pre {
-					background-color: #1f2937 !important;
-					color: #e5e7eb !important;
-				}
-				.dark .prose blockquote {
-					color: #d1d5db !important;
-					border-left-color: #7a9b8e !important;
-				}
-				.dark .prose hr {
-					border-color: #374151 !important;
-				}
-				.dark .prose thead th {
-					color: #ffffff !important;
-					border-bottom-color: #4b5563 !important;
-				}
-				.dark .prose tbody td {
-					color: #e5e7eb !important;
-					border-bottom-color: #374151 !important;
-				}
-			</style>
-			<script src="/assets/js/htmx.min.js"></script>
-			<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+				// Close mobile nav on escape key
+				document.addEventListener('keydown', function(e) {
+					if (e.key === 'Escape') {
+						const overlay = document.getElementById('mobile-nav-overlay');
+						if (overlay && !overlay.classList.contains('hidden')) {
+							overlay.classList.add('hidden');
+						}
+					}
+				});
+			</script>
+			<script src="/assets/js/htmx.min.js" defer></script>
+			<script src="/assets/js/app.js" defer></script>
 		</head>
 		<body class="font-brand antialiased bg-white dark:bg-navy-950">
 			@components.Navigation(currentPath)

@@ -5,6 +5,7 @@ all: build
 
 build:
 	@echo "Building..."
+	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
 	@templ generate
 	@go build -o main cmd/api/main.go
 
@@ -29,6 +30,21 @@ docker-down:
 		echo "Falling back to Docker Compose V1"; \
 		docker-compose down; \
 	fi
+
+# Build CSS
+css:
+	@echo "Building CSS..."
+	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ"
+
+# Build CSS for production (minified)
+css-prod:
+	@echo "Building production CSS..."
+	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
+
+# Watch CSS for changes
+css-watch:
+	@echo "Watching CSS..."
+	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --watch
 
 # Test the application
 test:
@@ -173,4 +189,4 @@ rollback:
 	@read -p "Enter release version to rollback to: " version; \
 	flyctl releases rollback $$version
 
-.PHONY: all build run test clean watch dev lint security pre-deploy fly-auth fly-secrets fly-secrets-verify fly-deploy fly-status fly-logs fly-ssh fly-machines fly-stop fly-destroy deploy deploy-fast rollback
+.PHONY: all build run css css-prod css-watch test clean watch dev lint security pre-deploy fly-auth fly-secrets fly-secrets-verify fly-deploy fly-status fly-logs fly-ssh fly-machines fly-stop fly-destroy deploy deploy-fast rollback

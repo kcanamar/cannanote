@@ -8,23 +8,41 @@
 # Test binary, built with "go test -c"
 *.test
 
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Output of the go coverage tool
 *.out
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Dependency directories
+vendor/
 
 # Go workspace file
 go.work
+
+# Temporary folders
 tmp/
+temp/
 
 # IDE specific files
-.vscode
-.idea
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# .env file
+# Environment variables
 .env
+.env.local
+.env.*.local
 
-# Project build
+# Project build outputs
 main
+
+# Templ generated files
 *templ.go
+
+# Tailwind Standalone CLI
+tailwindcss
+tailwindcss-*  # covers platform-specific downloads
+
+# Generated CSS (critical!)
+static/css/output.css
+cmd/web/assets/css/output.css
+cmd/web/assets/css/*.css

@@ -156,23 +156,49 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 		<!-- Mobile Navigation Overlay -->
 		<div
 			id="mobile-nav-overlay"
-			class="fixed inset-0 z-50 lg:hidden hidden"
+			class="fixed inset-0 z-50 lg:hidden hidden transition-opacity duration-300"
 			onclick="toggleMobileNav()"
 		>
-			<div class="absolute inset-0 bg-black/50"></div>
-			<div class="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-navy-900 overflow-y-auto" onclick="event.stopPropagation()">
-				<div class="p-6">
-					<div class="flex items-center justify-between mb-6">
-						<span class="text-lg font-semibold text-navy-900 dark:text-white">Navigation</span>
-						<button onclick="toggleMobileNav()" class="text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300">
-							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-							</svg>
-						</button>
+			<!-- Background overlay -->
+			<div class="absolute inset-0 bg-navy-900/80 backdrop-blur-sm"></div>
+			
+			<!-- Slide-out navigation panel -->
+			<div class="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-navy-900 shadow-2xl transform transition-transform duration-300 ease-out" onclick="event.stopPropagation()">
+				<!-- Header with logo and close button -->
+				<div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-navy-700 bg-sage-50 dark:bg-navy-800">
+					<div class="flex items-center space-x-3">
+						<svg class="w-8 h-8 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.168 18.477 18.582 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+						</svg>
+						<span class="text-lg font-semibold text-navy-900 dark:text-white">Documentation</span>
 					</div>
-					<nav class="space-y-1">
-						@docsNavigationTree(sidebar, currentPath)
-					</nav>
+					<button 
+						onclick="toggleMobileNav()" 
+						class="p-2 text-neutral-500 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 hover:bg-sage-100 dark:hover:bg-navy-700 rounded-lg transition-colors"
+						aria-label="Close navigation"
+					>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+						</svg>
+					</button>
+				</div>
+				
+				<!-- Navigation content -->
+				<div class="overflow-y-auto h-full pb-20">
+					<div class="p-4">
+						<nav class="space-y-2">
+							@docsNavigationTree(sidebar, currentPath)
+						</nav>
+					</div>
+				</div>
+				
+				<!-- Footer with branding -->
+				<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent dark:from-navy-900 border-t border-neutral-200 dark:border-navy-700">
+					<div class="text-center">
+						<p class="text-xs text-neutral-500 dark:text-neutral-400">
+							CannaNote Documentation
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>

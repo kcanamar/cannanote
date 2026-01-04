@@ -41,6 +41,22 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/health", httpHandlers.HealthHandler)
 
+	// Cache headers middleware for static assets
+	r.Use(func(c *gin.Context) {
+		// Add cache headers for static assets (CSS, JS, fonts, images)
+		if len(c.Request.URL.Path) > 8 && c.Request.URL.Path[:8] == "/assets/" {
+			// Cache CSS and JS for 1 year (they have content hashes)
+			if filepath.Ext(c.Request.URL.Path) == ".css" || filepath.Ext(c.Request.URL.Path) == ".js" {
+				c.Header("Cache-Control", "public, max-age=31536000, immutable")
+			} else {
+				// Cache other assets for 30 days
+				c.Header("Cache-Control", "public, max-age=2592000")
+			}
+		}
+		c.Next()
+	})
+
+	// Static assets served with cache headers
 	r.Static("/assets", "./cmd/web/assets")
 
 	r.GET("/web", func(c *gin.Context) {
