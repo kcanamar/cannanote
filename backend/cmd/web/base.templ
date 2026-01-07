@@ -9,6 +9,15 @@ templ Base(title string, currentPath string) {
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ title }</title>
+			
+			<!-- Favicon - Brand compliant with style guide colors -->
+			<link rel="icon" type="image/x-icon" href="/assets/images/favicon/favicon.ico">
+			<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon/favicon-96x96.png">
+			<link rel="icon" type="image/svg+xml" href="/assets/images/favicon/favicon.svg">
+			<link rel="apple-touch-icon" href="/assets/images/favicon/apple-touch-icon.png">
+			<link rel="manifest" href="/assets/images/favicon/site.webmanifest">
+			<meta name="theme-color" content="#1a1f36">
+			
 			<!-- Dark mode initialization script - must run before any content renders -->
 			<script>
 				(function() {
