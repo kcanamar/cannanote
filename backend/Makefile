@@ -6,6 +6,13 @@ all: build
 build:
 	@echo "Building..."
 	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
+	@echo "Minifying JavaScript..."
+	@if command -v npx > /dev/null && npx terser --version > /dev/null 2>&1; then \
+		npx terser cmd/web/assets/js/app.js -o cmd/web/assets/js/app.min.js -c -m; \
+	else \
+		echo "terser not available, copying unminified JS"; \
+		cp cmd/web/assets/js/app.js cmd/web/assets/js/app.min.js; \
+	fi
 	@templ generate
 	@go build -o main cmd/api/main.go
 
