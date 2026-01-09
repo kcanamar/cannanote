@@ -17,7 +17,7 @@ RUN go mod download
 # Copy source code
 COPY backend/ .
 
-# Copy docs from root directory (now accessible with root build context)
+# Copy docs from root directory (accessible with root build context)
 COPY docs/ ./docs/
 
 # Generate templ templates
@@ -29,7 +29,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main cmd/api/main
 # Production stage
 FROM alpine:latest
 
-# Install certificates for HTTPS requests
+# Install certificates for HTTPS/TLS requests + timezone data
 RUN apk --no-cache add ca-certificates tzdata
 
 # Create non-root user for security
@@ -44,21 +44,20 @@ COPY --from=builder /app/main .
 # Copy web assets if needed (templates, static files)
 COPY --from=builder /app/cmd/web ./cmd/web
 
-# Copy documentation content (now accessible since build context is parent directory)
+# Copy documentation content
 COPY --from=builder /app/docs ./docs
 
-# Change ownership to non-root user
+# Copy the Supabase CA cert (critical for verify-full SSL mode)
+COPY --from=builder /app/certs ./certs
+
+# Change ownership to non-root user (including the new certs dir)
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
 
-# Expose port
+# Expose port (update if your app uses a different one)
 EXPOSE 3001
-
-# Disable Docker healthcheck (using Fly.io health checks instead)
-# HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-#     CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
 
 # Run the application
 CMD ["./main"]

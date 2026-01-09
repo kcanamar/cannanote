@@ -53,6 +53,7 @@ var (
 	port       = os.Getenv("DB_PORT")
 	host       = os.Getenv("DB_HOST")
 	schema     = os.Getenv("DB_SCHEMA")
+	appEnv     = os.Getenv("APP_ENV")
 	dbInstance *service
 )
 
@@ -71,17 +72,24 @@ func New() Service {
 	conditionalLog("DEBUG", "DB_PASSWORD=%s", maskPassword(password))
 	conditionalLog("DEBUG", "DB_SCHEMA=%s", schema)
 	
-	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=verify-full&sslrootcert=certs/prod-ca-2021.crt&search_path=%s", username, password, host, port, database, schema)
+	// Determine SSL certificate path based on environment
+	certPath := "certs/prod-ca-2021.crt"
+	if appEnv == "production" {
+		certPath = "/app/certs/prod-ca-2021.crt"
+	}
 	
-	// Debug connection string (mask password)
+	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=verify-full&sslrootcert=%s&search_path=%s", 
+		username, password, host, port, database, certPath, schema)
+	
 	conditionalLog("DEBUG", "Connection string: %s", maskConnectionString(connStr))
-	
 	conditionalLog("DEBUG", "Attempting to open database connection...")
+	
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Printf("ERROR: Failed to open database connection: %v", err)
+		log.Printf("ERROR: Failed to open database connection (cert path: %s): %v", certPath, err)
 		log.Fatal(err)
 	}
+	
 	conditionalLog("DEBUG", "Database connection opened successfully")
 	dbInstance = &service{
 		db: db,

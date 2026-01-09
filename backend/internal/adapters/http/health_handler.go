@@ -291,6 +291,9 @@ func testSupabaseAuthHealth() APIHealth {
 		}
 	}
 
+	// Health endpoints typically don't require authentication - try without auth first
+	// If this fails, we can add auth headers back
+
 	resp, err := client.Do(req)
 	responseTime := time.Since(start).Milliseconds()
 	
