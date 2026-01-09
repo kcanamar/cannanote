@@ -1,10 +1,6 @@
 /node_modules
 .env
 
-# Sensitive setup documentation
-SMTP_SETUP.md
-FLY_DOMAIN_SETUP.md
-
 # macOS system files
 .DS_Store
 */.DS_Store

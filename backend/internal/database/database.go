@@ -14,6 +14,20 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
+// conditionalLog only logs debug info in development
+func conditionalLog(level, format string, args ...interface{}) {
+	debug := os.Getenv("DEBUG")
+	appEnv := os.Getenv("APP_ENV")
+	
+	// Only log debug messages in development or when DEBUG=true
+	if level == "DEBUG" && debug != "true" && appEnv == "production" {
+		return
+	}
+	
+	// Always log non-debug messages
+	log.Printf("["+level+"] "+format, args...)
+}
+
 // Service represents a service that interacts with a database.
 type Service interface {
 	// Health returns a map of health status information.
@@ -45,30 +59,30 @@ var (
 func New() Service {
 	// Reuse Connection
 	if dbInstance != nil {
-		log.Println("DEBUG: Reusing existing database connection")
+		conditionalLog("DEBUG", "Reusing existing database connection")
 		return dbInstance
 	}
 	
 	// Debug environment variables (mask password)
-	log.Printf("DEBUG: DB_HOST=%s", host)
-	log.Printf("DEBUG: DB_PORT=%s", port)
-	log.Printf("DEBUG: DB_DATABASE=%s", database)
-	log.Printf("DEBUG: DB_USERNAME=%s", username)
-	log.Printf("DEBUG: DB_PASSWORD=%s", maskPassword(password))
-	log.Printf("DEBUG: DB_SCHEMA=%s", schema)
+	conditionalLog("DEBUG", "DB_HOST=%s", host)
+	conditionalLog("DEBUG", "DB_PORT=%s", port)
+	conditionalLog("DEBUG", "DB_DATABASE=%s", database)
+	conditionalLog("DEBUG", "DB_USERNAME=%s", username)
+	conditionalLog("DEBUG", "DB_PASSWORD=%s", maskPassword(password))
+	conditionalLog("DEBUG", "DB_SCHEMA=%s", schema)
 	
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=verify-full&sslrootcert=certs/prod-ca-2021.crt&search_path=%s", username, password, host, port, database, schema)
 	
 	// Debug connection string (mask password)
-	log.Printf("DEBUG: Connection string: %s", maskConnectionString(connStr))
+	conditionalLog("DEBUG", "Connection string: %s", maskConnectionString(connStr))
 	
-	log.Println("DEBUG: Attempting to open database connection...")
+	conditionalLog("DEBUG", "Attempting to open database connection...")
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
 		log.Printf("ERROR: Failed to open database connection: %v", err)
 		log.Fatal(err)
 	}
-	log.Println("DEBUG: Database connection opened successfully")
+	conditionalLog("DEBUG", "Database connection opened successfully")
 	dbInstance = &service{
 		db: db,
 	}
@@ -78,14 +92,14 @@ func New() Service {
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.
 func (s *service) Health() map[string]string {
-	log.Println("DEBUG: Starting database health check...")
+	conditionalLog("DEBUG", "Starting database health check...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	stats := make(map[string]string)
 
 	// Ping the database
-	log.Println("DEBUG: Attempting to ping database...")
+	conditionalLog("DEBUG", "Attempting to ping database...")
 	err := s.db.PingContext(ctx)
 	if err != nil {
 		log.Printf("ERROR: Database ping failed: %v", err)
@@ -95,7 +109,7 @@ func (s *service) Health() map[string]string {
 		return stats
 	}
 	
-	log.Println("DEBUG: Database ping successful!")
+	conditionalLog("DEBUG", "Database ping successful!")
 
 	// Database is up, add more statistics
 	stats["status"] = "up"

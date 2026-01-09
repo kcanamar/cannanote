@@ -115,9 +115,11 @@ fly-secrets:
 	 DB_SCHEMA=$$(grep '^DB_SCHEMA=' .env | cut -d'=' -f2-); \
 	 SUPABASE_URL=$$(grep '^SUPABASE_URL=' .env | cut -d'=' -f2-); \
 	 SUPABASE_ANON_KEY=$$(grep '^SUPABASE_ANON_KEY=' .env | cut -d'=' -f2-); \
-	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$SUPABASE_URL" ] || [ -z "$$SUPABASE_ANON_KEY" ]; then \
+	 SUPABASE_SECRET_KEY=$$(grep '^SUPABASE_SECRET_KEY=' .env | cut -d'=' -f2-); \
+	 APP_URL=$$(grep '^APP_URL=' .env | cut -d'=' -f2-); \
+	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$SUPABASE_URL" ] || [ -z "$$SUPABASE_ANON_KEY" ] || [ -z "$$SUPABASE_SECRET_KEY" ] || [ -z "$$APP_URL" ]; then \
 	   echo "ERROR: Missing required environment variables in .env file!"; \
-	   echo "Required: DB_PASSWORD, SUPABASE_URL, SUPABASE_ANON_KEY"; \
+	   echo "Required: DB_PASSWORD, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SECRET_KEY, APP_URL"; \
 	   exit 1; \
 	 fi; \
 	 echo "Setting secrets..."; \
@@ -129,7 +131,12 @@ fly-secrets:
 	   "DB_PASSWORD=$$DB_PASSWORD" \
 	   "DB_SCHEMA=$$DB_SCHEMA" \
 	   "SUPABASE_URL=$$SUPABASE_URL" \
-	   "SUPABASE_ANON_KEY=$$SUPABASE_ANON_KEY"
+	   "SUPABASE_ANON_KEY=$$SUPABASE_ANON_KEY" \
+	   "SUPABASE_SECRET_KEY=$$SUPABASE_SECRET_KEY" \
+	   "APP_ENV=production" \
+	   "GIN_MODE=release" \
+	   "DEBUG=false" \
+	   "APP_URL=$$APP_URL"
 	@echo "All secrets configured successfully"
 
 fly-secrets-verify:
@@ -137,12 +144,16 @@ fly-secrets-verify:
 	@flyctl secrets list | grep -q "DB_PASSWORD" || (echo "ERROR: DB_PASSWORD not set!" && exit 1)
 	@flyctl secrets list | grep -q "SUPABASE_URL" || (echo "ERROR: SUPABASE_URL not set!" && exit 1)
 	@flyctl secrets list | grep -q "SUPABASE_ANON_KEY" || (echo "ERROR: SUPABASE_ANON_KEY not set!" && exit 1)
+	@flyctl secrets list | grep -q "SUPABASE_SECRET_KEY" || (echo "ERROR: SUPABASE_SECRET_KEY not set!" && exit 1)
+	@flyctl secrets list | grep -q "APP_ENV" || (echo "ERROR: APP_ENV not set!" && exit 1)
+	@flyctl secrets list | grep -q "APP_URL" || (echo "ERROR: APP_URL not set!" && exit 1)
 	@echo "All required secrets are set"
 
 fly-deploy:
 	@echo "Deploying to Fly.io..."
 	@echo "Using Fly.io remote builder (no local Docker needed)..."
-	@flyctl deploy --remote-only
+	@echo "Deploying from project root for monorepo build context..."
+	@cd .. && flyctl deploy . --config backend/fly.toml --dockerfile backend/Dockerfile --remote-only -a cannanote-backend
 	@echo "Deployment complete"
 
 fly-status:

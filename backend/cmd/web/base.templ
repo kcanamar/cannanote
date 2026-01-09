@@ -18,48 +18,6 @@ templ Base(title string, currentPath string) {
 			<link rel="manifest" href="/assets/images/favicon/site.webmanifest">
 			<meta name="theme-color" content="#1a1f36">
 			
-			<!-- Dark mode initialization script - must run before any content renders -->
-			<script>
-				(function() {
-					const theme = localStorage.getItem('theme');
-					const prefersDark = !theme && window.matchMedia('(prefers-color-scheme: dark)').matches;
-					const isDark = theme === 'dark' || prefersDark;
-					
-					if (isDark) {
-						document.documentElement.classList.add('dark');
-					}
-					
-					// Set initial icon visibility after DOM loads
-					document.addEventListener('DOMContentLoaded', function() {
-						// Desktop icons
-						const sunIcon = document.getElementById('sun-icon');
-						const moonIcon = document.getElementById('moon-icon');
-						// Mobile icons  
-						const mobileSunIcon = document.getElementById('mobile-sun-icon');
-						const mobileMoonIcon = document.getElementById('mobile-moon-icon');
-						const mobileDarkText = document.getElementById('mobile-dark-text');
-						const mobileLightText = document.getElementById('mobile-light-text');
-						
-						if (isDark) {
-							// Show moon icon, hide sun icon
-							if (sunIcon) sunIcon.classList.add('hidden');
-							if (moonIcon) moonIcon.classList.remove('hidden');
-							if (mobileSunIcon) mobileSunIcon.classList.add('hidden');
-							if (mobileMoonIcon) mobileMoonIcon.classList.remove('hidden');
-							if (mobileDarkText) mobileDarkText.classList.add('hidden');
-							if (mobileLightText) mobileLightText.classList.remove('hidden');
-						} else {
-							// Show sun icon, hide moon icon (default state)
-							if (sunIcon) sunIcon.classList.remove('hidden');
-							if (moonIcon) moonIcon.classList.add('hidden');
-							if (mobileSunIcon) mobileSunIcon.classList.remove('hidden');
-							if (mobileMoonIcon) mobileMoonIcon.classList.add('hidden');
-							if (mobileDarkText) mobileDarkText.classList.remove('hidden');
-							if (mobileLightText) mobileLightText.classList.add('hidden');
-						}
-					});
-				})();
-			</script>
 			<meta name="description" content="Your personal cannabis educator and tracking companion. Transform consumption data into clear insights through private, mindful journaling."/>
 			
 			<!-- Open Graph / Social Media -->
@@ -94,29 +52,12 @@ templ Base(title string, currentPath string) {
 			<!-- Optimized font loading -->
 			<link rel="preconnect" href="https://fonts.googleapis.com">
 			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-			<noscript><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 			<!-- Local Tailwind CSS build with typography -->
 			<link href="/assets/css/output.css" rel="stylesheet"/>
-			<script>
-				// Mobile navigation toggle
-				function toggleMobileNav() {
-					const overlay = document.getElementById('mobile-nav-overlay');
-					if (overlay) {
-						overlay.classList.toggle('hidden');
-					}
-				}
-				
-				// Close mobile nav on escape key
-				document.addEventListener('keydown', function(e) {
-					if (e.key === 'Escape') {
-						const overlay = document.getElementById('mobile-nav-overlay');
-						if (overlay && !overlay.classList.contains('hidden')) {
-							overlay.classList.add('hidden');
-						}
-					}
-				});
-			</script>
+			
+			<!-- External JavaScript files -->
+			<script src="/assets/js/theme.js"></script>
 			<script src="/assets/js/htmx.min.js" defer></script>
 			<script src="/assets/js/app.min.js" defer></script>
 		</head>

@@ -11,11 +11,14 @@ RUN go install github.com/a-h/templ/cmd/templ@latest
 WORKDIR /app
 
 # Copy go mod files for dependency caching
-COPY go.mod go.sum ./
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
 # Copy source code
-COPY . .
+COPY backend/ .
+
+# Copy docs from root directory (now accessible with root build context)
+COPY docs/ ./docs/
 
 # Generate templ templates
 RUN templ generate
@@ -40,6 +43,9 @@ COPY --from=builder /app/main .
 
 # Copy web assets if needed (templates, static files)
 COPY --from=builder /app/cmd/web ./cmd/web
+
+# Copy documentation content (now accessible since build context is parent directory)
+COPY --from=builder /app/docs ./docs
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
