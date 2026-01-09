@@ -272,8 +272,8 @@ func testSupabaseAuthHealth() APIHealth {
 		}
 	}
 
-	// Test auth health endpoint
-	authURL := supabaseURL + "/auth/v1/health"
+	// Test auth health endpoint with API key (like REST API pattern)
+	authURL := supabaseURL + "/auth/v1/health?apikey=" + apiKey
 	
 	start := time.Now()
 	
@@ -291,8 +291,9 @@ func testSupabaseAuthHealth() APIHealth {
 		}
 	}
 
-	// Health endpoints typically don't require authentication - try without auth first
-	// If this fails, we can add auth headers back
+	// Add auth headers like REST API endpoints
+	req.Header.Add("apikey", apiKey)
+	req.Header.Add("Authorization", "Bearer "+apiKey)
 
 	resp, err := client.Do(req)
 	responseTime := time.Since(start).Milliseconds()

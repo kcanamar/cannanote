@@ -117,9 +117,10 @@ fly-secrets:
 	 SUPABASE_ANON_KEY=$$(grep '^SUPABASE_ANON_KEY=' .env | cut -d'=' -f2-); \
 	 SUPABASE_SECRET_KEY=$$(grep '^SUPABASE_SECRET_KEY=' .env | cut -d'=' -f2-); \
 	 APP_URL=$$(grep '^APP_URL=' .env | cut -d'=' -f2-); \
-	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$SUPABASE_URL" ] || [ -z "$$SUPABASE_ANON_KEY" ] || [ -z "$$SUPABASE_SECRET_KEY" ] || [ -z "$$APP_URL" ]; then \
+	 RESEND_API_KEY=$$(grep '^RESEND_API_KEY=' .env | cut -d'=' -f2-); \
+	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$SUPABASE_URL" ] || [ -z "$$SUPABASE_ANON_KEY" ] || [ -z "$$SUPABASE_SECRET_KEY" ] || [ -z "$$APP_URL" ] || [ -z "$$RESEND_API_KEY" ]; then \
 	   echo "ERROR: Missing required environment variables in .env file!"; \
-	   echo "Required: DB_PASSWORD, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SECRET_KEY, APP_URL"; \
+	   echo "Required: DB_PASSWORD, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SECRET_KEY, APP_URL, RESEND_API_KEY"; \
 	   exit 1; \
 	 fi; \
 	 echo "Setting secrets..."; \
@@ -136,7 +137,8 @@ fly-secrets:
 	   "APP_ENV=production" \
 	   "GIN_MODE=release" \
 	   "DEBUG=false" \
-	   "APP_URL=$$APP_URL"
+	   "APP_URL=$$APP_URL" \
+	   "RESEND_API_KEY=$$RESEND_API_KEY"
 	@echo "All secrets configured successfully"
 
 fly-secrets-verify:

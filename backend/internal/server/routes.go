@@ -20,6 +20,7 @@ import (
 
 	"backend/cmd/web"
 	httpHandlers "backend/internal/adapters/http"
+	"backend/internal/adapters/external"
 	"github.com/a-h/templ"
 )
 
@@ -356,6 +357,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Static assets served with cache headers
 	r.Static("/assets", "./cmd/web/assets")
+	
+	// Serve robots.txt at root level
+	r.GET("/robots.txt", func(c *gin.Context) {
+		c.File("./cmd/web/assets/robots.txt")
+	})
 
 	r.GET("/web", func(c *gin.Context) {
 		templ.Handler(web.HelloForm()).ServeHTTP(c.Writer, c.Request)
@@ -529,7 +535,7 @@ func (s *Server) createBetaUser(email string) error {
 	// Use the Auth API to create user - this will send verification email
 	authUser, err := client.Auth.AdminCreateUser(types.AdminCreateUserRequest{
 		Email:        email,
-		EmailConfirm: false, // Require email verification for security
+		EmailConfirm: true, // Enable email verification for security
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create Supabase auth user: %w", err)
@@ -548,5 +554,16 @@ func (s *Server) createBetaUser(email string) error {
 	}
 	
 	conditionalLog("INFO", "Successfully created Supabase auth user and profile: %s (ID: %s)", email, authUser.ID)
+	
+	// Send welcome email via Resend (non-blocking)
+	go func() {
+		resendService := external.NewResendService()
+		if err := resendService.SendWelcomeEmail(email, ""); err != nil {
+			conditionalLog("ERROR", "Failed to send welcome email to %s: %v", email, err)
+		} else {
+			conditionalLog("INFO", "Welcome email sent successfully to: %s", email)
+		}
+	}()
+	
 	return nil
 }
