@@ -3,6 +3,7 @@
 
 # Sensitive setup documentation
 SMTP_SETUP.md
+FLY_DOMAIN_SETUP.md
 
 # macOS system files
 .DS_Store
