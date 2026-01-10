@@ -1,0 +1,115 @@
+package web
+
+templ Privacy() {
+  @Base("Privacy Notice – CannaNote", "/privacy") {
+    <div class="min-h-screen bg-white dark:bg-navy-950">
+      <!-- Header -->
+      <header class="bg-white dark:bg-navy-950 py-12 border-b border-neutral-200 dark:border-navy-800">
+        <div class="container mx-auto px-6 max-w-4xl">
+          <h1 class="text-3xl font-medium text-navy-900 dark:text-white mb-2">Privacy Notice</h1>
+          <p class="text-lg text-neutral-600 dark:text-neutral-300">Interim notice for beta testing</p>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="py-12">
+        <div class="container mx-auto px-6 max-w-4xl">
+          <!-- Interim Notice -->
+          <div class="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-700 rounded-lg p-6 mb-12">
+            <h2 class="text-xl font-medium text-navy-900 dark:text-white mb-3">Interim Privacy & Beta Participation Notice – CannaNote (January 2026)</h2>
+            <p class="text-neutral-700 dark:text-neutral-300 mb-3">Thank you for your interest in CannaNote, a private wellness journaling app currently in private beta.</p>
+            <p class="text-neutral-600 dark:text-neutral-400">While we work with legal experts to finalize our full Privacy Policy and Terms of Service, here's our clear commitment to you during this beta phase:</p>
+          </div>
+
+          <!-- Privacy Content -->
+          <div class="space-y-8">
+            
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">1. Local-First Storage</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">Your journal entries and personal data are stored locally on your device first (using secure, encrypted on-device storage). Nothing is uploaded to our servers unless you explicitly choose to enable sync.</p>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">2. Never Share or Sell Your Data</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">We do not—and will never—sell, share, or monetize your personal data. Period. This is a core promise.</p>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">3. Opt-In Sync Only</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">Cloud sync (for backup across devices) is completely optional and off by default. You control it fully and can disable or delete synced data at any time.</p>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">4. Sensitive Data Handling</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">We treat wellness journaling as highly sensitive personal information. Access is restricted (via row-level security), encrypted, and limited to only what's needed for the app to function.</p>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">5. Beta Data Collection</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4">During beta, we collect minimal anonymized usage data (e.g., feature interactions, crash reports) only to improve the app—with your explicit consent during onboarding. No personal journal content is ever collected or viewed.</p>
+
+              <div class="bg-neutral-50 dark:bg-navy-900/50 border border-neutral-200 dark:border-navy-700 rounded-lg p-4">
+                <p class="text-sm font-medium text-navy-900 dark:text-white mb-2">Minimal usage data includes:</p>
+                <ul class="text-sm text-neutral-600 dark:text-neutral-400 space-y-1">
+                  <li>• App crashes and error reports</li>
+                  <li>• Feature usage patterns (which buttons are used, not what you enter)</li>
+                  <li>• Performance metrics (load times, sync success rates)</li>
+                </ul>
+              </div>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">6. Beta Participation</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4">This is pre-release software provided "as is" for testing. We appreciate your feedback but offer no guarantees of uptime or features.</p>
+              
+              <div class="bg-warning/10 dark:bg-warning/5 border border-warning/30 dark:border-warning/20 rounded-lg p-4">
+                <div class="flex items-start">
+                  <svg class="w-5 h-5 text-warning mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"/>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-warning mb-1">Important</p>
+                    <p class="text-sm text-navy-900 dark:text-neutral-200">Beta data may be lost during development updates—please export your data regularly.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">7. Data Export & Deletion</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">You can export all your data or delete your account at any time. During beta, account deletion removes all associated data within 7 days.</p>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">8. Age Restriction</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">This app is intended for adults only (21+ in most jurisdictions where applicable).</p>
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">Contact</h2>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">Questions? Email us at <a href="mailto:privacy@cannanote.app" class="text-sage-600 dark:text-sage-400 hover:text-sage-800 dark:hover:text-sage-300 transition">privacy@cannanote.app</a>. Thank you for helping shape a more private wellness experience.</p>
+            </section>
+
+          </div>
+
+          <!-- Footer Notice -->
+          <div class="mt-16 pt-8 border-t border-neutral-200 dark:border-navy-700">
+            <div class="text-center">
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 italic">This is an interim notice for beta testing only. Full legal documentation is in development and will replace this notice before public launch.</p>
+            </div>
+          </div>
+
+          <!-- Back to Home -->
+          <div class="mt-12 text-center">
+            <a href="/" class="inline-flex items-center text-sage-600 dark:text-sage-400 hover:text-sage-800 dark:hover:text-sage-300 transition font-medium">
+              <svg class="w-5 h-5 mr-2 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+              Back to CannaNote
+            </a>
+          </div>
+        </div>
+      </main>
+    </div>
+  }
+}

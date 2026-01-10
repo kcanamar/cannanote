@@ -1,0 +1,52 @@
+# Build artifacts
+main
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development files
+README.md
+.git/
+.gitignore
+
+# Logs
+*.log
+
+# Environment files (security)
+.env
+.env.local
+.env.production
+
+# SSL certificates (security)
+certs/
+*.crt
+*.pem
+
+# Docker files
+Dockerfile*
+.dockerignore
+
+# Development database
+*.db
+*.sqlite

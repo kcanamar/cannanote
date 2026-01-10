@@ -1,0 +1,72 @@
+package web
+
+import "backend/cmd/web/components"
+
+templ Base(title string, currentPath string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title }</title>
+			
+			<!-- Favicon - Brand compliant with style guide colors -->
+			<link rel="icon" type="image/x-icon" href="/assets/images/favicon/favicon.ico">
+			<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon/favicon-96x96.png">
+			<link rel="icon" type="image/svg+xml" href="/assets/images/favicon/favicon.svg">
+			<link rel="apple-touch-icon" href="/assets/images/favicon/apple-touch-icon.png">
+			<link rel="manifest" href="/assets/images/favicon/site.webmanifest">
+			<meta name="theme-color" content="#1a1f36">
+			
+			<meta name="description" content="Your personal cannabis educator and tracking companion. Transform consumption data into clear insights through private, mindful journaling."/>
+			
+			<!-- Open Graph / Social Media -->
+			<meta property="og:title" content="{ title }"/>
+			<meta property="og:description" content="Your patterns, not their profits. Private cannabis wellness journaling built for you."/>
+			<meta property="og:type" content="website"/>
+			<meta property="og:url" content="https://cannanote.app"/>
+			
+			<!-- Structured Data -->
+			<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "SoftwareApplication",
+				"name": "CannaNote",
+				"description": "Personal cannabis wellness journaling and tracking companion",
+				"applicationCategory": "HealthApplication",
+				"operatingSystem": "Web, iOS, Android",
+				"offers": {
+					"@type": "Offer",
+					"price": "0",
+					"priceCurrency": "USD"
+				},
+				"featureList": [
+					"Private cannabis consumption tracking",
+					"Pattern recognition and insights",
+					"Harm reduction guidance",
+					"Offline-first data storage"
+				]
+			}
+			</script>
+			
+			<!-- Optimized font loading -->
+			<link rel="preconnect" href="https://fonts.googleapis.com">
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+			<!-- Local Tailwind CSS build with typography -->
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+			
+			<!-- External JavaScript files -->
+			<script src="/assets/js/theme.js"></script>
+			<script src="/assets/js/htmx.min.js" defer></script>
+			<script src="/assets/js/app.min.js" defer></script>
+		</head>
+		<body class="font-brand antialiased bg-white dark:bg-navy-950">
+			@components.Navigation(currentPath)
+			<main role="main">
+				{ children... }
+			</main>
+			@components.Footer()
+		</body>
+	</html>
+}
