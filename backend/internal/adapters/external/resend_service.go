@@ -44,9 +44,9 @@ func (r *ResendService) SendWelcomeEmail(email, name string) error {
 	}
 
 	welcomeEmail := ResendEmail{
-		From:    "CannaNote <welcome@cannanote.org>",
+		From:    "CannaNote <welcome@mail.cannanote.org>",
 		To:      []string{email},
-		Subject: "Welcome to CannaNote Beta! 🌱",
+		Subject: "Welcome to CannaNote Beta",
 		HTML: fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
@@ -65,7 +65,7 @@ func (r *ResendService) SendWelcomeEmail(email, name string) error {
 <body>
     <div class="container">
         <div class="header">
-            <h1>🌱 Welcome to CannaNote</h1>
+            <h1>Welcome to CannaNote</h1>
             <p>Your Personal Cannabis Wellness Companion</p>
         </div>
         <div class="content">
@@ -82,7 +82,7 @@ func (r *ResendService) SendWelcomeEmail(email, name string) error {
             
             <a href="https://cannanote.org" class="cta">Get Started with CannaNote</a>
             
-            <h3>Beta Grandfathering 🎉</h3>
+            <h3>Beta Grandfathering</h3>
             <p>As a beta member, you'll receive <strong>lifetime access</strong> to premium sync features once we launch. Your early support means everything to us!</p>
             
             <h3>Need Help?</h3>
@@ -99,7 +99,7 @@ func (r *ResendService) SendWelcomeEmail(email, name string) error {
 </body>
 </html>
 		`),
-		Text: fmt.Sprintf(`Welcome to CannaNote Beta! 🌱
+		Text: fmt.Sprintf(`Welcome to CannaNote Beta
 
 Hi there,
 
@@ -113,7 +113,7 @@ What's Next?
 
 Get Started: https://cannanote.org
 
-Beta Grandfathering 🎉
+Beta Grandfathering
 As a beta member, you'll receive lifetime access to premium sync features once we launch. Your early support means everything to us!
 
 Need Help?

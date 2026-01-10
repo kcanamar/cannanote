@@ -535,7 +535,7 @@ func (s *Server) createBetaUser(email string) error {
 	// Use the Auth API to create user - this will send verification email
 	authUser, err := client.Auth.AdminCreateUser(types.AdminCreateUserRequest{
 		Email:        email,
-		EmailConfirm: true, // Enable email verification for security
+		EmailConfirm: false, // Require email verification for real humans
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create Supabase auth user: %w", err)
