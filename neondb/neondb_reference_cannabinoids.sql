@@ -1,15 +1,16 @@
 -- ============================================================================
 -- CANNABINOIDS REFERENCE DATA - EDUCATIONAL PURPOSES ONLY
--- 
+-- NeonDB Version (adapted from supabase/reference-data/cannabinoids.sql)
+--
 -- IMPORTANT LEGAL DISCLAIMERS:
 -- * This data is for educational and research purposes only
--- * NOT intended as medical advice, diagnosis, or treatment recommendations  
+-- * NOT intended as medical advice, diagnosis, or treatment recommendations
 -- * Consult qualified healthcare professionals for medical guidance
 -- * Individual experiences may vary significantly
 -- * No health claims are made or implied
 -- ============================================================================
 
--- Clear existing data for fresh update
+-- Clear existing data for fresh update (table must exist first)
 TRUNCATE TABLE cannabinoids RESTART IDENTITY CASCADE;
 
 -- Insert cannabinoid compound data for educational reference
@@ -26,7 +27,7 @@ INSERT INTO cannabinoids (id, name, full_name, description, psychoactive, report
         "commonly_reported": ["euphoria", "relaxation", "altered_perception"],
         "user_reported_uses": ["recreational", "wellness", "research"],
         "anecdotal_experiences": [
-            "appetite_changes", "relaxation", "mood_effects", 
+            "appetite_changes", "relaxation", "mood_effects",
             "sensory_changes", "time_perception_changes"
         ]
     }'::jsonb,
@@ -222,10 +223,10 @@ COMMENT ON COLUMN cannabinoids.reported_experiences IS 'Anecdotal user reports -
 COMMENT ON COLUMN cannabinoids.compound_notes IS 'Educational information for research purposes';
 
 -- Track data provenance for legal compliance
-INSERT INTO data_sources (table_name, source, last_updated, legal_notes) VALUES 
-('cannabinoids', 'Educational compilation for research purposes', NOW(), 
+INSERT INTO data_sources (table_name, source, last_updated, legal_notes) VALUES
+('cannabinoids', 'Educational compilation for research purposes', NOW(),
  'No medical claims made. Educational use only. Consult healthcare professionals.')
-ON CONFLICT (table_name) DO UPDATE SET 
+ON CONFLICT (table_name) DO UPDATE SET
     source = EXCLUDED.source,
     last_updated = EXCLUDED.last_updated,
     legal_notes = EXCLUDED.legal_notes;

@@ -1,16 +1,17 @@
 -- ============================================================================
 -- TERPENES REFERENCE DATA - EDUCATIONAL PURPOSES ONLY
--- 
+-- NeonDB Version (adapted from supabase/reference-data/terpenes.sql)
+--
 -- IMPORTANT LEGAL DISCLAIMERS:
 -- * This data is for educational and research purposes only
--- * NOT intended as medical advice, diagnosis, or treatment recommendations  
+-- * NOT intended as medical advice, diagnosis, or treatment recommendations
 -- * Consult qualified healthcare professionals for medical guidance
 -- * Individual experiences may vary significantly
 -- * No health claims are made or implied
 -- * Based on 2025 cannabis research and user reports
 -- ============================================================================
 
--- Clear existing data for fresh update
+-- Clear existing data for fresh update (table must exist first)
 TRUNCATE TABLE terpenes RESTART IDENTITY CASCADE;
 
 -- Insert comprehensive terpene compound data for educational reference
@@ -25,7 +26,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["relaxation", "sedation", "muscle_relief"],
         "user_experiences": ["nighttime_use", "stress_relief", "body_relaxation"],
         "anecdotal_effects": [
-            "enhanced_thc_absorption", "couch_lock_sensation", 
+            "enhanced_thc_absorption", "couch_lock_sensation",
             "sleep_support", "muscle_tension_relief"
         ],
         "timing_preference": "evening_nighttime"
@@ -49,7 +50,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["mood_elevation", "stress_relief", "anxiety_reduction"],
         "user_experiences": ["daytime_use", "social_activities", "creative_tasks"],
         "anecdotal_effects": [
-            "counteracts_thc_anxiety", "uplifting_mood", 
+            "counteracts_thc_anxiety", "uplifting_mood",
             "enhanced_focus", "anti_stress"
         ],
         "timing_preference": "daytime_morning"
@@ -58,7 +59,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
     '{"botanical_sources": ["citrus_fruits", "juniper", "peppermint", "rosemary"], "prevalence": "second_most_common_in_cannabis"}'::jsonb,
     '{
         "therapeutic_research": "anti_anxiety_anti_inflammatory",
-        "mechanism": "affects_serotonin_dopamine_signaling", 
+        "mechanism": "affects_serotonin_dopamine_signaling",
         "absorption": "well_absorbed_through_skin",
         "safety_profile": "generally_recognized_as_safe"
     }'::jsonb
@@ -73,7 +74,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["anti_inflammatory", "pain_relief", "stress_reduction"],
         "user_experiences": ["wellness_routines", "physical_discomfort", "research_interest"],
         "anecdotal_effects": [
-            "muscle_soreness_relief", "inflammation_support", 
+            "muscle_soreness_relief", "inflammation_support",
             "tension_reduction", "physical_wellness"
         ],
         "timing_preference": "any_time"
@@ -97,7 +98,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["calming", "anxiety_relief", "sleep_support"],
         "user_experiences": ["bedtime_routines", "relaxation", "stress_management"],
         "anecdotal_effects": [
-            "improved_sleep_quality", "reduced_anxiety", 
+            "improved_sleep_quality", "reduced_anxiety",
             "mood_stabilization", "relaxation_response"
         ],
         "timing_preference": "evening_nighttime"
@@ -121,7 +122,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["alertness", "focus", "memory_support"],
         "user_experiences": ["daytime_productivity", "mental_clarity", "outdoor_activities"],
         "anecdotal_effects": [
-            "enhanced_alertness", "memory_retention", 
+            "enhanced_alertness", "memory_retention",
             "reduced_thc_memory_impairment", "mental_clarity"
         ],
         "timing_preference": "daytime"
@@ -145,7 +146,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["uplifting", "creative", "energetic"],
         "user_experiences": ["creative_projects", "social_situations", "daytime_activities"],
         "anecdotal_effects": [
-            "enhanced_creativity", "mood_elevation", 
+            "enhanced_creativity", "mood_elevation",
             "social_confidence", "mental_stimulation"
         ],
         "timing_preference": "daytime"
@@ -169,7 +170,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["appetite_suppression", "anti_inflammatory", "alertness"],
         "user_experiences": ["wellness_routines", "research_interest", "herbal_products"],
         "anecdotal_effects": [
-            "reduced_appetite", "inflammation_support", 
+            "reduced_appetite", "inflammation_support",
             "energy_without_stimulation", "focus_enhancement"
         ],
         "timing_preference": "any_time"
@@ -193,7 +194,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["energizing", "uplifting", "immune_support"],
         "user_experiences": ["daytime_wellness", "outdoor_activities", "social_energy"],
         "anecdotal_effects": [
-            "natural_energy_boost", "mood_enhancement", 
+            "natural_energy_boost", "mood_enhancement",
             "immune_system_support", "antiviral_properties"
         ],
         "timing_preference": "daytime"
@@ -217,7 +218,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["mental_clarity", "respiratory_support", "anti_inflammatory"],
         "user_experiences": ["focus_enhancement", "breathing_wellness", "mental_alertness"],
         "anecdotal_effects": [
-            "enhanced_concentration", "respiratory_comfort", 
+            "enhanced_concentration", "respiratory_comfort",
             "reduced_inflammation", "cognitive_clarity"
         ],
         "timing_preference": "daytime"
@@ -241,7 +242,7 @@ INSERT INTO terpenes (id, name, aroma_profile, reported_effects, boiling_point_c
         "commonly_reported": ["skin_soothing", "anti_inflammatory", "calming"],
         "user_experiences": ["topical_wellness", "relaxation", "skin_care"],
         "anecdotal_effects": [
-            "skin_comfort", "reduced_irritation", 
+            "skin_comfort", "reduced_irritation",
             "gentle_relaxation", "healing_support"
         ],
         "timing_preference": "any_time"
@@ -275,10 +276,10 @@ COMMENT ON COLUMN terpenes.reported_effects IS 'User-reported experiences - not 
 COMMENT ON COLUMN terpenes.research_notes IS 'Educational research information - consult professionals for medical guidance';
 
 -- Track data provenance for legal compliance
-INSERT INTO data_sources (table_name, source, last_updated, legal_notes) VALUES 
-('terpenes', 'Comprehensive 2025 cannabis research compilation for educational purposes', NOW(), 
+INSERT INTO data_sources (table_name, source, last_updated, legal_notes) VALUES
+('terpenes', 'Comprehensive 2025 cannabis research compilation for educational purposes', NOW(),
  'No medical claims made. Educational and research use only. Individual experiences vary. Consult healthcare professionals for medical guidance.')
-ON CONFLICT (table_name) DO UPDATE SET 
+ON CONFLICT (table_name) DO UPDATE SET
     source = EXCLUDED.source,
     last_updated = EXCLUDED.last_updated,
     legal_notes = EXCLUDED.legal_notes;

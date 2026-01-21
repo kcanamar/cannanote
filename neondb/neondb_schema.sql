@@ -1,19 +1,24 @@
--- CannaNote Database Schema & Seed Data
--- This file defines our application schema and initial data
--- Applied via: supabase db reset (local) or supabase db push (production)
+-- ============================================================================
+-- CANNANOTE NEONDB SCHEMA
+-- Adapted from supabase/seeds/seed.sql for NeonDB compatibility
+--
+-- Changes from Supabase version:
+-- - Removed all RLS (Row Level Security) policies
+-- - Removed auth.uid() references (Supabase-specific)
+-- - Removed REFERENCES auth.users (Supabase auth table doesn't exist)
+-- - Auth/authorization now handled by Supertokens at application layer
+-- ============================================================================
 
 -- ============================================================================
--- HUMANS TABLE - Core entity for our hexagonal architecture
+-- HUMANS TABLE - Core entity for hexagonal architecture
 -- ============================================================================
 
--- Drop existing table if exists (for reset scenarios)
 DROP TABLE IF EXISTS humans CASCADE;
 
--- Create humans table matching our Go hexagonal architecture
 CREATE TABLE humans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username TEXT UNIQUE NOT NULL,
-    email TEXT UNIQUE NOT NULL, 
+    email TEXT UNIQUE NOT NULL,
     profile JSONB NOT NULL DEFAULT '{}',
     consent JSONB NOT NULL DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -21,87 +26,22 @@ CREATE TABLE humans (
 );
 
 -- ============================================================================
--- PERFORMANCE INDEXES
+-- PROFILES TABLE - Beta user profiles linked to Supertokens users
 -- ============================================================================
 
--- Index for authentication lookups
-CREATE INDEX idx_humans_email ON humans(email);
+DROP TABLE IF EXISTS profiles CASCADE;
 
--- Index for user searches
-CREATE INDEX idx_humans_username ON humans(username);
-
--- Index for recent users
-CREATE INDEX idx_humans_created_at ON humans(created_at);
-
--- ============================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES
--- ============================================================================
-
--- Enable RLS for security
-ALTER TABLE humans ENABLE ROW LEVEL SECURITY;
-
--- Policy: Users can only view their own records
--- Note: This assumes Supabase auth.uid() matches the human.id
-CREATE POLICY "humans_select_own" ON humans
-    FOR SELECT USING (auth.uid()::text = id::text);
-
--- Policy: Users can only insert their own records  
-CREATE POLICY "humans_insert_own" ON humans
-    FOR INSERT WITH CHECK (auth.uid()::text = id::text);
-
--- Policy: Users can only update their own records
-CREATE POLICY "humans_update_own" ON humans
-    FOR UPDATE USING (auth.uid()::text = id::text);
-
--- Policy: Users can only delete their own records
-CREATE POLICY "humans_delete_own" ON humans
-    FOR DELETE USING (auth.uid()::text = id::text);
-
--- ============================================================================
--- FUNCTIONS & TRIGGERS
--- ============================================================================
-
--- Function to automatically update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Trigger to auto-update updated_at on humans table
-CREATE TRIGGER update_humans_updated_at 
-    BEFORE UPDATE ON humans 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
--- ============================================================================
--- SAMPLE DATA (Optional - for development/testing)
--- ============================================================================
-
--- Uncomment for development seed data
--- INSERT INTO humans (id, username, email, profile, consent) VALUES 
--- (
---     gen_random_uuid(),
---     'demo_user',
---     'demo@cannanote.com',
---     '{
---         "preferred_strains": ["Blue Dream", "OG Kush"],
---         "preferred_consumption": ["vape", "edible"],
---         "experience_level": "intermediate",
---         "public_profile": false,
---         "share_experiences": true
---     }'::jsonb,
---     '{
---         "data_collection": true,
---         "marketing_emails": false,
---         "data_sharing": false,
---         "medical_data_sharing": false,
---         "consent_date": "2025-12-20T00:00:00Z",
---         "consent_version": "v1.0"
---     }'::jsonb
--- );
+CREATE TABLE profiles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    beta_status TEXT DEFAULT 'waitlist',
+    beta_joined_at TIMESTAMPTZ DEFAULT NOW(),
+    subscription_tier TEXT DEFAULT 'beta_grandfathered',
+    referral_code TEXT UNIQUE,
+    invited_at TIMESTAMPTZ,
+    activated_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ============================================================================
 -- CANNABINOIDS TABLE - Reference data for cannabinoid compounds
@@ -122,7 +62,7 @@ CREATE TABLE cannabinoids (
 );
 
 -- ============================================================================
--- TERPENES TABLE - Reference data for terpene compounds  
+-- TERPENES TABLE - Reference data for terpene compounds
 -- ============================================================================
 
 DROP TABLE IF EXISTS terpenes CASCADE;
@@ -222,17 +162,24 @@ CREATE TABLE data_sources (
 );
 
 -- ============================================================================
--- PERFORMANCE INDEXES FOR ALL TABLES
+-- PERFORMANCE INDEXES
 -- ============================================================================
 
--- Humans indexes (already created above)
+-- Humans indexes
+CREATE INDEX idx_humans_email ON humans(email);
+CREATE INDEX idx_humans_username ON humans(username);
+CREATE INDEX idx_humans_created_at ON humans(created_at);
+
+-- Profiles indexes
+CREATE INDEX idx_profiles_email ON profiles(email);
+CREATE INDEX idx_profiles_beta_status ON profiles(beta_status);
 
 -- Cannabinoids indexes
 CREATE INDEX idx_cannabinoids_name ON cannabinoids(name);
 CREATE INDEX idx_cannabinoids_psychoactive ON cannabinoids(psychoactive);
 CREATE INDEX idx_cannabinoids_experiences_gin ON cannabinoids USING gin(reported_experiences);
 
--- Terpenes indexes  
+-- Terpenes indexes
 CREATE INDEX idx_terpenes_name ON terpenes(name);
 CREATE INDEX idx_terpenes_aroma_gin ON terpenes USING gin(aroma_profile);
 CREATE INDEX idx_terpenes_effects_gin ON terpenes USING gin(reported_effects);
@@ -260,59 +207,47 @@ CREATE INDEX idx_entries_rating ON entries(rating);
 CREATE INDEX idx_entries_created_at ON entries(created_at);
 
 -- ============================================================================
--- ROW LEVEL SECURITY POLICIES
+-- FUNCTIONS & TRIGGERS
 -- ============================================================================
 
--- Chemical profiles: Public reference data (no RLS needed)
--- Cannabinoids: Public reference data (no RLS needed)  
--- Terpenes: Public reference data (no RLS needed)
--- Consumption methods: Public reference data (no RLS needed)
-
--- Entries: Private user data with RLS
-ALTER TABLE entries ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "entries_select_own" ON entries
-    FOR SELECT USING (auth.uid()::text = human_id::text);
-
-CREATE POLICY "entries_insert_own" ON entries
-    FOR INSERT WITH CHECK (auth.uid()::text = human_id::text);
-
-CREATE POLICY "entries_update_own" ON entries  
-    FOR UPDATE USING (auth.uid()::text = human_id::text);
-
-CREATE POLICY "entries_delete_own" ON entries
-    FOR DELETE USING (auth.uid()::text = human_id::text);
-
--- ============================================================================
--- TRIGGERS FOR UPDATED_AT TIMESTAMPS
--- ============================================================================
-
--- Function to automatically update updated_at timestamp (already created above)
+-- Function to automatically update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
 
 -- Apply trigger to all tables with updated_at column
-CREATE TRIGGER update_cannabinoids_updated_at 
-    BEFORE UPDATE ON cannabinoids 
-    FOR EACH ROW 
+CREATE TRIGGER update_humans_updated_at
+    BEFORE UPDATE ON humans
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_terpenes_updated_at 
-    BEFORE UPDATE ON terpenes 
-    FOR EACH ROW 
+CREATE TRIGGER update_cannabinoids_updated_at
+    BEFORE UPDATE ON cannabinoids
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_consumption_methods_updated_at 
-    BEFORE UPDATE ON consumption_methods 
-    FOR EACH ROW 
+CREATE TRIGGER update_terpenes_updated_at
+    BEFORE UPDATE ON terpenes
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_chemical_profiles_updated_at 
-    BEFORE UPDATE ON chemical_profiles 
-    FOR EACH ROW 
+CREATE TRIGGER update_consumption_methods_updated_at
+    BEFORE UPDATE ON consumption_methods
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_entries_updated_at 
-    BEFORE UPDATE ON entries 
-    FOR EACH ROW 
+CREATE TRIGGER update_chemical_profiles_updated_at
+    BEFORE UPDATE ON chemical_profiles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_entries_updated_at
+    BEFORE UPDATE ON entries
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
@@ -320,11 +255,15 @@ CREATE TRIGGER update_entries_updated_at
 -- ============================================================================
 
 COMMENT ON TABLE humans IS 'Core human entities for CannaNote cannabis journaling platform';
-COMMENT ON COLUMN humans.id IS 'Primary key UUID, matches Supabase auth.uid() for RLS';
+COMMENT ON COLUMN humans.id IS 'Primary key UUID, links to Supertokens user ID for auth';
 COMMENT ON COLUMN humans.username IS 'Unique human-friendly identifier';
 COMMENT ON COLUMN humans.email IS 'Unique email for authentication';
 COMMENT ON COLUMN humans.profile IS 'JSON object containing cannabis preferences and profile data';
 COMMENT ON COLUMN humans.consent IS 'JSON object containing HIPAA-ready consent settings and history';
+
+COMMENT ON TABLE profiles IS 'Beta user profiles linked to Supertokens authentication';
+COMMENT ON COLUMN profiles.id IS 'UUID matching Supertokens user ID';
+COMMENT ON COLUMN profiles.subscription_tier IS 'Beta users get beta_grandfathered for lifetime sync access';
 
 COMMENT ON TABLE cannabinoids IS 'Reference data for cannabinoid compounds - educational purposes only';
 COMMENT ON TABLE terpenes IS 'Reference data for terpene compounds - educational purposes only';
@@ -332,3 +271,11 @@ COMMENT ON TABLE consumption_methods IS 'Reference data for cannabis consumption
 COMMENT ON TABLE chemical_profiles IS 'Lab test data using efficient JSONB storage for chemical analysis';
 COMMENT ON TABLE entries IS 'Personal cannabis consumption experiences and effects tracking';
 COMMENT ON TABLE data_sources IS 'Legal compliance tracking for reference data provenance';
+
+-- ============================================================================
+-- AUTHORIZATION NOTE
+-- ============================================================================
+-- Authorization is handled by Supertokens at the application layer.
+-- Backend Go services verify session tokens before database operations.
+-- No database-level RLS policies required.
+-- ============================================================================
