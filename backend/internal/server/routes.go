@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/rand"
 	"fmt"
 	"html"
 	"log"
@@ -15,8 +16,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/supabase-community/supabase-go"
-	"github.com/supabase-community/gotrue-go/types"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 
 	"backend/cmd/web"
 	httpHandlers "backend/internal/adapters/http"
@@ -308,11 +308,14 @@ func validateConsent(consent string) error {
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
-	
+
 	// Apply security middleware (production-aware)
 	r.Use(SecurityHeaders())
 	r.Use(RequestSizeLimit(8 << 20)) // 8MB request limit
-	
+
+	// Add Supertokens CORS middleware (must be early in chain)
+	r.Use(httpHandlers.SupertokensCORS())
+
 	// Add custom logging middleware (conditional debug)
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
@@ -505,56 +508,52 @@ func (s *Server) BetaSignupHandler(c *gin.Context) {
 	templ.Handler(web.BetaSignupSuccess(email)).ServeHTTP(c.Writer, c.Request)
 }
 
-// createBetaUser creates a Supabase auth user and corresponding profile
+// createBetaUser creates a Supertokens user and corresponding profile in NeonDB
 func (s *Server) createBetaUser(email string) error {
-	// Initialize Supabase client with service role key for admin operations
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	serviceKey := os.Getenv("SUPABASE_SECRET_KEY")
-	
-	if supabaseURL == "" || serviceKey == "" {
-		return fmt.Errorf("missing Supabase configuration")
-	}
-	
-	client, err := supabase.NewClient(supabaseURL, serviceKey, &supabase.ClientOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to create Supabase client: %w", err)
-	}
-	
-	// Check if user already exists by email in auth.users
+	// Check if user already exists in profiles table
 	db := s.db.GetDB()
-	var existingUserID string
-	err = db.QueryRow("SELECT id FROM auth.users WHERE email = $1", email).Scan(&existingUserID)
+	var existingEmail string
+	err := db.QueryRow("SELECT email FROM profiles WHERE email = $1", email).Scan(&existingEmail)
 	if err == nil {
 		// User already exists
 		return fmt.Errorf("email %s already registered for beta", email)
 	}
-	
-	// Create Supabase auth user with email verification required
-	conditionalLog("INFO", "Creating Supabase auth user for: %s", email)
-	
-	// Use the Auth API to create user - this will send verification email
-	authUser, err := client.Auth.AdminCreateUser(types.AdminCreateUserRequest{
-		Email:        email,
-		EmailConfirm: false, // Require email verification for real humans
-	})
+
+	// Generate secure temporary password for Supertokens user
+	tempPassword := generateSecurePassword()
+
+	conditionalLog("INFO", "Creating Supertokens user for: %s", email)
+
+	// Create user in Supertokens via email/password signup
+	signUpResponse, err := emailpassword.SignUp("public", email, tempPassword)
 	if err != nil {
-		return fmt.Errorf("failed to create Supabase auth user: %w", err)
+		conditionalLog("ERROR", "Supertokens signup failed for %s: %v", email, err)
+		return fmt.Errorf("failed to create Supertokens user: %w", err)
 	}
-	
-	// Create corresponding profile using the real auth user ID
+
+	// Check if email already exists in Supertokens
+	if signUpResponse.EmailAlreadyExistsError != nil {
+		conditionalLog("INFO", "Email already exists in Supertokens: %s", email)
+		return fmt.Errorf("email %s already registered for beta", email)
+	}
+
+	// Get the user ID from Supertokens response
+	userID := signUpResponse.OK.User.ID
+
+	// Create profile in NeonDB using Supertokens user ID
 	_, err = db.Exec(`
-		INSERT INTO profiles (id, email, beta_status, beta_joined_at, created_at) 
-		VALUES ($1, $2, 'waitlist', NOW(), NOW())
-	`, authUser.ID, email)
-	
+		INSERT INTO profiles (id, email, beta_status, beta_joined_at, subscription_tier, created_at)
+		VALUES ($1, $2, 'waitlist', NOW(), 'beta_grandfathered', NOW())
+	`, userID, email)
+
 	if err != nil {
-		conditionalLog("ERROR", "Failed to create profile for auth user %s: %v", authUser.ID, err)
-		// TODO: Consider cleaning up auth user if profile creation fails
+		conditionalLog("ERROR", "Failed to create profile for Supertokens user %s: %v", userID, err)
+		// TODO: Consider cleaning up Supertokens user if profile creation fails
 		return fmt.Errorf("failed to create user profile: %w", err)
 	}
-	
-	conditionalLog("INFO", "Successfully created Supabase auth user and profile: %s (ID: %s)", email, authUser.ID)
-	
+
+	conditionalLog("INFO", "Successfully created Supertokens user and profile: %s (ID: %s)", email, userID)
+
 	// Send welcome email via Resend (non-blocking)
 	go func() {
 		resendService := external.NewResendService()
@@ -564,6 +563,25 @@ func (s *Server) createBetaUser(email string) error {
 			conditionalLog("INFO", "Welcome email sent successfully to: %s", email)
 		}
 	}()
-	
+
 	return nil
+}
+
+// generateSecurePassword creates a cryptographically secure random password
+func generateSecurePassword() string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+	const length = 32
+
+	b := make([]byte, length)
+	_, err := rand.Read(b)
+	if err != nil {
+		// Fallback to timestamp-based password if crypto/rand fails
+		return fmt.Sprintf("temp_%d", time.Now().UnixNano())
+	}
+
+	for i := range b {
+		b[i] = charset[b[i]%byte(len(charset))]
+	}
+
+	return string(b)
 }

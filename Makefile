@@ -1,94 +1,112 @@
 # CannaNote Project Makefile
-# Manage database, backend, and deployment tasks
+# Tech Stack: Go + NeonDB (PostgreSQL) + Supertokens + Resend
+# Development-focused commands for local workflow
 
-.PHONY: help db-local db-prod db-reset db-seed backend-dev backend-build deploy-fly
+.PHONY: help dev dev-setup test db-import db-verify clean deploy deploy-fast deploy-status deploy-logs deploy-rollback
 
-# Default target
+# ==============================================================================
+# QUICK START
+# ==============================================================================
+
+# Default target shows help
 help:
-	@echo "CannaNote Development Commands"
-	@echo "=============================="
-	@echo "Database:"
-	@echo "  db-local     - Seed local Supabase database"
-	@echo "  db-prod      - Seed production Supabase database" 
-	@echo "  db-reset     - Reset local database with fresh schema"
-	@echo "  db-seed      - Load reference data only"
+	@echo "🌱 CannaNote Development Commands"
+	@echo "=================================="
 	@echo ""
-	@echo "Backend:"
-	@echo "  backend-dev  - Start Go backend development server"
-	@echo "  backend-build- Build backend for production"
+	@echo "Quick Start:"
+	@echo "  make dev         - Start development server with hot reload"
+	@echo "  make dev-setup   - Install all development dependencies"
+	@echo "  make test        - Run tests"
 	@echo ""
-	@echo "Deployment:"
-	@echo "  deploy       - Full deployment pipeline with checks"
-	@echo "  deploy-fast  - Quick deployment (skip pre-checks)"
-	@echo "  deploy-status- Check deployment status and health"
-	@echo "  deploy-logs  - View deployment logs"
-	@echo "  deploy-rollback - Rollback to previous version"
+	@echo "Database (NeonDB):"
+	@echo "  make db-import   - Import schema and reference data to NeonDB"
+	@echo "  make db-verify   - Verify NeonDB data integrity"
+	@echo ""
+	@echo "Deployment (Fly.io):"
+	@echo "  make deploy      - Full deployment with pre-checks"
+	@echo "  make deploy-fast - Quick deployment (skip checks)"
+	@echo "  make deploy-status - Check deployment status"
+	@echo "  make deploy-logs - View production logs"
+	@echo "  make deploy-rollback - Rollback to previous version"
+	@echo ""
+	@echo "Utilities:"
+	@echo "  make clean       - Clean build artifacts"
 
-# Database commands
-db-local:
-	@echo "Setting up LOCAL database..."
-	@cd supabase && supabase db reset --debug
-	@echo "Local database seeded successfully"
-	@echo "Studio URL: http://localhost:54323"
+# ==============================================================================
+# DEVELOPMENT COMMANDS
+# ==============================================================================
 
-db-prod:
-	@echo "Setting up PRODUCTION database..."
-	@cd supabase && supabase db push
-	@echo "Loading reference data to production..."
-	@echo "Enter your Supabase database password when prompted..."
-	@cd supabase && PGPASSWORD="$$DB_PASSWORD" psql \
-		postgresql://postgres.citdskdmralncvjyybin:$$DB_PASSWORD@db.citdskdmralncvjyybin.supabase.co:5432/postgres \
-		--file=reference-data/cannabinoids.sql
-	@cd supabase && PGPASSWORD="$$DB_PASSWORD" psql \
-		postgresql://postgres.citdskdmralncvjyybin:$$DB_PASSWORD@db.citdskdmralncvjyybin.supabase.co:5432/postgres \
-		--file=reference-data/terpenes.sql
-	@echo "Production database seeded successfully"
-
-db-reset:
-	@cd supabase && supabase db reset --debug
-
-db-seed:
-	@echo "Loading reference data to local database..."
-	@cd supabase && psql \
-		--host=127.0.0.1 \
-		--port=54322 \
-		--username=postgres \
-		--dbname=postgres \
-		--file=reference-data/cannabinoids.sql
-	@cd supabase && psql \
-		--host=127.0.0.1 \
-		--port=54322 \
-		--username=postgres \
-		--dbname=postgres \
-		--file=reference-data/terpenes.sql
-	@echo "Reference data loaded"
-
-# Backend commands  
-backend-dev:
+# Primary development command - start backend with hot reload
+dev:
 	@cd backend && make dev
 
-backend-build:
-	@cd backend && make build
+# Install all development dependencies
+dev-setup:
+	@echo "🔧 Setting up CannaNote development environment..."
+	@cd backend && make dev-setup
+	@echo "✅ Development environment ready!"
+	@echo "💡 Run 'make dev' to start coding"
 
-# Deployment commands
+# Run tests
+test:
+	@cd backend && make test
+
+# Run tests with coverage
+test-coverage:
+	@cd backend && make test-coverage
+
+# Clean build artifacts
+clean:
+	@cd backend && make clean
+
+# ==============================================================================
+# DATABASE COMMANDS (NeonDB)
+# ==============================================================================
+
+# Import schema and reference data to NeonDB
+db-import:
+	@echo "📊 Importing schema and reference data to NeonDB..."
+	@test -f backend/.env || (echo "❌ backend/.env not found!" && exit 1)
+	@cd backend && chmod +x ../scripts/import_to_neondb.sh
+	@cd backend && ../scripts/import_to_neondb.sh
+	@echo "✅ Database import complete"
+
+# Verify NeonDB data integrity
+db-verify:
+	@echo "🔍 Verifying NeonDB data integrity..."
+	@test -f backend/.env || (echo "❌ backend/.env not found!" && exit 1)
+	@. backend/.env && psql "$$DB_CONNECTION_URI" -c "\
+		SELECT 'profiles' as table_name, COUNT(*) as row_count FROM profiles \
+		UNION ALL \
+		SELECT 'cannabinoids', COUNT(*) FROM cannabinoids \
+		UNION ALL \
+		SELECT 'terpenes', COUNT(*) FROM terpenes \
+		ORDER BY table_name;"
+	@echo "✅ Verification complete"
+
+# ==============================================================================
+# DEPLOYMENT COMMANDS (Fly.io)
+# ==============================================================================
+
+# Full deployment pipeline with pre-checks
 deploy:
-	@echo "Starting CannaNote deployment pipeline..."
+	@echo "🚀 Starting CannaNote deployment pipeline..."
 	@cd backend && make deploy
-	@echo "CannaNote deployment complete"
+	@echo "✅ CannaNote deployment complete"
 
+# Quick deployment (skip pre-checks)
 deploy-fast:
-	@echo "Fast deployment (skipping checks)..."
+	@echo "⚡ Fast deployment (skipping checks)..."
 	@cd backend && make deploy-fast
 
+# Check deployment status
 deploy-status:
 	@cd backend && make fly-status
 
+# View production logs
 deploy-logs:
 	@cd backend && make fly-logs
 
+# Rollback to previous version
 deploy-rollback:
 	@cd backend && make rollback
-
-# Quick setup for new developers
-setup: db-local
-	@echo "Setup complete! Run 'make backend-dev' to start coding."

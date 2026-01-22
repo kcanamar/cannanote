@@ -74,7 +74,8 @@ func (r *ResendService) SendWelcomeEmail(email, name string) error {
             
             <h3>What's Next?</h3>
             <ul>
-                <li><strong>Verify your email</strong> - Check your inbox for the Supabase verification email</li>
+                <li><strong>Verify your email</strong> - Check your inbox for the verification email</li>
+                <li><strong>Set your password</strong> - Complete account setup via the verification link</li>
                 <li><strong>Start tracking</strong> - Log your first cannabis session in under 30 seconds</li>
                 <li><strong>Discover patterns</strong> - Get insights into your consumption habits</li>
                 <li><strong>Privacy first</strong> - Your data stays local unless you choose premium sync</li>
@@ -106,8 +107,9 @@ Hi there,
 Welcome to the CannaNote beta! You've just joined a community focused on mindful cannabis consumption and personal wellness insights.
 
 What's Next?
-- Verify your email - Check your inbox for the Supabase verification email
-- Start tracking - Log your first cannabis session in under 30 seconds  
+- Check your email - You'll receive a verification link shortly
+- Set your password - Complete your account setup via the verification link
+- Start tracking - Log your first cannabis session in under 30 seconds
 - Discover patterns - Get insights into your consumption habits
 - Privacy first - Your data stays local unless you choose premium sync
 

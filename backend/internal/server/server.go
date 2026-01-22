@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"backend/internal/database"
 	"backend/internal/core/application"
 	"backend/internal/adapters/repository"
+	"backend/internal/adapters/external"
 	httpAdapters "backend/internal/adapters/http"
 )
 
@@ -35,6 +37,13 @@ type Server struct {
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
+	// Initialize Supertokens FIRST (before any route registration)
+	log.Println("Initializing Supertokens authentication...")
+	if err := external.InitializeSupertokens(); err != nil {
+		log.Printf("WARNING: Supertokens initialization failed: %v", err)
+		log.Println("Continuing without Supertokens - auth features will be disabled")
+	}
+
 	// Initialize database service (existing infrastructure code)
 	dbService := database.New()
 
@@ -43,21 +52,20 @@ func NewServer() *http.Server {
 	rawDB := dbService.GetDB()
 
 	// Wire the hexagonal architecture layers from inside out:
-	
+
 	// 1. Repositories (adapters implementing ports)
 	// These translate between domain contracts and external systems
 	humanRepo := repository.NewSupabaseHumanRepository(rawDB)
 
-	// TODO: Implement these when we add authentication and authorization
-	// roleRepo := repository.NewSupabaseRoleRepository(rawDB)
-	// authService := external.NewSupabaseAuthService()
+	// 2. Authentication service (Supertokens adapter)
+	authService := external.NewSupertokensAuthService()
 
-	// 2. Application services (use cases and business workflows)
+	// 3. Application services (use cases and business workflows)
 	// These orchestrate domain entities and coordinate with repositories
-	// Pass nil for unimplemented services - services handle graceful degradation
-	humanService := application.NewHumanService(humanRepo, nil, nil)
+	// Pass authService as the third parameter (was nil before)
+	humanService := application.NewHumanService(humanRepo, nil, authService)
 
-	// 3. HTTP handlers (adapters for web interface)
+	// 4. HTTP handlers (adapters for web interface)
 	// These translate HTTP requests/responses to application service calls
 	humanHandlers := httpAdapters.NewHumanHandlers(humanService)
 

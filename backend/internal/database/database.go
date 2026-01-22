@@ -72,21 +72,17 @@ func New() Service {
 	conditionalLog("DEBUG", "DB_PASSWORD=%s", maskPassword(password))
 	conditionalLog("DEBUG", "DB_SCHEMA=%s", schema)
 	
-	// Determine SSL certificate path based on environment
-	certPath := "certs/prod-ca-2021.crt"
-	if appEnv == "production" {
-		certPath = "/app/certs/prod-ca-2021.crt"
-	}
-	
-	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=verify-full&sslrootcert=%s&search_path=%s", 
-		username, password, host, port, database, certPath, schema)
-	
+	// NeonDB uses system CA certificates (no custom cert needed)
+	// Use sslmode=require for secure connections with system trust store
+	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=require&search_path=%s",
+		username, password, host, port, database, schema)
+
 	conditionalLog("DEBUG", "Connection string: %s", maskConnectionString(connStr))
-	conditionalLog("DEBUG", "Attempting to open database connection...")
-	
+	conditionalLog("DEBUG", "Attempting to open database connection to NeonDB...")
+
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Printf("ERROR: Failed to open database connection (cert path: %s): %v", certPath, err)
+		log.Printf("ERROR: Failed to open database connection: %v", err)
 		log.Fatal(err)
 	}
 	
