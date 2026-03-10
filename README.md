@@ -25,15 +25,15 @@ Cannabis users deserve better than expensive trial and error. Built from real in
 - **Gin Router** - HTTP routing and middleware
 - **templ** - Type-safe HTML templates
 - **HTMX** - Dynamic interactions without complex JavaScript
+- **Resend** - Transactional email delivery
 
 **Database:**
-- **Supabase PostgreSQL** - Database with built-in authentication
-- **Row Level Security** - Privacy protection at the database level
+- **NeonDB** - Managed PostgreSQL (serverless)
 
 **Frontend:**
 - **Server-side rendering** - Fast loading, accessible by default
-- **Tailwind CSS** - Utility-first styling
-- **Alpine.js** (minimal) - Lightweight JavaScript when needed
+- **Tailwind CSS v4** - Utility-first styling with local build
+- **Vanilla JavaScript** - Zero framework overhead, minimal bundle size
 
 **Infrastructure:**
 - **Fly.io** - Simple, reliable deployment
@@ -44,17 +44,18 @@ Cannabis users deserve better than expensive trial and error. Built from real in
 ```
 cannanote/
 ├── README.md                # Project overview and setup
+├── CLAUDE.md                # Development roadmap and future plans
 ├── backend/                 # Go application
 │   ├── cmd/
-│   │   ├── api/             # API server entry point  
+│   │   ├── api/             # API server entry point
 │   │   └── web/             # Web templates and assets
 │   │       ├── assets/      # Static assets (CSS, JS, images)
-│   │       │   └── images/logos/  # Logo assets
-│   │       ├── *.templ      # HTML templates
-│   │       └── *.go         # Generated template code
+│   │       ├── components/  # Reusable templ components
+│   │       └── *.templ      # Page templates
 │   ├── internal/            # Private application code
 │   │   ├── adapters/        # External service integrations
-│   │   │   ├── http/        # HTTP handlers
+│   │   │   ├── external/    # Third-party services (email, etc.)
+│   │   │   ├── http/        # HTTP handlers and middleware
 │   │   │   └── repository/  # Data access layer
 │   │   ├── core/            # Business logic
 │   │   │   ├── domain/      # Entities and business rules
@@ -62,21 +63,17 @@ cannanote/
 │   │   │   └── ports/       # Interface definitions
 │   │   ├── database/        # Database connection setup
 │   │   └── server/          # Server configuration and routing
-│   ├── tests/               # Test files
+│   ├── neondb/              # Database migrations
+│   │   └── migrations/      # SQL migration files
 │   ├── Dockerfile           # Container definition
-│   ├── fly.toml            # Deployment configuration
-│   ├── Makefile            # Build and development commands
-│   └── go.mod              # Go dependencies
-├── mobile/                  # Flutter mobile application
-├── supabase/               # Database schema and configuration
-│   ├── config.toml         # Supabase configuration
-│   ├── seed.sql            # Initial data
-│   └── reference-data/     # Cannabinoids and terpenes data
-└── docs/                   # Documentation
-    ├── style-guide.md      # Brand guidelines and design system
-    ├── brand-strategy.md   # Business strategy and positioning
-    ├── engineering.md      # Development guidelines
-    └── archive/            # Archived documentation
+│   ├── fly.toml             # Deployment configuration
+│   ├── Makefile             # Build and development commands
+│   └── go.mod               # Go dependencies
+├── mobile/                  # Flutter mobile application (future)
+└── docs/                    # Documentation
+    ├── content/             # Markdown documentation content
+    ├── style-guide.md       # Brand guidelines and design system
+    └── engineering.md       # Development guidelines
 ```
 
 ## Architecture Philosophy
@@ -149,31 +146,31 @@ make build
 make deploy
 ```
 
-## Features
+## Current Features
 
-### Personal Cannabis Tracking
-- **Seamless logging** - Track sessions in under 30 seconds
-- **Pattern recognition** - See what actually works for your body
-- **Multiple consumption methods** - Flower, concentrates, edibles, topicals
-- **Comprehensive data** - Strains, effects, dosage, timing, environment
+### Beta Access System
+- **Email signup flow** - Request beta access with email verification
+- **Account activation** - Secure email verification and password setup
+- **Session management** - Persistent authentication with secure cookies
+- **Beta grandfathering** - Early supporters receive lifetime premium benefits
 
-### Evidence-Based Education
-- **Cannabis science** explained in accessible language
-- **Harm reduction** guidance and safety information
-- **Myth-busting** content based on peer-reviewed research
-- **Personal insights** derived from your own consumption patterns
+### Application Interface
+- **Landing page** - Clear value proposition and beta signup
+- **Authenticated dashboard** - Protected app area for verified users
+- **Collapsible sidebar** - Slack/Discord-style navigation (desktop + mobile)
+- **Dark mode support** - System-aware theme with manual toggle
+- **Mobile-first design** - Responsive layouts optimized for touch
+
+### Documentation System
+- **Markdown-based docs** - Easy to maintain documentation
+- **Searchable content** - Find information quickly
+- **Cannabis education** - Harm reduction and science-based content
 
 ### Privacy Protection
-- **Local-first data storage** - Your data stays on your device
-- **No data selling** - We never monetize your personal information
-- **Radical transparency** - Clear documentation of all data practices
-- **User ownership** - You control your data completely
-
-### Mindful Design
-- **Harm reduction first** - Features prioritize your well-being
-- **Non-judgmental approach** - "You're not wrong" philosophy
-- **Accessible interface** - Works for everyone, regardless of experience level
-- **Environmental consciousness** - Sustainable technology choices
+- **Local-first architecture** - Cannabis data stays on your device
+- **No third-party tracking** - Zero analytics or advertising SDKs
+- **Minimal data collection** - Only what's necessary for core functionality
+- **User data ownership** - Full control over your information
 
 ## Contributing
 
@@ -216,44 +213,50 @@ This will:
 Required configuration in `.env`:
 
 ```bash
-# Database
-DB_HOST=your-supabase-host
+# Database (NeonDB)
+DB_HOST=your-neondb-host
 DB_PORT=5432
-DB_DATABASE=postgres
-DB_USERNAME=postgres
+DB_DATABASE=your-database
+DB_USERNAME=your-username
 DB_PASSWORD=your-password
+DB_SCHEMA=public
 
 # Application
-PORT=3001
+PORT=8080
 APP_ENV=production
+APP_URL=https://your-domain.com
+
+# Email (Resend)
+RESEND_API_KEY=your-resend-api-key
 ```
 
 ## Privacy & Security
 
 ### Data Protection
-- **Local-first architecture** - Data stays on user devices when possible
-- **Minimal data collection** - Only collect what's necessary for functionality
-- **No third-party tracking** - No analytics or advertising SDKs
+- **Local-first architecture** - Cannabis data stays on user devices
+- **Minimal server data** - Only authentication and sync metadata on server
+- **No third-party tracking** - Zero analytics or advertising SDKs
 - **Transparent practices** - Clear documentation of all data handling
 
-### Security Measures
-- **Parameterized queries** - Prevent SQL injection
-- **Input validation** - Sanitize all user inputs
-- **HTTPS enforcement** - Encrypted connections in production
-- **Regular updates** - Keep dependencies current for security
+### Security Practices
+- **Input validation** - All user inputs sanitized
+- **HTTPS enforcement** - Encrypted connections required
+- **Regular dependency updates** - Automated security scanning
+- **Rate limiting** - Protection against abuse
 
 ## Roadmap
 
-### Current Focus
-- **Core tracking functionality** - Reliable, fast journaling experience
-- **Basic pattern recognition** - Help users understand their data
-- **Mobile application** - Flutter app for iOS and Android
+See [CLAUDE.md](CLAUDE.md) for the detailed development roadmap.
 
-### Future Considerations
-- **Advanced analytics** - Deeper insights from consumption patterns
-- **Community features** - Optional sharing with privacy controls
-- **Integration options** - Connect with other health tracking apps
-- **Offline capabilities** - Full functionality without internet
+### Current Focus
+- **Offline-first PWA** - Full functionality without network connection
+- **Session logging** - 30-second cannabis session tracking
+- **Local data storage** - IndexedDB-based client-side persistence
+
+### Future Plans
+- **Optional cloud sync** - Paid feature for cross-device access
+- **Mobile application** - Native apps via Flutter
+- **Pattern insights** - Personal analytics and recommendations
 
 ## Support
 
