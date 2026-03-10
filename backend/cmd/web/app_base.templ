@@ -1,0 +1,336 @@
+package web
+
+// AppBase is the layout template for authenticated /app routes
+// Features a collapsible sidebar (Slack/Discord style) instead of top navigation
+templ AppBase(title string, currentPath string, email string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title }</title>
+
+			<!-- Favicon -->
+			<link rel="icon" type="image/x-icon" href="/assets/images/favicon/favicon.ico">
+			<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon/favicon-96x96.png">
+			<link rel="icon" type="image/svg+xml" href="/assets/images/favicon/favicon.svg">
+			<link rel="apple-touch-icon" href="/assets/images/favicon/apple-touch-icon.png">
+			<link rel="manifest" href="/assets/images/favicon/site.webmanifest">
+			<meta name="theme-color" content="#1a1f36">
+
+			<!-- Fonts -->
+			<link rel="preconnect" href="https://fonts.googleapis.com">
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+			<!-- Styles -->
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+
+			<!-- Scripts -->
+			<script src="/assets/js/theme.js"></script>
+			<script src="/assets/js/htmx.min.js" defer></script>
+			<script src="/assets/js/app.min.js" defer></script>
+
+			<style>
+				/* Sidebar transitions */
+				.sidebar {
+					transition: width 200ms ease-in-out;
+				}
+				.sidebar-collapsed {
+					width: 4.5rem;
+				}
+				.sidebar-expanded {
+					width: 16rem;
+				}
+				/* Mobile overlay */
+				.sidebar-overlay {
+					transition: opacity 200ms ease-in-out;
+				}
+				/* Hide text when collapsed */
+				.sidebar-collapsed .nav-label,
+				.sidebar-collapsed .user-email,
+				.sidebar-collapsed .logo-text {
+					display: none;
+				}
+				/* Main content margin adjustment */
+				.main-content {
+					transition: margin-left 200ms ease-in-out;
+				}
+				@media (min-width: 768px) {
+					.main-content-expanded {
+						margin-left: 16rem;
+					}
+					.main-content-collapsed {
+						margin-left: 4.5rem;
+					}
+				}
+			</style>
+		</head>
+		<body class="font-brand antialiased bg-gray-50 dark:bg-navy-950">
+			<!-- Mobile overlay (hidden by default) -->
+			<div
+				id="sidebar-overlay"
+				class="sidebar-overlay fixed inset-0 bg-black/50 z-40 hidden md:hidden"
+				onclick="toggleMobileSidebar()"
+			></div>
+
+			<!-- Sidebar -->
+			<aside
+				id="sidebar"
+				class="sidebar sidebar-expanded fixed top-0 left-0 h-full bg-white dark:bg-navy-900 border-r border-gray-200 dark:border-navy-700 z-50 flex flex-col -translate-x-full md:translate-x-0"
+			>
+				<!-- Logo Section -->
+				<div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-navy-700">
+					<a href="/app" class="flex items-center space-x-3 overflow-hidden">
+						<img
+							src="/assets/images/logos/logo-book.svg"
+							alt="CannaNote"
+							class="w-8 h-8 flex-shrink-0 dark:invert"
+						/>
+						<span class="logo-text text-xl font-semibold text-navy-900 dark:text-white whitespace-nowrap">
+							CannaNote
+						</span>
+					</a>
+				</div>
+
+				<!-- Navigation -->
+				<nav class="flex-1 py-4 overflow-y-auto">
+					<ul class="space-y-1 px-2">
+						@appNavItem("/app", "Dashboard", currentPath, dashboardIcon())
+						@appNavItem("/app/sessions", "Sessions", currentPath, sessionsIcon())
+						@appNavItem("/app/settings", "Settings", currentPath, settingsIcon())
+					</ul>
+
+					<!-- External Links -->
+					<div class="mt-4 pt-4 border-t border-gray-200 dark:border-navy-700 px-2">
+						<a
+							href="/docs"
+							target="_blank"
+							rel="noopener"
+							class="flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+						>
+							@docsIcon()
+							<span class="nav-label ml-3 whitespace-nowrap">Docs</span>
+						</a>
+					</div>
+				</nav>
+
+				<!-- User Section -->
+				<div class="border-t border-gray-200 dark:border-navy-700 p-4">
+					<!-- Theme Toggle -->
+					<button
+						onclick="toggleTheme()"
+						class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors mb-2"
+					>
+						<svg id="app-sun-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+						</svg>
+						<svg id="app-moon-icon" class="w-5 h-5 flex-shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+						</svg>
+						<span class="nav-label ml-3 whitespace-nowrap">Toggle Theme</span>
+					</button>
+
+					<!-- User Email -->
+					<div class="flex items-center px-3 py-2 text-sm text-gray-500 dark:text-gray-400 overflow-hidden">
+						<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+						</svg>
+						<span class="user-email ml-3 truncate">{ email }</span>
+					</div>
+
+					<!-- Sign Out -->
+					<form action="/auth/signout" method="POST">
+						<button
+							type="submit"
+							class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+						>
+							<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+							</svg>
+							<span class="nav-label ml-3 whitespace-nowrap">Sign Out</span>
+						</button>
+					</form>
+				</div>
+
+				<!-- Collapse Toggle (Desktop only) -->
+				<button
+					id="sidebar-collapse-btn"
+					onclick="toggleSidebarCollapse()"
+					class="hidden md:flex items-center justify-center h-12 border-t border-gray-200 dark:border-navy-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+					aria-label="Toggle sidebar"
+				>
+					<svg id="collapse-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+					</svg>
+					<svg id="expand-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+					</svg>
+				</button>
+			</aside>
+
+			<!-- Mobile Header -->
+			<header class="md:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-navy-700 z-30 flex items-center px-4">
+				<button
+					onclick="toggleMobileSidebar()"
+					class="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800"
+					aria-label="Open menu"
+				>
+					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+					</svg>
+				</button>
+				<span class="ml-3 text-lg font-semibold text-navy-900 dark:text-white">CannaNote</span>
+			</header>
+
+			<!-- Main Content -->
+			<main
+				id="main-content"
+				class="main-content main-content-expanded min-h-screen pt-16 md:pt-0"
+				role="main"
+			>
+				<div class="p-6">
+					{ children... }
+				</div>
+			</main>
+
+			<script>
+				// Sidebar state management
+				const SIDEBAR_COLLAPSED_KEY = 'cannanote_sidebar_collapsed';
+
+				function initSidebar() {
+					const sidebar = document.getElementById('sidebar');
+					const mainContent = document.getElementById('main-content');
+					const collapseIcon = document.getElementById('collapse-icon');
+					const expandIcon = document.getElementById('expand-icon');
+
+					// Check saved preference (desktop only)
+					if (window.innerWidth >= 768) {
+						const isCollapsed = localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+						if (isCollapsed) {
+							sidebar.classList.remove('sidebar-expanded');
+							sidebar.classList.add('sidebar-collapsed');
+							mainContent.classList.remove('main-content-expanded');
+							mainContent.classList.add('main-content-collapsed');
+							collapseIcon.classList.add('hidden');
+							expandIcon.classList.remove('hidden');
+						}
+					}
+				}
+
+				function toggleSidebarCollapse() {
+					const sidebar = document.getElementById('sidebar');
+					const mainContent = document.getElementById('main-content');
+					const collapseIcon = document.getElementById('collapse-icon');
+					const expandIcon = document.getElementById('expand-icon');
+
+					const isCurrentlyExpanded = sidebar.classList.contains('sidebar-expanded');
+
+					if (isCurrentlyExpanded) {
+						sidebar.classList.remove('sidebar-expanded');
+						sidebar.classList.add('sidebar-collapsed');
+						mainContent.classList.remove('main-content-expanded');
+						mainContent.classList.add('main-content-collapsed');
+						collapseIcon.classList.add('hidden');
+						expandIcon.classList.remove('hidden');
+						localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'true');
+					} else {
+						sidebar.classList.remove('sidebar-collapsed');
+						sidebar.classList.add('sidebar-expanded');
+						mainContent.classList.remove('main-content-collapsed');
+						mainContent.classList.add('main-content-expanded');
+						collapseIcon.classList.remove('hidden');
+						expandIcon.classList.add('hidden');
+						localStorage.setItem(SIDEBAR_COLLAPSED_KEY, 'false');
+					}
+				}
+
+				function toggleMobileSidebar() {
+					const sidebar = document.getElementById('sidebar');
+					const overlay = document.getElementById('sidebar-overlay');
+
+					const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+					if (isOpen) {
+						sidebar.classList.add('-translate-x-full');
+						overlay.classList.add('hidden');
+						document.body.style.overflow = '';
+					} else {
+						sidebar.classList.remove('-translate-x-full');
+						overlay.classList.remove('hidden');
+						document.body.style.overflow = 'hidden';
+					}
+				}
+
+				// Initialize on load
+				document.addEventListener('DOMContentLoaded', initSidebar);
+
+				// Handle resize
+				window.addEventListener('resize', function() {
+					const sidebar = document.getElementById('sidebar');
+					const overlay = document.getElementById('sidebar-overlay');
+
+					if (window.innerWidth >= 768) {
+						// Desktop: ensure sidebar is visible and overlay is hidden
+						sidebar.classList.remove('-translate-x-full');
+						overlay.classList.add('hidden');
+						document.body.style.overflow = '';
+					} else {
+						// Mobile: hide sidebar by default
+						sidebar.classList.add('-translate-x-full');
+					}
+				});
+			</script>
+		</body>
+	</html>
+}
+
+// Navigation item helper
+templ appNavItem(href, label, currentPath string, icon templ.Component) {
+	<li>
+		if href == currentPath {
+			<a
+				href={ templ.SafeURL(href) }
+				class="flex items-center px-3 py-2 rounded-lg bg-sage-100 dark:bg-sage-900/30 text-sage-800 dark:text-sage-300 font-medium"
+				aria-current="page"
+			>
+				@icon
+				<span class="nav-label ml-3 whitespace-nowrap">{ label }</span>
+			</a>
+		} else {
+			<a
+				href={ templ.SafeURL(href) }
+				class="flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+			>
+				@icon
+				<span class="nav-label ml-3 whitespace-nowrap">{ label }</span>
+			</a>
+		}
+	</li>
+}
+
+// Icon components
+templ dashboardIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+	</svg>
+}
+
+templ sessionsIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+	</svg>
+}
+
+templ settingsIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+	</svg>
+}
+
+templ docsIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+	</svg>
+}

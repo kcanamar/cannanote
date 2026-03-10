@@ -124,7 +124,7 @@ docker-down:
 	fi
 
 # ==============================================================================
-# FLY.IO DEPLOYMENT (Production - NeonDB + Supertokens + Resend)
+# FLY.IO DEPLOYMENT (Production - NeonDB + Resend)
 # ==============================================================================
 
 fly-auth:
@@ -141,13 +141,11 @@ fly-secrets:
 	 DB_USERNAME=$$(grep '^DB_USERNAME=' .env | cut -d'=' -f2-); \
 	 DB_PASSWORD=$$(grep '^DB_PASSWORD=' .env | cut -d'=' -f2-); \
 	 DB_SCHEMA=$$(grep '^DB_SCHEMA=' .env | cut -d'=' -f2-); \
-	 SUPERTOKENS_CONNECTION_URI=$$(grep '^SUPERTOKENS_CONNECTION_URI=' .env | cut -d'=' -f2-); \
-	 SUPERTOKENS_API_KEY=$$(grep '^SUPERTOKENS_API_KEY=' .env | cut -d'=' -f2-); \
 	 APP_URL=$$(grep '^APP_URL=' .env | cut -d'=' -f2-); \
 	 RESEND_API_KEY=$$(grep '^RESEND_API_KEY=' .env | cut -d'=' -f2-); \
-	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$SUPERTOKENS_CONNECTION_URI" ] || [ -z "$$SUPERTOKENS_API_KEY" ] || [ -z "$$APP_URL" ] || [ -z "$$RESEND_API_KEY" ]; then \
+	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$APP_URL" ] || [ -z "$$RESEND_API_KEY" ]; then \
 	   echo "❌ Missing required environment variables!"; \
-	   echo "Required: DB_PASSWORD, SUPERTOKENS_CONNECTION_URI, SUPERTOKENS_API_KEY, APP_URL, RESEND_API_KEY"; \
+	   echo "Required: DB_PASSWORD, APP_URL, RESEND_API_KEY"; \
 	   exit 1; \
 	 fi; \
 	 echo "Setting secrets on Fly.io..."; \
@@ -158,8 +156,6 @@ fly-secrets:
 	   "DB_USERNAME=$$DB_USERNAME" \
 	   "DB_PASSWORD=$$DB_PASSWORD" \
 	   "DB_SCHEMA=$$DB_SCHEMA" \
-	   "SUPERTOKENS_CONNECTION_URI=$$SUPERTOKENS_CONNECTION_URI" \
-	   "SUPERTOKENS_API_KEY=$$SUPERTOKENS_API_KEY" \
 	   "APP_ENV=production" \
 	   "GIN_MODE=release" \
 	   "DEBUG=false" \
@@ -170,8 +166,6 @@ fly-secrets:
 fly-secrets-verify:
 	@echo "Verifying secrets..."
 	@flyctl secrets list | grep -q "DB_PASSWORD" || (echo "❌ DB_PASSWORD not set!" && exit 1)
-	@flyctl secrets list | grep -q "SUPERTOKENS_CONNECTION_URI" || (echo "❌ SUPERTOKENS_CONNECTION_URI not set!" && exit 1)
-	@flyctl secrets list | grep -q "SUPERTOKENS_API_KEY" || (echo "❌ SUPERTOKENS_API_KEY not set!" && exit 1)
 	@flyctl secrets list | grep -q "APP_ENV" || (echo "❌ APP_ENV not set!" && exit 1)
 	@flyctl secrets list | grep -q "APP_URL" || (echo "❌ APP_URL not set!" && exit 1)
 	@flyctl secrets list | grep -q "RESEND_API_KEY" || (echo "❌ RESEND_API_KEY not set!" && exit 1)

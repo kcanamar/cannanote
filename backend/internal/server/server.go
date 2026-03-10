@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -10,10 +9,9 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"backend/internal/database"
-	"backend/internal/core/application"
 	"backend/internal/adapters/repository"
-	"backend/internal/adapters/external"
+	"backend/internal/core/application"
+	"backend/internal/database"
 	httpAdapters "backend/internal/adapters/http"
 )
 
@@ -37,33 +35,20 @@ type Server struct {
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
-	// Initialize Supertokens FIRST (before any route registration)
-	log.Println("Initializing Supertokens authentication...")
-	if err := external.InitializeSupertokens(); err != nil {
-		log.Printf("WARNING: Supertokens initialization failed: %v", err)
-		log.Println("Continuing without Supertokens - auth features will be disabled")
-	}
-
-	// Initialize database service (existing infrastructure code)
+	// Initialize database service
 	dbService := database.New()
 
 	// Get the underlying *sql.DB for repositories
-	// Repository adapters need direct database access for SQL operations
 	rawDB := dbService.GetDB()
 
-	// Wire the hexagonal architecture layers from inside out:
+	// Wire the hexagonal architecture layers:
 
 	// 1. Repositories (adapters implementing ports)
-	// These translate between domain contracts and external systems
 	humanRepo := repository.NewSupabaseHumanRepository(rawDB)
 
-	// 2. Authentication service (Supertokens adapter)
-	authService := external.NewSupertokensAuthService()
-
-	// 3. Application services (use cases and business workflows)
-	// These orchestrate domain entities and coordinate with repositories
-	// Pass authService as the third parameter (was nil before)
-	humanService := application.NewHumanService(humanRepo, nil, authService)
+	// 2. Application services (use cases and business workflows)
+	// Auth is now handled directly in route handlers via AuthService
+	humanService := application.NewHumanService(humanRepo, nil, nil)
 
 	// 4. HTTP handlers (adapters for web interface)
 	// These translate HTTP requests/responses to application service calls
