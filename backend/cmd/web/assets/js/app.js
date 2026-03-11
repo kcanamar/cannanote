@@ -104,25 +104,30 @@ function handleDocumentClick(event) {
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize theme
   initTheme();
-  
+
+  // Register service worker for offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+
   // Add form validation listeners
   const emailInput = document.getElementById('email-input');
   const consentCheckbox = document.getElementById('consent-checkbox');
-  
+
   if (emailInput) {
     emailInput.addEventListener('input', validateBetaForm);
   }
-  
+
   if (consentCheckbox) {
     consentCheckbox.addEventListener('change', validateBetaForm);
   }
-  
+
   // Initial form validation
   validateBetaForm();
-  
+
   // Add click-away listener for mobile menu
   document.addEventListener('click', handleDocumentClick);
-  
+
   // Close mobile menu on escape key
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {

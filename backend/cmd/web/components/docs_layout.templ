@@ -8,9 +8,21 @@ import (
 
 // shouldFolderBeOpen determines if a folder should be open based on current path
 func shouldFolderBeOpen(folder docs.SidebarItem, currentPath string) bool {
-	// Open folder if current path is within this section
+	// Check if folder's own href matches
+	if folder.Href != "" && folder.Href == currentPath {
+		return true
+	}
+	// Check if current path is within this section
+	if folder.Section != "" && strings.Contains(currentPath, "/"+folder.Section+"/") {
+		return true
+	}
+	// Recursively check children
 	for _, child := range folder.Children {
-		if child.Href == currentPath || strings.Contains(currentPath, "/"+folder.Section+"/") {
+		if child.Href == currentPath {
+			return true
+		}
+		// If child is a folder, check its children recursively
+		if child.IsFolder && shouldFolderBeOpen(child, currentPath) {
 			return true
 		}
 	}
@@ -20,18 +32,19 @@ func shouldFolderBeOpen(folder docs.SidebarItem, currentPath string) bool {
 // docsTOCSidebar renders the table of contents sidebar
 templ docsTOCSidebar(doc *docs.Doc) {
 	if len(doc.TOC) > 0 {
-		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden xl:block">
+		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden xl:block">
 			<div class="p-6">
 				<h3 class="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider mb-4">
 					On This Page
 				</h3>
 				<nav class="space-y-1">
-					<ul class="space-y-1 text-sm">
+					<ul id="toc-list" class="space-y-1 text-sm">
 						for _, item := range doc.TOC {
 							<li class={ "ml-" + strconv.Itoa((item.Level - 2) * 4) }>
 								<a
-									href={ "#" + item.ID }
-									class="block py-1 text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition truncate"
+									href={ templ.SafeURL("#" + item.ID) }
+									data-toc-link={ item.ID }
+									class="toc-link block py-1 text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition truncate"
 								>
 									{ item.Text }
 								</a>
@@ -41,8 +54,9 @@ templ docsTOCSidebar(doc *docs.Doc) {
 				</nav>
 			</div>
 		</aside>
+		@tocScrollSpy()
 	} else {
-		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden xl:block">
+		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden xl:block">
 			<div class="p-6">
 				<div class="text-sm text-neutral-500 dark:text-neutral-400">
 					No headings on this page
@@ -52,11 +66,58 @@ templ docsTOCSidebar(doc *docs.Doc) {
 	}
 }
 
+// tocScrollSpy adds scroll-spy behavior to highlight active TOC item
+templ tocScrollSpy() {
+	<script>
+		(function() {
+			const tocLinks = document.querySelectorAll('.toc-link');
+			if (!tocLinks.length) return;
+
+			const activeClass = 'text-sage-600 dark:text-sage-400 font-medium';
+			const inactiveClass = 'text-neutral-600 dark:text-neutral-400';
+
+			function setActiveLink(id) {
+				tocLinks.forEach(link => {
+					const linkId = link.getAttribute('data-toc-link');
+					if (linkId === id) {
+						link.className = `toc-link block py-1 ${activeClass} hover:text-sage-600 dark:hover:text-sage-400 transition truncate`;
+					} else {
+						link.className = `toc-link block py-1 ${inactiveClass} hover:text-sage-600 dark:hover:text-sage-400 transition truncate`;
+					}
+				});
+			}
+
+			// Get all heading IDs from TOC links
+			const headingIds = Array.from(tocLinks).map(link => link.getAttribute('data-toc-link'));
+			const headings = headingIds.map(id => document.getElementById(id)).filter(Boolean);
+
+			if (!headings.length) return;
+
+			// Use IntersectionObserver for scroll spy
+			const observer = new IntersectionObserver((entries) => {
+				entries.forEach(entry => {
+					if (entry.isIntersecting) {
+						setActiveLink(entry.target.id);
+					}
+				});
+			}, {
+				rootMargin: '-80px 0px -70% 0px',
+				threshold: 0
+			});
+
+			headings.forEach(heading => observer.observe(heading));
+
+			// Set initial active state
+			if (headings[0]) setActiveLink(headings[0].id);
+		})();
+	</script>
+}
+
 // DocsContentLayout creates the three-column layout for documentation
 templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
 	<div class="flex min-h-screen bg-white dark:bg-navy-950">
 		<!-- Left Sidebar - Navigation -->
-		<aside class="docs-sidebar w-72 bg-white dark:bg-navy-900 border-r border-neutral-200 dark:border-navy-700 h-screen sticky top-0 overflow-y-auto hidden lg:block">
+		<aside class="docs-sidebar w-72 bg-white dark:bg-navy-900 border-r border-neutral-200 dark:border-navy-700 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden lg:block">
 			<div class="p-6">
 				<!-- Back to Main Site -->
 				<div class="mb-6 pb-6 border-b border-neutral-200 dark:border-navy-700">
@@ -218,16 +279,35 @@ templ docsNavigationTree(items []docs.SidebarItem, currentPath string) {
 
 // Helper template for folder navigation items (collapsible sections)
 templ docsNavigationFolder(folder docs.SidebarItem, currentPath string) {
-	<details class="group" open={ shouldFolderBeOpen(folder, currentPath) }>
+	<details class="group" open?={ shouldFolderBeOpen(folder, currentPath) }>
 		<summary class="flex items-center justify-between px-3 py-2 text-sm font-semibold text-neutral-900 dark:text-white cursor-pointer hover:bg-neutral-100 dark:hover:bg-navy-800 rounded-md transition list-none">
-			<span>{ folder.Label }</span>
-			<svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			if folder.Href != "" {
+				<a
+					href={ folder.Href }
+					class={ "flex-1 hover:text-sage-600 dark:hover:text-sage-400 transition",
+						templ.KV("text-sage-700 dark:text-sage-300", folder.Href == currentPath) }
+					onclick="event.stopPropagation()"
+					hx-get={ folder.Href }
+					hx-target="#main-content"
+					hx-swap="innerHTML"
+					hx-push-url="true"
+				>
+					{ folder.Label }
+				</a>
+			} else {
+				<span>{ folder.Label }</span>
+			}
+			<svg class="w-4 h-4 transition-transform group-open:rotate-90 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 			</svg>
 		</summary>
-		<div class="ml-6 mt-1 space-y-1">
+		<div class="ml-4 mt-1 space-y-1 border-l border-neutral-200 dark:border-navy-700 pl-3">
 			for _, child := range folder.Children {
-				@docsNavigationItem(child, currentPath)
+				if child.IsFolder {
+					@docsNavigationFolder(child, currentPath)
+				} else {
+					@docsNavigationItem(child, currentPath)
+				}
 			}
 		</div>
 	</details>

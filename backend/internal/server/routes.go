@@ -52,7 +52,7 @@ func SecurityHeaders() gin.HandlerFunc {
 				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
 				"img-src 'self' data: https:; " +
 				"font-src 'self' https://fonts.gstatic.com; " +
-				"connect-src 'self'; " +
+				"connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; " +
 				"form-action 'self'; " +
 				"frame-ancestors 'none'; " +
 				"base-uri 'self'"
@@ -62,7 +62,7 @@ func SecurityHeaders() gin.HandlerFunc {
 				"img-src 'self' data: https: blob:; " +
 				"font-src 'self' data: https://fonts.gstatic.com; " +
 				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-				"connect-src 'self' ws: wss:; " +
+				"connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com; " +
 				"form-action 'self'"
 		}
 		c.Header("Content-Security-Policy", csp)
@@ -364,6 +364,23 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Serve robots.txt at root level
 	r.GET("/robots.txt", func(c *gin.Context) {
 		c.File("./cmd/web/assets/robots.txt")
+	})
+
+	// Serve favicon.ico at root level (browsers request this by default)
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.File("./cmd/web/assets/images/favicon/favicon.ico")
+	})
+
+	// Service worker - served from root scope for full site control
+	r.GET("/sw.js", func(c *gin.Context) {
+		c.Header("Cache-Control", "no-cache")
+		c.Header("Content-Type", "application/javascript")
+		c.File("./cmd/web/assets/sw.js")
+	})
+
+	// Offline fallback page
+	r.GET("/offline", func(c *gin.Context) {
+		templ.Handler(web.Offline()).ServeHTTP(c.Writer, c.Request)
 	})
 
 	// Documentation routes - check multiple possible locations

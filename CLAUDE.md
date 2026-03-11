@@ -243,6 +243,49 @@ Client                           Server
 
 ---
 
+## Open Discussion Items
+
+### Data Persistence & Browser "Clear Site Data" Problem
+
+**The Issue:**
+When users "clear site data" in browsers, IndexedDB gets wiped alongside cache storage. Users may think they're just clearing cached pages, but they lose their session history.
+
+**Potential Solution (to discuss):**
+Filesystem-based backup - user downloads a backup file to their system, can reimport later. This provides:
+- True data ownership (file lives on their device/cloud storage)
+- Protection against browser data clearing
+- Easy migration between browsers
+- Backup before PWA uninstall
+
+**Questions to resolve:**
+- File format? (JSON is portable, encrypted JSON for privacy?)
+- Auto-prompt for backup before destructive actions?
+- Import/export UX flow?
+- How to detect "first launch after data loss" to prompt restore?
+
+**Related to:** Data Export feature in Seedling Cycle
+
+---
+
+### Documentation Header Linking
+
+**The Need:**
+Add clickable anchor links to documentation headers for better:
+- Direct linking to specific sections in support conversations
+- Backlinks between related documentation
+- Shareable URLs that jump to exact content
+- Improved navigation for humans seeking specific answers
+
+**Implementation:**
+- Headers already have auto-generated IDs (via goldmark parser)
+- Need to add visible anchor links (hover or always-visible)
+- Consider copy-to-clipboard functionality for easy sharing
+- Update docs CSS/JS to support anchor link styling
+
+**Related to:** Documentation system, support workflow
+
+---
+
 ## Metrics
 
 ### Primary (User Experience)

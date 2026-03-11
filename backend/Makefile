@@ -89,10 +89,10 @@ build:
 	@echo "Building for production..."
 	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
 	@echo "Minifying JavaScript..."
-	@if command -v npx > /dev/null && npx terser --version > /dev/null 2>&1; then \
-		npx terser cmd/web/assets/js/app.js -o cmd/web/assets/js/app.min.js -c -m; \
+	@if command -v npx > /dev/null; then \
+		npx --yes terser cmd/web/assets/js/app.js -o cmd/web/assets/js/app.min.js -c -m; \
 	else \
-		echo "terser not available, copying unminified JS"; \
+		echo "npx not available, copying unminified JS"; \
 		cp cmd/web/assets/js/app.js cmd/web/assets/js/app.min.js; \
 	fi
 	@templ generate

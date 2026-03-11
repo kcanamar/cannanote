@@ -28,9 +28,10 @@ CannaNote exists to help people develop a healthier relationship with cannabis t
 #### Prerequisites
 
 - **Go 1.21+** for backend development
-- **Flutter/Dart** for mobile development
 - **Git** for version control
 - **Make** for development commands
+
+> **Note:** Flutter/Dart mobile development is planned for our Vegetative Cycle. Currently, we're focused on PWA-first development.
 
 #### Getting Started
 
@@ -60,7 +61,8 @@ CannaNote exists to help people develop a healthier relationship with cannabis t
 #### Code Standards
 
 - **Go**: Follow `gofmt` and `golint` conventions
-- **Flutter**: Use `dart format` and follow Flutter best practices
+- **JavaScript**: Keep it minimal and vanilla (no frameworks)
+- **CSS**: Tailwind v4 with semantic class names
 - **Commit messages**: Use conventional commits format
 - **Privacy**: Never commit secrets or personal data
 
@@ -111,8 +113,8 @@ CannaNote exists to help people develop a healthier relationship with cannabis t
 
 - **Steps to reproduce** the issue
 - **Expected behavior** vs actual behavior
-- **Platform details** (web, iOS, Android)
-- **App version** and device information
+- **Platform details** (browser, OS, device type)
+- **Browser version** and device information
 - **Screenshots or screen recordings** if helpful
 
 #### Privacy in Bug Reports
@@ -168,8 +170,8 @@ CannaNote uses hexagonal architecture with these key components:
 - **Domain Layer** - Core business logic (Go)
 - **Application Layer** - Use cases and services (Go)
 - **Adapters** - External interfaces (HTTP, database, etc.)
-- **Mobile App** - Flutter with Drift for local storage
-- **Web Frontend** - Server-side rendering with HTMX
+- **Web Frontend** - Server-side rendering with HTMX + PWA
+- **Mobile App** - *Planned: Flutter with Drift for local storage*
 
 ### Key Principles
 
@@ -182,8 +184,8 @@ CannaNote uses hexagonal architecture with these key components:
 
 - **Unit tests** for domain logic (85%+ coverage required)
 - **Integration tests** for API endpoints
-- **Widget tests** for Flutter UI components
 - **End-to-end tests** for critical user journeys
+- **Widget tests** - *Planned for Flutter mobile development*
 
 ## Getting Help
 
