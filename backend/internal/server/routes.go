@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"crypto/rand"
 	"fmt"
 	"html"
 	"net"
@@ -317,21 +316,43 @@ func validateConsent(consent string) error {
 }
 
 func (s *Server) RegisterRoutes() http.Handler {
-	r := gin.Default()
+	// Set GIN mode based on environment (explicit, not just env var)
+	if version.IsProduction() {
+		gin.SetMode(gin.ReleaseMode)
+		routesLog.Info("GIN running in release mode")
+	} else {
+		gin.SetMode(gin.DebugMode)
+		routesLog.Info("GIN running in debug mode")
+	}
 
-	// Apply security middleware (production-aware)
+	// Use gin.New() for explicit middleware control
+	r := gin.New()
+
+	// Recovery middleware - always needed
+	r.Use(gin.Recovery())
+
+	// Request logging - only in development
+	if version.IsDevelopment() {
+		r.Use(gin.Logger())
+		r.Use(func(c *gin.Context) {
+			clientIP := getTrustedClientIP(c)
+			routesLog.Debug("Incoming request",
+				ports.F("method", c.Request.Method),
+				ports.F("path", c.Request.URL.Path),
+				ports.F("ip", clientIP),
+			)
+			c.Next()
+			routesLog.Debug("Request completed",
+				ports.F("method", c.Request.Method),
+				ports.F("path", c.Request.URL.Path),
+				ports.F("status", c.Writer.Status()),
+			)
+		})
+	}
+
+	// Apply security middleware (always)
 	r.Use(SecurityHeaders())
 	r.Use(RequestSizeLimit(8 << 20)) // 8MB request limit
-
-	// Add custom logging middleware (conditional debug)
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
-	r.Use(func(c *gin.Context) {
-		clientIP := getTrustedClientIP(c)
-		conditionalLog("DEBUG", "Incoming request: %s %s from %s", c.Request.Method, c.Request.URL.Path, clientIP)
-		c.Next()
-		conditionalLog("DEBUG", "Request completed: %s %s -> %d", c.Request.Method, c.Request.URL.Path, c.Writer.Status())
-	})
 
 	// Create auth middleware
 	authMiddleware := httpAdapters.NewAuthMiddleware(s.db.GetDB())
@@ -502,10 +523,6 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (s *Server) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
-}
-
 func (s *Server) BetaSignupHandler(c *gin.Context) {
 	// Use secure IP detection for rate limiting
 	clientIP := getTrustedClientIP(c)
@@ -617,25 +634,6 @@ func (s *Server) createBetaUser(ctx context.Context, email string) error {
 	}()
 
 	return nil
-}
-
-// generateSecurePassword creates a cryptographically secure random password
-func generateSecurePassword() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-	const length = 32
-
-	b := make([]byte, length)
-	_, err := rand.Read(b)
-	if err != nil {
-		// Fallback to timestamp-based password if crypto/rand fails
-		return fmt.Sprintf("temp_%d", time.Now().UnixNano())
-	}
-
-	for i := range b {
-		b[i] = charset[b[i]%byte(len(charset))]
-	}
-
-	return string(b)
 }
 
 // ActivateAccountHandler handles email verification from the welcome email

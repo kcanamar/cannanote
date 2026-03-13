@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"backend/internal/adapters/logging"
@@ -45,7 +44,6 @@ var (
 	port       = os.Getenv("DB_PORT")
 	host       = os.Getenv("DB_HOST")
 	schema     = os.Getenv("DB_SCHEMA")
-	appEnv     = os.Getenv("APP_ENV")
 	dbInstance *service
 )
 
@@ -155,32 +153,4 @@ func (s *service) Close() error {
 // This exposes the *sql.DB for use by repository adapters
 func (s *service) GetDB() *sql.DB {
 	return s.db
-}
-
-// maskPassword masks password for logging (shows first 2 and last 2 chars)
-func maskPassword(password string) string {
-	if len(password) <= 4 {
-		return "****"
-	}
-	return password[:2] + "****" + password[len(password)-2:]
-}
-
-// maskConnectionString masks the password in connection string for logging
-func maskConnectionString(connStr string) string {
-	// Find password section in postgresql://user:password@host:port/db
-	if strings.Contains(connStr, "://") && strings.Contains(connStr, "@") {
-		parts := strings.Split(connStr, "@")
-		if len(parts) == 2 {
-			userPart := parts[0]
-			if strings.Contains(userPart, ":") {
-				userPassParts := strings.Split(userPart, ":")
-				if len(userPassParts) >= 3 {
-					// postgresql://user:password -> mask password
-					userPassParts[2] = maskPassword(userPassParts[2])
-					return strings.Join(userPassParts, ":") + "@" + parts[1]
-				}
-			}
-		}
-	}
-	return "****MASKED****"
 }

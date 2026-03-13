@@ -84,5 +84,7 @@ func CannabinoidsHandler(c *gin.Context) {
 	// Render template
 	component := CannabinoidsPage(cannabinoidMaps)
 	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
+	if err := component.Render(c.Request.Context(), c.Writer); err != nil {
+		learnLog.Error("Error rendering template", ports.F("error", err))
+	}
 }

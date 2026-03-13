@@ -15,13 +15,16 @@ import (
 	"github.com/google/uuid"
 )
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
 const (
 	// SessionCookieName is the name of the session cookie
 	SessionCookieName = "cannanote_session"
 	// SessionContextKey is the key used to store session in context
-	SessionContextKey = "session"
+	SessionContextKey contextKey = "session"
 	// UserContextKey is the key used to store user in context
-	UserContextKey = "user"
+	UserContextKey contextKey = "user"
 )
 
 // AuthMiddleware provides authentication middleware using our custom auth service
