@@ -1,14 +1,17 @@
 package tests
 
 import (
-	"backend/internal/server"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"backend/internal/server"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestHelloWorldHandler(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	s := &server.Server{}
 	r := gin.New()
 	r.GET("/", s.HelloWorldHandler)
