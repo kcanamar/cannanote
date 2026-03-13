@@ -5,6 +5,11 @@ import (
 	"backend/internal/core/ports"
 )
 
+// Version is the semantic version of the application
+// Bump this manually when creating a new release
+// Format: MAJOR.MINOR.PATCH (no 'v' prefix here, added by GetVersion())
+const Version = "0.0.0"
+
 // These variables are set at build time via ldflags
 // Example: go build -ldflags "-X backend/internal/version.BuildHash=abc123"
 var (
@@ -23,9 +28,15 @@ var (
 
 var versionLog = logging.With("version")
 
+// GetVersion returns the semantic version with 'v' prefix (e.g., "v0.0.1")
+func GetVersion() string {
+	return "v" + Version
+}
+
 // LogBuildInfo logs the current build information at startup
 func LogBuildInfo() {
 	versionLog.Info("Build information",
+		ports.F("version", GetVersion()),
 		ports.F("hash", BuildHash),
 		ports.F("time", BuildTime),
 		ports.F("env", Environment),
