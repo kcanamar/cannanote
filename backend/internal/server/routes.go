@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"html"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -19,10 +18,34 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"backend/cmd/web"
-	httpAdapters "backend/internal/adapters/http"
 	"backend/internal/adapters/external"
+	httpAdapters "backend/internal/adapters/http"
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
+	"backend/internal/version"
+
 	"github.com/a-h/templ"
 )
+
+var routesLog = logging.With("routes")
+
+// conditionalLog provides backward compatibility while using the new logging system
+// This maps the old level strings to proper logger methods
+func conditionalLog(level, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	switch level {
+	case "DEBUG":
+		routesLog.Debug(msg)
+	case "INFO":
+		routesLog.Info(msg)
+	case "WARN", "WARNING":
+		routesLog.Warn(msg)
+	case "ERROR", "SECURITY":
+		routesLog.Warn(msg) // Security events as warnings for visibility
+	default:
+		routesLog.Info(msg)
+	}
+}
 
 // Email validation regex - RFC 5322 compliant but practical
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
@@ -118,19 +141,6 @@ func RequestSizeLimit(maxSize int64) gin.HandlerFunc {
 	})
 }
 
-// conditionalLog only logs debug info in development
-func conditionalLog(level, format string, args ...interface{}) {
-	debug := os.Getenv("DEBUG")
-	appEnv := os.Getenv("APP_ENV")
-
-	// Only log debug messages in development or when DEBUG=true
-	if level == "DEBUG" && debug != "true" && appEnv == "production" {
-		return
-	}
-
-	// Always log non-debug messages
-	log.Printf("["+level+"] "+format, args...)
-}
 
 // Rate limiting for beta signup
 type rateLimiter struct {
@@ -371,11 +381,31 @@ func (s *Server) RegisterRoutes() http.Handler {
 		c.File("./cmd/web/assets/images/favicon/favicon.ico")
 	})
 
-	// Service worker - served from root scope for full site control
+	// Service worker - served dynamically with version injection
 	r.GET("/sw.js", func(c *gin.Context) {
-		c.Header("Cache-Control", "no-cache")
-		c.Header("Content-Type", "application/javascript")
-		c.File("./cmd/web/assets/sw.js")
+		swVersion := version.GetServiceWorkerVersion()
+		swLog := routesLog.With("sw")
+
+		swLog.Debug("Serving service worker",
+			ports.F("version", swVersion),
+			ports.F("env", version.Environment),
+		)
+
+		// Read the service worker template
+		swContent, err := os.ReadFile("./cmd/web/assets/sw.js")
+		if err != nil {
+			swLog.Error("Failed to read service worker file", ports.F("error", err))
+			c.String(http.StatusInternalServerError, "Failed to load service worker")
+			return
+		}
+
+		// Replace version placeholder with actual version
+		swJS := strings.Replace(string(swContent), "{{SW_VERSION}}", swVersion, 1)
+
+		// Set headers for service worker
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+		c.Header("Content-Type", "application/javascript; charset=utf-8")
+		c.String(http.StatusOK, swJS)
 	})
 
 	// Offline fallback page
@@ -409,7 +439,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	})
 
 	if err != nil {
-		log.Printf("Failed to initialize docs handler: %v", err)
+		routesLog.Error("Failed to initialize docs handler", ports.F("error", err))
 		// Fallback to old docs page
 		r.GET("/docs", func(c *gin.Context) {
 			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)

@@ -1,13 +1,14 @@
 // CannaNote Service Worker
-// Simple cache-first strategy for offline support
+// Intelligent caching with automatic updates
 
-const CACHE_NAME = 'cannanote-v1';
+// Version is injected at runtime by the server
+// Local dev: timestamp (changes every build)
+// Production: git hash (changes only when code changes)
+const SW_VERSION = '{{SW_VERSION}}';
+const CACHE_NAME = `cannanote-v${SW_VERSION}`;
 
-// Assets to cache on install
-const ASSETS_TO_CACHE = [
-  '/',
-  '/app',
-  '/offline',
+// Static assets - these use cache-first (they're fingerprinted/versioned)
+const STATIC_ASSETS = [
   '/assets/css/output.css',
   '/assets/js/app.min.js',
   '/assets/js/theme.js',
@@ -16,71 +17,203 @@ const ASSETS_TO_CACHE = [
   '/assets/images/favicon/favicon.svg'
 ];
 
+// Shell pages to pre-cache for offline access
+const SHELL_PAGES = [
+  '/',
+  '/offline'
+];
+
 // Install: cache core assets
 self.addEventListener('install', (event) => {
+  console.log(`[SW] Installing version ${SW_VERSION}`);
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
-      .then(() => self.skipWaiting())
+      .then((cache) => {
+        // Cache static assets and shell pages
+        return cache.addAll([...STATIC_ASSETS, ...SHELL_PAGES]);
+      })
+      .then(() => {
+        console.log(`[SW] Version ${SW_VERSION} installed`);
+        // Force activation without waiting for existing tabs to close
+        return self.skipWaiting();
+      })
   );
 });
 
-// Activate: clean up old caches
+// Activate: clean up old caches and take control
 self.addEventListener('activate', (event) => {
+  console.log(`[SW] Activating version ${SW_VERSION}`);
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      ))
-      .then(() => self.clients.claim())
+      .then((keys) => {
+        return Promise.all(
+          keys
+            .filter((key) => key.startsWith('cannanote-') && key !== CACHE_NAME)
+            .map((key) => {
+              console.log(`[SW] Deleting old cache: ${key}`);
+              return caches.delete(key);
+            })
+        );
+      })
+      .then(() => {
+        console.log(`[SW] Version ${SW_VERSION} now active`);
+        // Take control of all open tabs immediately
+        return self.clients.claim();
+      })
+      .then(() => {
+        // Notify all clients that SW has updated
+        return self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({ type: 'SW_UPDATED', version: SW_VERSION });
+          });
+        });
+      })
   );
 });
 
-// Fetch: cache-first for assets, network-first for pages
+// Fetch: different strategies for different content types
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
-  // Skip external requests (fonts, CDNs, etc.) - let browser handle them
+  // Skip external requests (fonts, CDNs, etc.)
   if (url.origin !== self.location.origin) return;
 
-  // Skip API calls - let them go to network
+  // Skip API calls - always need fresh data
   if (url.pathname.startsWith('/api/')) return;
 
   // Skip auth routes - always need fresh
   if (url.pathname.startsWith('/auth/')) return;
+  if (url.pathname.startsWith('/login')) return;
+  if (url.pathname.startsWith('/activate')) return;
+  if (url.pathname.startsWith('/onboarding')) return;
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((cached) => {
-        if (cached) {
-          return cached;
-        }
+  // Static assets: Cache-first (they're versioned)
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(cacheFirst(event.request));
+    return;
+  }
 
-        return fetch(event.request)
-          .then((response) => {
-            // Don't cache non-success responses
-            if (!response || response.status !== 200) {
-              return response;
-            }
+  // HTML pages (docs, etc.): Stale-while-revalidate
+  // Serve cached version immediately, update cache in background
+  if (event.request.mode === 'navigate' || url.pathname.startsWith('/docs')) {
+    event.respondWith(staleWhileRevalidate(event.request));
+    return;
+  }
 
-            // Cache successful responses
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => cache.put(event.request, responseToCache));
+  // Default: Network-first with cache fallback
+  event.respondWith(networkFirst(event.request));
+});
 
-            return response;
-          })
-          .catch(() => {
-            // Network failed, try to serve offline page for navigation requests
-            if (event.request.mode === 'navigate') {
-              return caches.match('/offline');
-            }
-          });
-      })
-  );
+// Check if URL is a static asset
+function isStaticAsset(pathname) {
+  return pathname.startsWith('/assets/') ||
+         pathname.endsWith('.css') ||
+         pathname.endsWith('.js') ||
+         pathname.endsWith('.svg') ||
+         pathname.endsWith('.png') ||
+         pathname.endsWith('.jpg') ||
+         pathname.endsWith('.woff2');
+}
+
+// Cache-first strategy: serve from cache, fallback to network
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    // If both cache and network fail, return offline page for navigation
+    if (request.mode === 'navigate') {
+      return caches.match('/offline');
+    }
+    throw error;
+  }
+}
+
+// Network-first strategy: try network, fallback to cache
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    if (request.mode === 'navigate') {
+      return caches.match('/offline');
+    }
+    throw error;
+  }
+}
+
+// Stale-while-revalidate: serve cached immediately, update in background
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await caches.match(request);
+
+  // Start fetching fresh version in background
+  const fetchPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch((error) => {
+      console.log(`[SW] Background fetch failed for ${request.url}:`, error);
+      return null;
+    });
+
+  // If we have cached content, return it immediately
+  if (cached) {
+    // Background update will refresh cache for next visit
+    return cached;
+  }
+
+  // No cache - wait for network
+  const response = await fetchPromise;
+  if (response) {
+    return response;
+  }
+
+  // Network failed and no cache - show offline page
+  if (request.mode === 'navigate') {
+    return caches.match('/offline');
+  }
+
+  throw new Error('No cached version available');
+}
+
+// Handle messages from the main thread
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') {
+    self.skipWaiting();
+  }
+
+  if (event.data === 'clearCache') {
+    caches.delete(CACHE_NAME).then(() => {
+      console.log(`[SW] Cache cleared`);
+      event.ports[0].postMessage({ success: true });
+    });
+  }
+
+  if (event.data === 'getVersion') {
+    event.ports[0].postMessage({ version: SW_VERSION });
+  }
 });

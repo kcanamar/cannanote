@@ -10,23 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/joho/godotenv/autoload"
 )
 
-// conditionalLog only logs debug info in development
-func conditionalLog(level, format string, args ...interface{}) {
-	debug := os.Getenv("DEBUG")
-	appEnv := os.Getenv("APP_ENV")
-	
-	// Only log debug messages in development or when DEBUG=true
-	if level == "DEBUG" && debug != "true" && appEnv == "production" {
-		return
-	}
-	
-	// Always log non-debug messages
-	log.Printf("["+level+"] "+format, args...)
-}
+// dbLog is the logger for database operations
+var dbLog = logging.With("database")
 
 // Service represents a service that interacts with a database.
 type Service interface {
@@ -60,33 +52,36 @@ var (
 func New() Service {
 	// Reuse Connection
 	if dbInstance != nil {
-		conditionalLog("DEBUG", "Reusing existing database connection")
+		dbLog.Debug("Reusing existing database connection")
 		return dbInstance
 	}
-	
+
 	// Debug environment variables (mask password)
-	conditionalLog("DEBUG", "DB_HOST=%s", host)
-	conditionalLog("DEBUG", "DB_PORT=%s", port)
-	conditionalLog("DEBUG", "DB_DATABASE=%s", database)
-	conditionalLog("DEBUG", "DB_USERNAME=%s", username)
-	conditionalLog("DEBUG", "DB_PASSWORD=%s", maskPassword(password))
-	conditionalLog("DEBUG", "DB_SCHEMA=%s", schema)
-	
+	dbLog.Debug("Database configuration",
+		ports.F("host", host),
+		ports.F("port", port),
+		ports.F("database", database),
+		ports.F("username", username),
+		ports.F("schema", schema),
+	)
+
 	// NeonDB uses system CA certificates (no custom cert needed)
 	// Use sslmode=require for secure connections with system trust store
 	connStr := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=require&search_path=%s",
 		username, password, host, port, database, schema)
 
-	conditionalLog("DEBUG", "Connection string: %s", maskConnectionString(connStr))
-	conditionalLog("DEBUG", "Attempting to open database connection to NeonDB...")
+	dbLog.Debug("Opening database connection to NeonDB")
 
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		log.Printf("ERROR: Failed to open database connection: %v", err)
+		dbLog.Error("Failed to open database connection", ports.F("error", err))
 		log.Fatal(err)
 	}
-	
-	conditionalLog("DEBUG", "Database connection opened successfully")
+
+	dbLog.Info("Database connection established",
+		ports.F("host", host),
+		ports.F("database", database),
+	)
 	dbInstance = &service{
 		db: db,
 	}
@@ -96,24 +91,22 @@ func New() Service {
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.
 func (s *service) Health() map[string]string {
-	conditionalLog("DEBUG", "Starting database health check...")
+	dbLog.Debug("Starting database health check")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	stats := make(map[string]string)
 
 	// Ping the database
-	conditionalLog("DEBUG", "Attempting to ping database...")
 	err := s.db.PingContext(ctx)
 	if err != nil {
-		log.Printf("ERROR: Database ping failed: %v", err)
+		dbLog.Error("Database ping failed", ports.F("error", err))
 		stats["status"] = "down"
 		stats["error"] = fmt.Sprintf("db down: %v", err)
-		// Don't use log.Fatalf - just return the error for debugging
 		return stats
 	}
-	
-	conditionalLog("DEBUG", "Database ping successful!")
+
+	dbLog.Debug("Database ping successful")
 
 	// Database is up, add more statistics
 	stats["status"] = "up"
@@ -154,7 +147,7 @@ func (s *service) Health() map[string]string {
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
 func (s *service) Close() error {
-	log.Printf("Disconnected from database: %s", database)
+	dbLog.Info("Disconnecting from database", ports.F("database", database))
 	return s.db.Close()
 }
 

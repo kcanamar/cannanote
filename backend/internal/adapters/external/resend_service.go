@@ -7,11 +7,15 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
 )
 
 type ResendService struct {
 	apiKey string
 	client *http.Client
+	log    ports.Logger
 }
 
 type ResendEmail struct {
@@ -34,17 +38,19 @@ func NewResendService() *ResendService {
 		client: &http.Client{
 			Timeout: 10 * time.Second,
 		},
+		log: logging.With("email"),
 	}
 }
 
 // SendWelcomeEmail sends a welcome email to a new beta user with activation link
 func (r *ResendService) SendWelcomeEmail(email, activationLink string) error {
-	fmt.Printf("[DEBUG] SendWelcomeEmail: Starting for email=%s\n", email)
-	fmt.Printf("[DEBUG] SendWelcomeEmail: activationLink=%s\n", activationLink)
-	fmt.Printf("[DEBUG] SendWelcomeEmail: RESEND_API_KEY configured: %v (length: %d)\n", r.apiKey != "", len(r.apiKey))
+	r.log.Debug("Sending welcome email",
+		ports.F("email", email),
+		ports.F("has_activation_link", activationLink != ""),
+	)
 
 	if r.apiKey == "" {
-		fmt.Printf("[DEBUG] SendWelcomeEmail: FAILED - RESEND_API_KEY not configured\n")
+		r.log.Error("RESEND_API_KEY not configured")
 		return fmt.Errorf("RESEND_API_KEY not configured")
 	}
 
@@ -156,50 +162,54 @@ If you didn't sign up for CannaNote, you can safely ignore this email.`, activat
 
 // sendEmail sends an email via Resend API
 func (r *ResendService) sendEmail(email ResendEmail) error {
-	fmt.Printf("[DEBUG] sendEmail: Preparing to send email to %v\n", email.To)
-	fmt.Printf("[DEBUG] sendEmail: From=%s, Subject=%s\n", email.From, email.Subject)
+	r.log.Debug("Preparing email",
+		ports.F("to", email.To),
+		ports.F("subject", email.Subject),
+	)
 
 	jsonData, err := json.Marshal(email)
 	if err != nil {
-		fmt.Printf("[DEBUG] sendEmail: FAILED to marshal email data: %v\n", err)
+		r.log.Error("Failed to marshal email data", ports.F("error", err))
 		return fmt.Errorf("failed to marshal email data: %w", err)
 	}
-	fmt.Printf("[DEBUG] sendEmail: Email JSON marshaled successfully (size: %d bytes)\n", len(jsonData))
 
 	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Printf("[DEBUG] sendEmail: FAILED to create HTTP request: %v\n", err)
+		r.log.Error("Failed to create HTTP request", ports.F("error", err))
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+r.apiKey)
 	req.Header.Set("Content-Type", "application/json")
-	fmt.Printf("[DEBUG] sendEmail: Making POST request to Resend API...\n")
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		fmt.Printf("[DEBUG] sendEmail: FAILED HTTP request: %v\n", err)
+		r.log.Error("HTTP request failed", ports.F("error", err))
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("[DEBUG] sendEmail: Resend API response status: %d\n", resp.StatusCode)
-
 	if resp.StatusCode != http.StatusOK {
 		var errorResp ResendResponse
 		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err == nil {
-			fmt.Printf("[DEBUG] sendEmail: FAILED - Resend API error (%d): %s\n", resp.StatusCode, errorResp.Message)
+			r.log.Error("Resend API error",
+				ports.F("status", resp.StatusCode),
+				ports.F("message", errorResp.Message),
+			)
 			return fmt.Errorf("resend API error (%d): %s", resp.StatusCode, errorResp.Message)
 		}
-		fmt.Printf("[DEBUG] sendEmail: FAILED - Resend API error: %d\n", resp.StatusCode)
+		r.log.Error("Resend API error", ports.F("status", resp.StatusCode))
 		return fmt.Errorf("resend API error: %d", resp.StatusCode)
 	}
 
 	var successResp ResendResponse
 	if err := json.NewDecoder(resp.Body).Decode(&successResp); err == nil {
-		fmt.Printf("[DEBUG] sendEmail: SUCCESS - Email sent with ID: %s\n", successResp.ID)
+		r.log.Info("Email sent successfully",
+			ports.F("email_id", successResp.ID),
+			ports.F("to", email.To),
+		)
 	} else {
-		fmt.Printf("[DEBUG] sendEmail: SUCCESS - Email sent (no ID in response)\n")
+		r.log.Info("Email sent successfully", ports.F("to", email.To))
 	}
 
 	return nil

@@ -2,6 +2,32 @@
 # Development-focused commands for local workflow
 
 # ==============================================================================
+# VERSION INJECTION
+# ==============================================================================
+
+# Build timestamp for local development (changes every build)
+BUILD_TIME := $(shell date +%Y%m%d%H%M%S)
+
+# Git commit hash for production (changes only when code changes)
+GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
+# Full git hash for Fly.io deployments
+GIT_HASH_FULL := $(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
+
+# Version package path for ldflags injection
+VERSION_PKG := backend/internal/version
+
+# ldflags for local development (uses timestamp)
+LDFLAGS_DEV := -X $(VERSION_PKG).BuildHash=$(BUILD_TIME) \
+               -X $(VERSION_PKG).BuildTime=$(BUILD_TIME) \
+               -X $(VERSION_PKG).Environment=development
+
+# ldflags for production (uses git hash)
+LDFLAGS_PROD := -X $(VERSION_PKG).BuildHash=$(GIT_HASH) \
+                -X $(VERSION_PKG).BuildTime=$(BUILD_TIME) \
+                -X $(VERSION_PKG).Environment=production
+
+# ==============================================================================
 # DEVELOPMENT COMMANDS
 # ==============================================================================
 
@@ -41,10 +67,10 @@ dev-build:
 	@templ generate
 	@echo "Assets built successfully"
 
-# Run server without hot reload
+# Run server without hot reload (with version injection)
 run:
-	@echo "Starting server..."
-	@go run cmd/api/main.go
+	@echo "Starting server with version: $(BUILD_TIME)..."
+	@go run -ldflags "$(LDFLAGS_DEV)" cmd/api/main.go
 
 # Watch CSS for changes (run in separate terminal)
 css-watch:
@@ -84,9 +110,11 @@ clean:
 # PRODUCTION BUILD
 # ==============================================================================
 
-# Build for production
+# Build for production (local - uses timestamp for cache busting)
 build:
 	@echo "Building for production..."
+	@echo "  Version: $(BUILD_TIME) (timestamp)"
+	@echo "  Git: $(GIT_HASH)"
 	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
 	@echo "Minifying JavaScript..."
 	@if command -v npx > /dev/null; then \
@@ -96,8 +124,9 @@ build:
 		cp cmd/web/assets/js/app.js cmd/web/assets/js/app.min.js; \
 	fi
 	@templ generate
-	@go build -o main cmd/api/main.go
-	@echo "Production build complete"
+	@echo "Compiling binary with version injection..."
+	@go build -ldflags "$(LDFLAGS_DEV)" -o main cmd/api/main.go
+	@echo "Production build complete (version: $(BUILD_TIME))"
 
 # Full pre-deploy checks
 pre-deploy: clean lint security test build
@@ -173,9 +202,17 @@ fly-secrets-verify:
 
 fly-deploy:
 	@echo "Deploying to Fly.io..."
-	@echo "Using Fly.io remote builder..."
-	@cd .. && flyctl deploy . --config backend/fly.toml --dockerfile backend/Dockerfile --remote-only -a cannanote-backend
-	@echo "Deployment complete"
+	@echo "  Git hash: $(GIT_HASH_FULL)"
+	@echo "  Short hash: $(GIT_HASH)"
+	@echo "Using Fly.io remote builder with version injection..."
+	@cd .. && flyctl deploy . \
+		--config backend/fly.toml \
+		--dockerfile backend/Dockerfile \
+		--build-arg GIT_HASH=$(GIT_HASH) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) \
+		--remote-only \
+		-a cannanote-backend
+	@echo "Deployment complete (version: $(GIT_HASH))"
 
 fly-status:
 	@echo "Checking deployment status..."

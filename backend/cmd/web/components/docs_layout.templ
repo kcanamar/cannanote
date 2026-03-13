@@ -6,6 +6,14 @@ import (
 	"strings"
 )
 
+// boolToString converts a bool to "true" or "false" string for aria attributes
+func boolToString(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
 // shouldFolderBeOpen determines if a folder should be open based on current path
 func shouldFolderBeOpen(folder docs.SidebarItem, currentPath string) bool {
 	// Check if folder's own href matches
@@ -275,18 +283,50 @@ templ docsNavigationTree(items []docs.SidebarItem, currentPath string) {
 			@docsNavigationItem(item, currentPath)
 		}
 	}
+	@folderToggleScript()
+}
+
+// folderToggleScript provides the JavaScript for folder expand/collapse
+templ folderToggleScript() {
+	<script>
+		function toggleFolder(button) {
+			const isExpanded = button.getAttribute('aria-expanded') === 'true';
+			const folderNav = button.closest('.folder-nav');
+			const content = folderNav.querySelector('.folder-content');
+			const icon = button.querySelector('svg');
+
+			if (isExpanded) {
+				content.classList.add('hidden');
+				button.setAttribute('aria-expanded', 'false');
+				icon.style.transform = 'rotate(0deg)';
+			} else {
+				content.classList.remove('hidden');
+				button.setAttribute('aria-expanded', 'true');
+				icon.style.transform = 'rotate(90deg)';
+			}
+		}
+
+		// Initialize icon rotation based on aria-expanded state
+		document.querySelectorAll('.folder-toggle').forEach(button => {
+			const isExpanded = button.getAttribute('aria-expanded') === 'true';
+			const icon = button.querySelector('svg');
+			if (isExpanded && icon) {
+				icon.style.transform = 'rotate(90deg)';
+			}
+		});
+	</script>
 }
 
 // Helper template for folder navigation items (collapsible sections)
 templ docsNavigationFolder(folder docs.SidebarItem, currentPath string) {
-	<details class="group" open?={ shouldFolderBeOpen(folder, currentPath) }>
-		<summary class="flex items-center justify-between px-3 py-2 text-sm font-semibold text-neutral-900 dark:text-white cursor-pointer hover:bg-neutral-100 dark:hover:bg-navy-800 rounded-md transition list-none">
+	<div class="folder-nav">
+		<div class="flex items-center gap-1">
 			if folder.Href != "" {
 				<a
 					href={ folder.Href }
-					class={ "flex-1 hover:text-sage-600 dark:hover:text-sage-400 transition",
-						templ.KV("text-sage-700 dark:text-sage-300", folder.Href == currentPath) }
-					onclick="event.stopPropagation()"
+					class={ "flex-1 px-3 py-2 text-sm font-semibold rounded-md transition hover:bg-neutral-100 dark:hover:bg-navy-800",
+						templ.KV("text-sage-700 dark:text-sage-300", folder.Href == currentPath),
+						templ.KV("text-neutral-900 dark:text-white", folder.Href != currentPath) }
 					hx-get={ folder.Href }
 					hx-target="#main-content"
 					hx-swap="innerHTML"
@@ -295,13 +335,26 @@ templ docsNavigationFolder(folder docs.SidebarItem, currentPath string) {
 					{ folder.Label }
 				</a>
 			} else {
-				<span>{ folder.Label }</span>
+				<span class="flex-1 px-3 py-2 text-sm font-semibold text-neutral-900 dark:text-white">
+					{ folder.Label }
+				</span>
 			}
-			<svg class="w-4 h-4 transition-transform group-open:rotate-90 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-			</svg>
-		</summary>
-		<div class="ml-4 mt-1 space-y-1 border-l border-neutral-200 dark:border-navy-700 pl-3">
+			<button
+				type="button"
+				class="folder-toggle p-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-navy-800 rounded-md transition"
+				aria-expanded={ boolToString(shouldFolderBeOpen(folder, currentPath)) }
+				aria-label={ "Toggle " + folder.Label + " section" }
+				onclick="toggleFolder(this)"
+			>
+				<svg class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+				</svg>
+			</button>
+		</div>
+		<div
+			class={ "folder-content ml-4 mt-1 space-y-1 border-l border-neutral-200 dark:border-navy-700 pl-3",
+				templ.KV("hidden", !shouldFolderBeOpen(folder, currentPath)) }
+		>
 			for _, child := range folder.Children {
 				if child.IsFolder {
 					@docsNavigationFolder(child, currentPath)
@@ -310,7 +363,7 @@ templ docsNavigationFolder(folder docs.SidebarItem, currentPath string) {
 				}
 			}
 		</div>
-	</details>
+	</div>
 }
 
 // Helper template for individual navigation items (files)

@@ -7,8 +7,10 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"time"
+
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -27,12 +29,16 @@ const (
 
 // AuthService handles authentication operations
 type AuthService struct {
-	db *sql.DB
+	db  *sql.DB
+	log ports.Logger
 }
 
 // NewAuthService creates a new auth service
 func NewAuthService(db *sql.DB) *AuthService {
-	return &AuthService{db: db}
+	return &AuthService{
+		db:  db,
+		log: logging.With("auth"),
+	}
 }
 
 // UserProfile represents a user profile from the database
@@ -118,7 +124,7 @@ func (a *AuthService) CreateUser(ctx context.Context, email string) (*UserProfil
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	log.Printf("Created new user: %s (ID: %s)", email, userID)
+	a.log.Info("Created new user", ports.F("email", email), ports.F("user_id", userID))
 
 	return &UserProfile{
 		ID:            userID,
@@ -196,7 +202,7 @@ func (a *AuthService) VerifyEmail(ctx context.Context, token string) (*UserProfi
 
 	user.EmailVerified = true
 	user.BetaStatus = "active"
-	log.Printf("Email verified for user: %s", user.Email)
+	a.log.Info("Email verified", ports.F("email", user.Email), ports.F("user_id", user.ID))
 
 	return &user, nil
 }
@@ -267,7 +273,7 @@ func (a *AuthService) SetPassword(ctx context.Context, token, password string) (
 		return nil, fmt.Errorf("failed to set password: %w", err)
 	}
 
-	log.Printf("Password set for user: %s", user.Email)
+	a.log.Info("Password set", ports.F("email", user.Email), ports.F("user_id", user.ID))
 	return &user, nil
 }
 
@@ -320,7 +326,7 @@ func (a *AuthService) CreateSession(ctx context.Context, userID uuid.UUID, userA
 		return "", fmt.Errorf("failed to create session: %w", err)
 	}
 
-	log.Printf("Session created for user: %s", userID)
+	a.log.Debug("Session created", ports.F("user_id", userID))
 	return token, nil
 }
 
@@ -364,7 +370,7 @@ func (a *AuthService) RevokeSession(ctx context.Context, token string) error {
 
 	rows, _ := result.RowsAffected()
 	if rows > 0 {
-		log.Printf("Session revoked")
+		a.log.Debug("Session revoked")
 	}
 
 	return nil
@@ -380,7 +386,7 @@ func (a *AuthService) RevokeAllUserSessions(ctx context.Context, userID uuid.UUI
 		return fmt.Errorf("failed to revoke sessions: %w", err)
 	}
 
-	log.Printf("All sessions revoked for user: %s", userID)
+	a.log.Info("All sessions revoked", ports.F("user_id", userID))
 	return nil
 }
 
@@ -413,7 +419,7 @@ func (a *AuthService) CleanupExpiredSessions(ctx context.Context) (int64, error)
 
 	rows, _ := result.RowsAffected()
 	if rows > 0 {
-		log.Printf("Cleaned up %d expired sessions", rows)
+		a.log.Info("Cleaned up expired sessions", ports.F("count", rows))
 	}
 
 	return rows, nil

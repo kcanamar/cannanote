@@ -4,6 +4,13 @@
 # Build stage
 FROM golang:1.24-alpine AS builder
 
+# Build arguments for version injection
+ARG GIT_HASH=unknown
+ARG BUILD_TIME=unknown
+
+# Version package path
+ENV VERSION_PKG=backend/internal/version
+
 # Install templ CLI for template generation
 RUN go install github.com/a-h/templ/cmd/templ@latest
 
@@ -23,8 +30,12 @@ COPY docs/ ./docs/
 # Generate templ templates
 RUN templ generate
 
-# Build the application with static linking for Alpine
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main cmd/api/main.go
+# Build the application with version injection
+# Uses git hash for production cache busting
+RUN echo "Building with version: ${GIT_HASH} (${BUILD_TIME})" && \
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
+    -ldflags "-X ${VERSION_PKG}.BuildHash=${GIT_HASH} -X ${VERSION_PKG}.BuildTime=${BUILD_TIME} -X ${VERSION_PKG}.Environment=production" \
+    -o main cmd/api/main.go
 
 # Production stage
 FROM alpine:latest

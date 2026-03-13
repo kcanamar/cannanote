@@ -3,12 +3,13 @@ package http
 import (
 	"context"
 	"database/sql"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"backend/internal/adapters/external"
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -26,12 +27,14 @@ const (
 // AuthMiddleware provides authentication middleware using our custom auth service
 type AuthMiddleware struct {
 	authService *external.AuthService
+	log         ports.Logger
 }
 
 // NewAuthMiddleware creates a new auth middleware instance
 func NewAuthMiddleware(db *sql.DB) *AuthMiddleware {
 	return &AuthMiddleware{
 		authService: external.NewAuthService(db),
+		log:         logging.With("auth-middleware"),
 	}
 }
 
@@ -41,7 +44,9 @@ func (m *AuthMiddleware) RequireSession() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := getSessionToken(c)
 		if token == "" {
-			log.Printf("[AUTH] No session token found, redirecting to login")
+			m.log.Debug("No session token found, redirecting to login",
+				ports.F("path", c.Request.URL.Path),
+			)
 			c.Redirect(http.StatusFound, "/login")
 			c.Abort()
 			return
@@ -49,7 +54,10 @@ func (m *AuthMiddleware) RequireSession() gin.HandlerFunc {
 
 		session, err := m.authService.ValidateSession(c.Request.Context(), token)
 		if err != nil {
-			log.Printf("[AUTH] Invalid session: %v", err)
+			m.log.Debug("Invalid session, redirecting to login",
+				ports.F("error", err),
+				ports.F("path", c.Request.URL.Path),
+			)
 			// Clear invalid cookie
 			clearSessionCookie(c)
 			c.Redirect(http.StatusFound, "/login")
