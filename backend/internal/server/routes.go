@@ -502,6 +502,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	{
 		protected.GET("", s.DashboardHandler)
 		protected.GET("/", s.DashboardHandler)
+
+		// Session routes
+		protected.GET("/sessions", s.SessionsHandler)
+		protected.GET("/sessions/new", s.SessionLogHandler)
+		protected.GET("/sessions/:id", s.SessionDetailHandler)
+		protected.GET("/sessions/:id/checkin", s.SessionCheckInHandler)
 	}
 
 	// Login page for unauthenticated users
@@ -845,4 +851,59 @@ func (s *Server) SignOutHandler(c *gin.Context) {
 
 	// Redirect to home
 	c.Redirect(http.StatusFound, "/")
+}
+
+// SessionsHandler displays the session history page
+func (s *Server) SessionsHandler(c *gin.Context) {
+	// Get user email for display
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.Sessions(email, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SessionLogHandler displays the new session logging form
+func (s *Server) SessionLogHandler(c *gin.Context) {
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.SessionLog(email, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SessionDetailHandler displays a single session's details
+func (s *Server) SessionDetailHandler(c *gin.Context) {
+	sessionID := c.Param("id")
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.SessionDetail(email, sessionID, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SessionCheckInHandler displays the check-in form for an active session
+func (s *Server) SessionCheckInHandler(c *gin.Context) {
+	sessionID := c.Param("id")
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.SessionCheckIn(email, sessionID, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
 }

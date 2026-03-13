@@ -1,0 +1,269 @@
+package web
+
+// Sessions displays the session history and provides access to log new sessions
+templ Sessions(email string, currentPath string) {
+	@AppBase("Sessions - CannaNote", currentPath, email) {
+		<div class="max-w-4xl mx-auto space-y-6">
+			<!-- Header with New Session button -->
+			<div class="flex items-center justify-between">
+				<div>
+					<h1 class="text-2xl font-semibold text-navy-900 dark:text-white">Sessions</h1>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Track your cannabis experiences</p>
+				</div>
+				<a
+					href="/app/sessions/new"
+					class="inline-flex items-center gap-2 px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
+				>
+					@plusIcon()
+					<span>Log Session</span>
+				</a>
+			</div>
+
+			<!-- Active Sessions Section -->
+			<div id="active-sessions" class="hidden">
+				<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-3">Active Session</h2>
+				<div id="active-sessions-list" class="space-y-3">
+					<!-- Populated by JavaScript -->
+				</div>
+			</div>
+
+			<!-- Session History -->
+			<div>
+				<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-3">Recent Sessions</h2>
+				<div id="sessions-list" class="space-y-3">
+					<!-- Empty state -->
+					<div id="sessions-empty" class="text-center py-12 bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg">
+						<div class="w-12 h-12 mx-auto mb-4 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+							@sessionsIconLarge()
+						</div>
+						<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-1">No sessions yet</h3>
+						<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Start logging your cannabis experiences</p>
+						<a
+							href="/app/sessions/new"
+							class="inline-flex items-center gap-2 px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
+						>
+							@plusIcon()
+							<span>Log Your First Session</span>
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<!-- Export Section -->
+			<div class="border-t border-gray-200 dark:border-navy-700 pt-6">
+				<div class="flex items-center justify-between">
+					<div>
+						<h3 class="text-sm font-medium text-navy-900 dark:text-white">Export Your Data</h3>
+						<p class="text-xs text-gray-500 dark:text-gray-400">Download your session history</p>
+					</div>
+					<div class="flex gap-2">
+						<button
+							onclick="exportJSON()"
+							class="px-3 py-1.5 text-sm border border-gray-300 dark:border-navy-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors"
+						>
+							JSON
+						</button>
+						<button
+							onclick="exportCSV()"
+							class="px-3 py-1.5 text-sm border border-gray-300 dark:border-navy-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors"
+						>
+							CSV
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Session Card Template -->
+		<template id="session-card-template">
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-4">
+				<div class="flex items-start justify-between">
+					<div class="flex-1">
+						<div class="flex items-center gap-2">
+							<span class="session-strain font-medium text-navy-900 dark:text-white"></span>
+							<span class="session-method text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-400"></span>
+						</div>
+						<div class="session-producer text-sm text-gray-500 dark:text-gray-400 mt-0.5"></div>
+						<div class="session-amount text-xs text-gray-400 dark:text-gray-500 mt-1"></div>
+					</div>
+					<div class="text-right">
+						<div class="session-time text-sm text-gray-500 dark:text-gray-400"></div>
+						<div class="session-date text-xs text-gray-400 dark:text-gray-500"></div>
+					</div>
+				</div>
+				<div class="session-feelings flex gap-4 mt-3 pt-3 border-t border-gray-100 dark:border-navy-800 hidden">
+					<div class="session-mood flex items-center gap-1 text-sm"></div>
+					<div class="session-mind flex items-center gap-1 text-sm"></div>
+					<div class="session-body flex items-center gap-1 text-sm"></div>
+				</div>
+			</div>
+		</template>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script>
+			// Feeling labels
+			const feelingLabels = ['', 'Very Low', 'Low', 'Neutral', 'Good', 'Excellent'];
+			const feelingEmojis = ['', '😫', '😔', '😐', '🙂', '😄'];
+
+			// Load sessions on page load
+			document.addEventListener('DOMContentLoaded', async () => {
+				await loadSessions();
+			});
+
+			async function loadSessions() {
+				try {
+					const activeSessions = await SessionDB.getActiveSessions();
+					const recentSessions = await SessionDB.getRecentSessions(20);
+					const products = await SessionDB.getProducts();
+
+					// Create product lookup
+					const productMap = {};
+					for (const p of products) {
+						productMap[p.id] = p;
+					}
+
+					// Show active sessions
+					const activeSection = document.getElementById('active-sessions');
+					const activeList = document.getElementById('active-sessions-list');
+					if (activeSessions.length > 0) {
+						activeSection.classList.remove('hidden');
+						activeList.innerHTML = '';
+						for (const session of activeSessions) {
+							activeList.appendChild(createSessionCard(session, productMap, true));
+						}
+					} else {
+						activeSection.classList.add('hidden');
+					}
+
+					// Show recent sessions
+					const emptyState = document.getElementById('sessions-empty');
+					const sessionsList = document.getElementById('sessions-list');
+
+					// Filter out active sessions from recent
+					const completedSessions = recentSessions.filter(s => s.status === 'completed');
+
+					if (completedSessions.length === 0 && activeSessions.length === 0) {
+						emptyState.classList.remove('hidden');
+					} else {
+						emptyState.classList.add('hidden');
+
+						// Clear existing cards (except empty state)
+						const existingCards = sessionsList.querySelectorAll(':not(#sessions-empty)');
+						existingCards.forEach(card => card.remove());
+
+						for (const session of completedSessions) {
+							sessionsList.appendChild(createSessionCard(session, productMap, false));
+						}
+					}
+				} catch (err) {
+					console.error('[Sessions] Failed to load:', err);
+				}
+			}
+
+			function createSessionCard(session, productMap, isActive) {
+				const template = document.getElementById('session-card-template');
+				const card = template.content.cloneNode(true).querySelector('div');
+
+				const product = productMap[session.productId] || {};
+				const date = new Date(session.timestamp);
+
+				// Fill in data
+				card.querySelector('.session-strain').textContent = product.strainName || 'Unknown Strain';
+				card.querySelector('.session-method').textContent = session.method || '';
+				card.querySelector('.session-producer').textContent = product.producer || '';
+				card.querySelector('.session-amount').textContent = session.amount ? `${session.amount} ${session.unit}` : '';
+				card.querySelector('.session-time').textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+				card.querySelector('.session-date').textContent = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+				// Show feelings if present
+				if (session.moodBefore || session.mindBefore || session.bodyBefore) {
+					const feelingsDiv = card.querySelector('.session-feelings');
+					feelingsDiv.classList.remove('hidden');
+
+					if (session.moodBefore) {
+						card.querySelector('.session-mood').innerHTML = `<span class="text-gray-400">Mood:</span> ${feelingEmojis[session.moodBefore]}`;
+					}
+					if (session.mindBefore) {
+						card.querySelector('.session-mind').innerHTML = `<span class="text-gray-400">Mind:</span> ${feelingEmojis[session.mindBefore]}`;
+					}
+					if (session.bodyBefore) {
+						card.querySelector('.session-body').innerHTML = `<span class="text-gray-400">Body:</span> ${feelingEmojis[session.bodyBefore]}`;
+					}
+				}
+
+				// Add active indicator
+				if (isActive) {
+					card.classList.add('border-sage-500', 'dark:border-sage-400');
+					card.classList.remove('border-gray-200', 'dark:border-navy-700');
+
+					const badge = document.createElement('span');
+					badge.className = 'inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-300 ml-2';
+					badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-sage-500 animate-pulse"></span> Active';
+					card.querySelector('.session-strain').after(badge);
+				}
+
+				// Make card clickable
+				card.classList.add('cursor-pointer', 'hover:border-sage-400', 'dark:hover:border-sage-600', 'transition-colors');
+				card.onclick = () => {
+					if (isActive) {
+						window.location.href = `/app/sessions/${session.id}/checkin`;
+					} else {
+						window.location.href = `/app/sessions/${session.id}`;
+					}
+				};
+
+				return card;
+			}
+
+			async function exportJSON() {
+				try {
+					const data = await SessionDB.exportData();
+					const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+					downloadBlob(blob, `cannanote-export-${formatDate(new Date())}.json`);
+				} catch (err) {
+					console.error('[Export] JSON failed:', err);
+					alert('Failed to export data. Please try again.');
+				}
+			}
+
+			async function exportCSV() {
+				try {
+					const csv = await SessionDB.exportCSV();
+					const blob = new Blob([csv], { type: 'text/csv' });
+					downloadBlob(blob, `cannanote-sessions-${formatDate(new Date())}.csv`);
+				} catch (err) {
+					console.error('[Export] CSV failed:', err);
+					alert('Failed to export data. Please try again.');
+				}
+			}
+
+			function downloadBlob(blob, filename) {
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+			}
+
+			function formatDate(date) {
+				return date.toISOString().split('T')[0];
+			}
+		</script>
+	}
+}
+
+// Icons
+templ plusIcon() {
+	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+	</svg>
+}
+
+templ sessionsIconLarge() {
+	<svg class="w-6 h-6 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+	</svg>
+}

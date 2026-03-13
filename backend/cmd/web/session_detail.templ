@@ -1,0 +1,252 @@
+package web
+
+// SessionDetail displays a single session's full details and check-in history
+templ SessionDetail(email string, sessionID string, currentPath string) {
+	@AppBase("Session Details - CannaNote", currentPath, email) {
+		<div class="max-w-2xl mx-auto">
+			<!-- Header -->
+			<div class="flex items-center gap-4 mb-6">
+				<a
+					href="/app/sessions"
+					class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+				>
+					@backIcon()
+				</a>
+				<div class="flex-1">
+					<h1 id="session-title" class="text-2xl font-semibold text-navy-900 dark:text-white">Session</h1>
+					<p id="session-date" class="text-sm text-gray-500 dark:text-gray-400"></p>
+				</div>
+				<div id="session-status" class="px-3 py-1 rounded-full text-sm font-medium"></div>
+			</div>
+
+			<!-- Session Info Card -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6">
+				<!-- Product Info -->
+				<div class="mb-6">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-2">Product</h2>
+					<div class="space-y-2">
+						<div class="flex justify-between">
+							<span class="text-gray-500 dark:text-gray-400">Strain</span>
+							<span id="detail-strain" class="font-medium text-navy-900 dark:text-white"></span>
+						</div>
+						<div id="detail-type-row" class="flex justify-between hidden">
+							<span class="text-gray-500 dark:text-gray-400">Type</span>
+							<span id="detail-type" class="text-navy-900 dark:text-white"></span>
+						</div>
+						<div id="detail-producer-row" class="flex justify-between hidden">
+							<span class="text-gray-500 dark:text-gray-400">Producer</span>
+							<span id="detail-producer" class="text-navy-900 dark:text-white"></span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Consumption Info -->
+				<div class="mb-6 pt-6 border-t border-gray-100 dark:border-navy-800">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-2">Consumption</h2>
+					<div class="space-y-2">
+						<div class="flex justify-between">
+							<span class="text-gray-500 dark:text-gray-400">Method</span>
+							<span id="detail-method" class="font-medium text-navy-900 dark:text-white capitalize"></span>
+						</div>
+						<div class="flex justify-between">
+							<span class="text-gray-500 dark:text-gray-400">Amount</span>
+							<span id="detail-amount" class="text-navy-900 dark:text-white"></span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Pre-Session State -->
+				<div id="presession-section" class="pt-6 border-t border-gray-100 dark:border-navy-800 hidden">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-3">Pre-Session State</h2>
+					<div class="grid grid-cols-3 gap-4 text-center">
+						<div>
+							<div class="text-2xl" id="detail-mood-before"></div>
+							<div class="text-xs text-gray-500 dark:text-gray-400">Mood</div>
+						</div>
+						<div>
+							<div class="text-2xl" id="detail-mind-before"></div>
+							<div class="text-xs text-gray-500 dark:text-gray-400">Mind</div>
+						</div>
+						<div>
+							<div class="text-2xl" id="detail-body-before"></div>
+							<div class="text-xs text-gray-500 dark:text-gray-400">Body</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Notes -->
+				<div id="notes-section" class="pt-6 border-t border-gray-100 dark:border-navy-800 hidden">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-2">Notes</h2>
+					<p id="detail-notes" class="text-gray-600 dark:text-gray-300"></p>
+				</div>
+			</div>
+
+			<!-- Check-ins Timeline -->
+			<div id="checkins-section" class="hidden">
+				<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Check-ins</h2>
+				<div id="checkins-timeline" class="space-y-4">
+					<!-- Populated by JavaScript -->
+				</div>
+			</div>
+
+			<!-- Actions -->
+			<div id="session-actions" class="flex gap-3 mt-6">
+				<button
+					id="complete-btn"
+					onclick="completeSession()"
+					class="hidden flex-1 px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
+				>
+					Complete Session
+				</button>
+				<button
+					onclick="deleteSession()"
+					class="px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+				>
+					Delete
+				</button>
+			</div>
+		</div>
+
+		<!-- Session ID for JavaScript -->
+		<input type="hidden" id="session-id-data" value={ sessionID }/>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script>
+			const sessionID = document.getElementById('session-id-data').value;
+			const feelingEmojis = ['', '😫', '😔', '😐', '🙂', '😄'];
+
+			document.addEventListener('DOMContentLoaded', async () => {
+				await loadSessionDetails();
+			});
+
+			async function loadSessionDetails() {
+				try {
+					const session = await SessionDB.get('sessions', sessionID);
+					if (!session) {
+						alert('Session not found');
+						window.location.href = '/app/sessions';
+						return;
+					}
+
+					// Load product
+					let product = null;
+					if (session.productId) {
+						product = await SessionDB.get('products', session.productId);
+					}
+
+					// Update header
+					const date = new Date(session.timestamp);
+					document.getElementById('session-title').textContent = product?.strainName || 'Session';
+					document.getElementById('session-date').textContent = date.toLocaleString();
+
+					// Status badge
+					const statusEl = document.getElementById('session-status');
+					if (session.status === 'active') {
+						statusEl.textContent = 'Active';
+						statusEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-300';
+						document.getElementById('complete-btn').classList.remove('hidden');
+					} else {
+						statusEl.textContent = 'Completed';
+						statusEl.className = 'px-3 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-navy-800 text-gray-600 dark:text-gray-400';
+					}
+
+					// Product details
+					document.getElementById('detail-strain').textContent = product?.strainName || 'Unknown';
+					if (product?.strainType) {
+						document.getElementById('detail-type').textContent = product.strainType;
+						document.getElementById('detail-type-row').classList.remove('hidden');
+					}
+					if (product?.producer) {
+						document.getElementById('detail-producer').textContent = product.producer;
+						document.getElementById('detail-producer-row').classList.remove('hidden');
+					}
+
+					// Consumption details
+					document.getElementById('detail-method').textContent = session.method;
+					document.getElementById('detail-amount').textContent = `${session.amount} ${session.unit}`;
+
+					// Pre-session state
+					if (session.moodBefore || session.mindBefore || session.bodyBefore) {
+						document.getElementById('presession-section').classList.remove('hidden');
+						document.getElementById('detail-mood-before').textContent = feelingEmojis[session.moodBefore] || '-';
+						document.getElementById('detail-mind-before').textContent = feelingEmojis[session.mindBefore] || '-';
+						document.getElementById('detail-body-before').textContent = feelingEmojis[session.bodyBefore] || '-';
+					}
+
+					// Notes
+					if (session.notes) {
+						document.getElementById('notes-section').classList.remove('hidden');
+						document.getElementById('detail-notes').textContent = session.notes;
+					}
+
+					// Load check-ins
+					await loadCheckIns();
+
+				} catch (err) {
+					console.error('[SessionDetail] Failed to load:', err);
+				}
+			}
+
+			async function loadCheckIns() {
+				try {
+					const checkIns = await SessionDB.getSessionCheckIns(sessionID);
+					if (checkIns.length === 0) return;
+
+					document.getElementById('checkins-section').classList.remove('hidden');
+					const timeline = document.getElementById('checkins-timeline');
+					timeline.innerHTML = '';
+
+					for (const checkIn of checkIns) {
+						const card = document.createElement('div');
+						card.className = 'bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-4';
+
+						const time = new Date(checkIn.timestamp);
+						let notesHtml = '';
+						if (checkIn.notes) {
+							notesHtml = '<p class="mt-3 pt-3 border-t border-gray-100 dark:border-navy-800 text-sm text-gray-600 dark:text-gray-300">' + checkIn.notes + '</p>';
+						}
+						card.innerHTML = '<div class="flex justify-between items-start mb-3">' +
+							'<span class="text-sm text-gray-500 dark:text-gray-400">' + time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>' +
+							'<span class="text-sm font-medium text-navy-900 dark:text-white">Intensity: ' + checkIn.intensity + '/10</span>' +
+							'</div>' +
+							'<div class="grid grid-cols-3 gap-4 text-center">' +
+							'<div><div class="text-xl">' + feelingEmojis[checkIn.mood] + '</div><div class="text-xs text-gray-500 dark:text-gray-400">Mood</div></div>' +
+							'<div><div class="text-xl">' + feelingEmojis[checkIn.mind] + '</div><div class="text-xs text-gray-500 dark:text-gray-400">Mind</div></div>' +
+							'<div><div class="text-xl">' + feelingEmojis[checkIn.body] + '</div><div class="text-xs text-gray-500 dark:text-gray-400">Body</div></div>' +
+							'</div>' + notesHtml;
+
+						timeline.appendChild(card);
+					}
+				} catch (err) {
+					console.error('[SessionDetail] Failed to load check-ins:', err);
+				}
+			}
+
+			async function completeSession() {
+				try {
+					await SessionDB.completeSession(sessionID);
+					await SessionDB.clearSessionNotifications(sessionID);
+					window.location.reload();
+				} catch (err) {
+					console.error('[SessionDetail] Failed to complete session:', err);
+					alert('Failed to complete session. Please try again.');
+				}
+			}
+
+			async function deleteSession() {
+				if (!confirm('Are you sure you want to delete this session? This cannot be undone.')) {
+					return;
+				}
+
+				try {
+					await SessionDB.remove('sessions', sessionID);
+					await SessionDB.clearSessionNotifications(sessionID);
+					window.location.href = '/app/sessions';
+				} catch (err) {
+					console.error('[SessionDetail] Failed to delete session:', err);
+					alert('Failed to delete session. Please try again.');
+				}
+			}
+		</script>
+	}
+}

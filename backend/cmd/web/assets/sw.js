@@ -13,6 +13,8 @@ const STATIC_ASSETS = [
   '/assets/js/app.min.js',
   '/assets/js/theme.js',
   '/assets/js/htmx.min.js',
+  '/assets/js/session-db.js',
+  '/assets/js/session-notifications.js',
   '/assets/images/logos/logo-book.svg',
   '/assets/images/favicon/favicon.svg'
 ];
@@ -216,4 +218,31 @@ self.addEventListener('message', (event) => {
   if (event.data === 'getVersion') {
     event.ports[0].postMessage({ version: SW_VERSION });
   }
+});
+
+// Handle notification clicks (for session check-in notifications)
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notification clicked:', event.notification.tag);
+
+  event.notification.close();
+
+  // Get the URL from notification data
+  const url = event.notification.data?.url || '/app/sessions';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Check if there's already a window open
+        for (const client of clientList) {
+          if (client.url.includes('/app') && 'focus' in client) {
+            client.navigate(url);
+            return client.focus();
+          }
+        }
+        // No window open, open a new one
+        if (clients.openWindow) {
+          return clients.openWindow(url);
+        }
+      })
+  );
 });

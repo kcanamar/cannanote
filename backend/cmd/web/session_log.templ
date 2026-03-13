@@ -1,0 +1,805 @@
+package web
+
+// SessionLog displays the multi-step session logging form
+templ SessionLog(email string, currentPath string) {
+	@AppBase("Log Session - CannaNote", currentPath, email) {
+		<div class="max-w-2xl mx-auto">
+			<!-- Header -->
+			<div class="flex items-center gap-4 mb-6">
+				<a
+					href="/app/sessions"
+					class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+				>
+					@backIcon()
+				</a>
+				<div>
+					<h1 class="text-2xl font-semibold text-navy-900 dark:text-white">Log Session</h1>
+					<p class="text-sm text-gray-500 dark:text-gray-400">Track your cannabis experience</p>
+				</div>
+			</div>
+
+			<!-- Progress Steps -->
+			<div class="flex items-center justify-center gap-2 mb-8">
+				<div id="step-1-indicator" class="w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium">1</div>
+				<div class="w-12 h-0.5 bg-gray-200 dark:bg-navy-700"></div>
+				<div id="step-2-indicator" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium">2</div>
+				<div class="w-12 h-0.5 bg-gray-200 dark:bg-navy-700"></div>
+				<div id="step-3-indicator" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium">3</div>
+			</div>
+
+			<!-- Form Steps -->
+			<form id="session-form" class="space-y-6">
+				<!-- Step 1: Product Selection -->
+				<div id="step-1" class="step-content">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">What are you using?</h2>
+
+					<!-- Product Picker (chips for existing products) -->
+					<div id="product-picker" class="mb-4">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Your Collection
+						</label>
+						<div id="product-chips" class="flex flex-wrap gap-2 mb-3">
+							<!-- Populated by JavaScript -->
+						</div>
+						<button
+							type="button"
+							onclick="showNewProductForm()"
+							class="text-sm text-sage-600 dark:text-sage-400 hover:text-sage-700 dark:hover:text-sage-300"
+						>
+							+ Add new product
+						</button>
+					</div>
+
+					<!-- New Product Form (hidden by default) -->
+					<div id="new-product-form" class="hidden space-y-4 p-4 bg-gray-50 dark:bg-navy-800/50 rounded-lg">
+						<div>
+							<label for="strain-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+								Strain Name <span class="text-red-500">*</span>
+							</label>
+							<input
+								type="text"
+								id="strain-name"
+								name="strainName"
+								placeholder="Blue Dream, OG Kush, etc."
+								class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+							/>
+						</div>
+
+						<div>
+							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
+							<div class="flex gap-2">
+								@strainTypeChip("indica", "Indica")
+								@strainTypeChip("hybrid", "Hybrid")
+								@strainTypeChip("sativa", "Sativa")
+							</div>
+						</div>
+
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div>
+								<label for="producer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Producer</label>
+								<input
+									type="text"
+									id="producer"
+									name="producer"
+									placeholder="Farm/Grower name"
+									list="producers-list"
+									class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								/>
+								<datalist id="producers-list"></datalist>
+							</div>
+							<div>
+								<label for="processor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Processor</label>
+								<input
+									type="text"
+									id="processor"
+									name="processor"
+									placeholder="Lab/Processor name"
+									list="processors-list"
+									class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								/>
+								<datalist id="processors-list"></datalist>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<div>
+								<label for="distributor" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Distributor</label>
+								<input
+									type="text"
+									id="distributor"
+									name="distributor"
+									placeholder="Dispensary name"
+									list="distributors-list"
+									class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								/>
+								<datalist id="distributors-list"></datalist>
+							</div>
+							<div>
+								<label for="harvest-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Harvest Date</label>
+								<input
+									type="date"
+									id="harvest-date"
+									name="harvestDate"
+									class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								/>
+							</div>
+						</div>
+
+						<!-- Chemistry Section (Collapsible) -->
+						<details class="border border-gray-200 dark:border-navy-600 rounded-lg">
+							<summary class="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg">
+								Add Chemistry (Optional)
+							</summary>
+							<div class="p-4 space-y-4 border-t border-gray-200 dark:border-navy-600">
+								<!-- Cannabinoids -->
+								<div>
+									<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cannabinoids</label>
+									<div id="cannabinoid-inputs" class="space-y-2">
+										@cannabinoidInput("THC")
+										@cannabinoidInput("CBD")
+									</div>
+									<button type="button" onclick="addCannabinoid()" class="mt-2 text-sm text-sage-600 dark:text-sage-400 hover:text-sage-700">
+										+ Add cannabinoid
+									</button>
+								</div>
+
+								<!-- Terpenes -->
+								<div>
+									<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Terpenes</label>
+									<div id="terpene-chips" class="flex flex-wrap gap-2 mb-2">
+										<!-- Populated by JavaScript -->
+									</div>
+									<div id="terpene-inputs" class="space-y-2 hidden">
+										<!-- Added dynamically -->
+									</div>
+								</div>
+							</div>
+						</details>
+					</div>
+				</div>
+
+				<!-- Step 2: Consumption Details -->
+				<div id="step-2" class="step-content hidden">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">How did you consume?</h2>
+
+					<!-- Method Selection -->
+					<div class="mb-6">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Method</label>
+						<div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+							@methodChip("vape", "Vape", vapeIcon())
+							@methodChip("smoke", "Smoke", smokeIcon())
+							@methodChip("edible", "Edible", edibleIcon())
+							@methodChip("tincture", "Tincture", tinctureIcon())
+							@methodChip("topical", "Topical", topicalIcon())
+							@methodChip("dab", "Dab", dabIcon())
+						</div>
+					</div>
+
+					<!-- Amount Input -->
+					<div class="mb-6">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount</label>
+						<div class="flex gap-2">
+							<input
+								type="number"
+								id="amount"
+								name="amount"
+								step="0.1"
+								min="0"
+								placeholder="0"
+								class="flex-1 px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+							/>
+							<select
+								id="unit"
+								name="unit"
+								class="px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+							>
+								<option value="puffs">puffs</option>
+								<option value="hits">hits</option>
+								<option value="g">grams</option>
+								<option value="mg">mg</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- Pre-Session State -->
+					<div class="space-y-4">
+						<h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">How are you feeling right now?</h3>
+
+						@feelingGrid("mood-before", "Mood", "Emotional state")
+						@feelingGrid("mind-before", "Mind", "Mental clarity")
+						@feelingGrid("body-before", "Body", "Physical comfort")
+					</div>
+				</div>
+
+				<!-- Step 3: Check-in Settings -->
+				<div id="step-3" class="step-content hidden">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Effect Check-ins</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+						Get notified to record how you're feeling after consuming.
+					</p>
+
+					<!-- Check-in Mode -->
+					<div class="mb-6">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Check-in Mode</label>
+						<div class="space-y-2">
+							@checkInModeOption("none", "No check-ins", "Just log the session")
+							@checkInModeOption("single", "Single check-in", "One notification after your set time")
+							@checkInModeOption("multiple", "Multiple check-ins", "Periodic notifications until you end the session")
+						</div>
+					</div>
+
+					<!-- Check-in Timing (shown when mode != none) -->
+					<div id="checkin-timing" class="hidden mb-6">
+						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Check-in after <span id="timing-value">30</span> minutes
+						</label>
+						<input
+							type="range"
+							id="checkin-interval"
+							name="checkInInterval"
+							min="5"
+							max="240"
+							step="5"
+							value="30"
+							class="w-full h-2 bg-gray-200 dark:bg-navy-700 rounded-lg appearance-none cursor-pointer accent-sage-600"
+						/>
+						<div class="flex justify-between text-xs text-gray-400 mt-1">
+							<span>5 min</span>
+							<span>4 hours</span>
+						</div>
+					</div>
+
+					<!-- Notes -->
+					<div class="mb-6">
+						<label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes (Optional)</label>
+						<textarea
+							id="notes"
+							name="notes"
+							rows="3"
+							placeholder="Any additional context..."
+							class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent resize-none"
+						></textarea>
+					</div>
+				</div>
+
+				<!-- Navigation Buttons -->
+				<div class="flex justify-between pt-4 border-t border-gray-200 dark:border-navy-700">
+					<button
+						type="button"
+						id="prev-btn"
+						onclick="prevStep()"
+						class="hidden px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-medium"
+					>
+						Back
+					</button>
+					<div class="flex-1"></div>
+					<button
+						type="button"
+						id="next-btn"
+						onclick="nextStep()"
+						class="px-6 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
+					>
+						Continue
+					</button>
+					<button
+						type="submit"
+						id="submit-btn"
+						class="hidden px-6 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
+					>
+						Start Session
+					</button>
+				</div>
+			</form>
+		</div>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script>
+			let currentStep = 1;
+			let selectedProductId = null;
+			let selectedStrainType = null;
+			let selectedMethod = null;
+			let selectedCheckInMode = 'none';
+			let selectedTerpenes = [];
+
+			// Units by method
+			const unitsByMethod = {
+				vape: ['puffs', 'seconds'],
+				smoke: ['hits', 'g', 'joints'],
+				edible: ['mg', 'pieces'],
+				tincture: ['mg', 'ml', 'drops'],
+				topical: ['applications'],
+				dab: ['hits', 'g']
+			};
+
+			// Initialize
+			document.addEventListener('DOMContentLoaded', async () => {
+				await loadProducts();
+				await loadAutocomplete();
+				await loadTerpenes();
+				setupEventListeners();
+			});
+
+			async function loadProducts() {
+				try {
+					const products = await SessionDB.getProducts();
+					const container = document.getElementById('product-chips');
+
+					if (products.length === 0) {
+						showNewProductForm();
+						return;
+					}
+
+					container.innerHTML = '';
+					for (const product of products.slice(0, 10)) {
+						const chip = createProductChip(product);
+						container.appendChild(chip);
+					}
+				} catch (err) {
+					console.error('[SessionLog] Failed to load products:', err);
+				}
+			}
+
+			function createProductChip(product) {
+				const chip = document.createElement('button');
+				chip.type = 'button';
+				chip.className = 'flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-navy-600 hover:border-sage-500 dark:hover:border-sage-400 transition-colors';
+				chip.dataset.productId = product.id;
+
+				let producerHtml = '';
+				if (product.producer) {
+					producerHtml = '<span class="text-xs text-gray-500 dark:text-gray-400">' + product.producer + '</span>';
+				}
+				chip.innerHTML = '<span class="font-medium text-navy-900 dark:text-white">' + product.strainName + '</span>' + producerHtml;
+
+				chip.onclick = () => selectProduct(product.id, chip);
+				return chip;
+			}
+
+			function selectProduct(productId, chipElement) {
+				// Deselect all
+				document.querySelectorAll('#product-chips button').forEach(btn => {
+					btn.classList.remove('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600', 'dark:border-sage-400');
+					btn.classList.add('border-gray-300', 'dark:border-navy-600');
+				});
+
+				// Select this one
+				chipElement.classList.remove('border-gray-300', 'dark:border-navy-600');
+				chipElement.classList.add('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600', 'dark:border-sage-400');
+				selectedProductId = productId;
+
+				// Hide new product form
+				document.getElementById('new-product-form').classList.add('hidden');
+			}
+
+			function showNewProductForm() {
+				selectedProductId = null;
+				document.getElementById('new-product-form').classList.remove('hidden');
+
+				// Deselect all product chips
+				document.querySelectorAll('#product-chips button').forEach(btn => {
+					btn.classList.remove('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600', 'dark:border-sage-400');
+					btn.classList.add('border-gray-300', 'dark:border-navy-600');
+				});
+			}
+
+			async function loadAutocomplete() {
+				try {
+					const producers = await SessionDB.getAutocomplete('producers');
+					const processors = await SessionDB.getAutocomplete('processors');
+					const distributors = await SessionDB.getAutocomplete('distributors');
+
+					populateDatalist('producers-list', producers);
+					populateDatalist('processors-list', processors);
+					populateDatalist('distributors-list', distributors);
+				} catch (err) {
+					console.error('[SessionLog] Failed to load autocomplete:', err);
+				}
+			}
+
+			function populateDatalist(id, items) {
+				const datalist = document.getElementById(id);
+				datalist.innerHTML = items.map(item => `<option value="${item}">`).join('');
+			}
+
+			async function loadTerpenes() {
+				try {
+					const terpenes = await SessionDB.getTerpenes();
+					const container = document.getElementById('terpene-chips');
+					container.innerHTML = '';
+
+					for (const terp of terpenes.slice(0, 10)) {
+						const chip = document.createElement('button');
+						chip.type = 'button';
+						chip.className = 'px-3 py-1.5 rounded-full border border-gray-300 dark:border-navy-600 text-sm text-gray-700 dark:text-gray-300 hover:border-sage-500 dark:hover:border-sage-400 transition-colors';
+						chip.textContent = terp.name;
+						chip.onclick = () => toggleTerpene(terp.name, chip);
+						container.appendChild(chip);
+					}
+				} catch (err) {
+					console.error('[SessionLog] Failed to load terpenes:', err);
+				}
+			}
+
+			function toggleTerpene(name, chipElement) {
+				const index = selectedTerpenes.findIndex(t => t.name === name);
+				if (index >= 0) {
+					selectedTerpenes.splice(index, 1);
+					chipElement.classList.remove('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
+				} else {
+					selectedTerpenes.push({ name, percent: null });
+					chipElement.classList.add('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
+				}
+			}
+
+			function setupEventListeners() {
+				// Strain type selection
+				document.querySelectorAll('[data-strain-type]').forEach(btn => {
+					btn.onclick = () => {
+						document.querySelectorAll('[data-strain-type]').forEach(b => {
+							b.classList.remove('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
+						});
+						btn.classList.add('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
+						selectedStrainType = btn.dataset.strainType;
+					};
+				});
+
+				// Method selection
+				document.querySelectorAll('[data-method]').forEach(btn => {
+					btn.onclick = () => {
+						document.querySelectorAll('[data-method]').forEach(b => {
+							b.classList.remove('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
+						});
+						btn.classList.add('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
+						selectedMethod = btn.dataset.method;
+						updateUnits(selectedMethod);
+					};
+				});
+
+				// Check-in mode selection
+				document.querySelectorAll('[data-checkin-mode]').forEach(radio => {
+					radio.onchange = () => {
+						selectedCheckInMode = radio.value;
+						const timingDiv = document.getElementById('checkin-timing');
+						if (selectedCheckInMode === 'none') {
+							timingDiv.classList.add('hidden');
+						} else {
+							timingDiv.classList.remove('hidden');
+						}
+					};
+				});
+
+				// Timing slider
+				const slider = document.getElementById('checkin-interval');
+				slider.oninput = () => {
+					document.getElementById('timing-value').textContent = slider.value;
+				};
+
+				// Form submission
+				document.getElementById('session-form').onsubmit = handleSubmit;
+			}
+
+			function updateUnits(method) {
+				const select = document.getElementById('unit');
+				const units = unitsByMethod[method] || ['hits'];
+				select.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
+			}
+
+			function nextStep() {
+				if (currentStep === 1 && !validateStep1()) return;
+				if (currentStep === 2 && !validateStep2()) return;
+
+				currentStep++;
+				updateStepDisplay();
+			}
+
+			function prevStep() {
+				if (currentStep > 1) {
+					currentStep--;
+					updateStepDisplay();
+				}
+			}
+
+			function validateStep1() {
+				if (!selectedProductId) {
+					const strainName = document.getElementById('strain-name').value.trim();
+					if (!strainName) {
+						alert('Please select a product or enter a strain name.');
+						return false;
+					}
+				}
+				return true;
+			}
+
+			function validateStep2() {
+				if (!selectedMethod) {
+					alert('Please select a consumption method.');
+					return false;
+				}
+				return true;
+			}
+
+			function updateStepDisplay() {
+				// Hide all steps
+				document.querySelectorAll('.step-content').forEach(step => step.classList.add('hidden'));
+
+				// Show current step
+				document.getElementById(`step-${currentStep}`).classList.remove('hidden');
+
+				// Update indicators
+				for (let i = 1; i <= 3; i++) {
+					const indicator = document.getElementById(`step-${i}-indicator`);
+					if (i < currentStep) {
+						indicator.className = 'w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium';
+						indicator.innerHTML = '&#10003;';
+					} else if (i === currentStep) {
+						indicator.className = 'w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium';
+						indicator.textContent = i;
+					} else {
+						indicator.className = 'w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium';
+						indicator.textContent = i;
+					}
+				}
+
+				// Update buttons
+				document.getElementById('prev-btn').classList.toggle('hidden', currentStep === 1);
+				document.getElementById('next-btn').classList.toggle('hidden', currentStep === 3);
+				document.getElementById('submit-btn').classList.toggle('hidden', currentStep !== 3);
+			}
+
+			async function handleSubmit(e) {
+				e.preventDefault();
+
+				try {
+					// Create product if needed
+					let productId = selectedProductId;
+					if (!productId) {
+						const product = await SessionDB.createProduct({
+							strainName: document.getElementById('strain-name').value.trim(),
+							strainType: selectedStrainType,
+							producer: document.getElementById('producer').value.trim() || null,
+							processor: document.getElementById('processor').value.trim() || null,
+							distributor: document.getElementById('distributor').value.trim() || null,
+							harvestDate: document.getElementById('harvest-date').value || null,
+							terpenes: selectedTerpenes,
+							cannabinoids: collectCannabinoids()
+						});
+						productId = product.id;
+					}
+
+					// Create session
+					const session = await SessionDB.createSession({
+						productId,
+						method: selectedMethod,
+						amount: parseFloat(document.getElementById('amount').value) || 0,
+						unit: document.getElementById('unit').value,
+						moodBefore: getSelectedFeeling('mood-before'),
+						mindBefore: getSelectedFeeling('mind-before'),
+						bodyBefore: getSelectedFeeling('body-before'),
+						checkInMode: selectedCheckInMode,
+						checkInInterval: parseInt(document.getElementById('checkin-interval').value),
+						notes: document.getElementById('notes').value.trim()
+					});
+
+					console.log('[SessionLog] Session created:', session.id);
+
+					// Schedule notification if check-ins enabled
+					if (selectedCheckInMode !== 'none') {
+						const interval = parseInt(document.getElementById('checkin-interval').value);
+						await scheduleCheckInNotification(session.id, interval);
+					}
+
+					// Redirect to sessions list (or check-in page if active)
+					if (selectedCheckInMode !== 'none') {
+						window.location.href = `/app/sessions/${session.id}/checkin`;
+					} else {
+						window.location.href = '/app/sessions';
+					}
+
+				} catch (err) {
+					console.error('[SessionLog] Failed to create session:', err);
+					alert('Failed to create session. Please try again.');
+				}
+			}
+
+			function getSelectedFeeling(prefix) {
+				const selected = document.querySelector(`input[name="${prefix}"]:checked`);
+				return selected ? parseInt(selected.value) : null;
+			}
+
+			function collectCannabinoids() {
+				const cannabinoids = [];
+				document.querySelectorAll('#cannabinoid-inputs .cannabinoid-row').forEach(row => {
+					const name = row.querySelector('input[type="text"]').value.trim();
+					const percent = parseFloat(row.querySelector('input[type="number"]').value) || 0;
+					if (name && percent > 0) {
+						cannabinoids.push({ name, percent });
+					}
+				});
+				return cannabinoids;
+			}
+
+			function addCannabinoid() {
+				const container = document.getElementById('cannabinoid-inputs');
+				const row = document.createElement('div');
+				row.className = 'cannabinoid-row flex gap-2';
+				row.innerHTML = `
+					<input type="text" placeholder="Cannabinoid" list="cannabinoids-list"
+						class="flex-1 px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white text-sm" />
+					<input type="number" step="0.1" min="0" max="100" placeholder="%"
+						class="w-20 px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white text-sm" />
+					<button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-700">
+						&times;
+					</button>
+				`;
+				container.appendChild(row);
+			}
+
+			async function scheduleCheckInNotification(sessionId, intervalMinutes) {
+				// Request notification permission
+				if ('Notification' in window && Notification.permission === 'default') {
+					await Notification.requestPermission();
+				}
+
+				// Schedule in IndexedDB
+				const scheduledTime = Date.now() + (intervalMinutes * 60 * 1000);
+				await SessionDB.scheduleNotification(sessionId, scheduledTime);
+
+				// Also set a timeout for immediate notification (if page stays open)
+				setTimeout(() => {
+					if ('Notification' in window && Notification.permission === 'granted') {
+						new Notification('CannaNote Check-in', {
+							body: 'How are you feeling? Tap to record your experience.',
+							icon: '/assets/images/favicon/favicon-96x96.png',
+							tag: `checkin-${sessionId}`
+						});
+					}
+				}, intervalMinutes * 60 * 1000);
+			}
+		</script>
+	}
+}
+
+// Component helpers
+templ strainTypeChip(value, label string) {
+	<button
+		type="button"
+		data-strain-type={ value }
+		class="px-4 py-2 rounded-full border border-gray-300 dark:border-navy-600 text-sm text-gray-700 dark:text-gray-300 hover:border-sage-500 dark:hover:border-sage-400 transition-colors"
+	>
+		{ label }
+	</button>
+}
+
+templ methodChip(value, label string, icon templ.Component) {
+	<button
+		type="button"
+		data-method={ value }
+		class="flex flex-col items-center gap-1 p-3 rounded-lg border border-gray-300 dark:border-navy-600 hover:border-sage-500 dark:hover:border-sage-400 transition-colors"
+	>
+		@icon
+		<span class="text-xs text-gray-600 dark:text-gray-400">{ label }</span>
+	</button>
+}
+
+templ cannabinoidInput(name string) {
+	<div class="cannabinoid-row flex gap-2">
+		<input
+			type="text"
+			value={ name }
+			placeholder="Cannabinoid"
+			class="flex-1 px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white text-sm"
+		/>
+		<input
+			type="number"
+			step="0.1"
+			min="0"
+			max="100"
+			placeholder="%"
+			class="w-20 px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white text-sm"
+		/>
+	</div>
+}
+
+templ feelingGrid(name, label, description string) {
+	<div class="space-y-2">
+		<div class="flex items-center justify-between">
+			<span class="text-sm font-medium text-gray-700 dark:text-gray-300">{ label }</span>
+			<span class="text-xs text-gray-400">{ description }</span>
+		</div>
+		<div class="grid grid-cols-5 gap-2">
+			<label class="cursor-pointer">
+				<input type="radio" name={ name } value="1" class="sr-only peer"/>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
+					<span class="text-xl">😫</span>
+				</div>
+			</label>
+			<label class="cursor-pointer">
+				<input type="radio" name={ name } value="2" class="sr-only peer"/>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
+					<span class="text-xl">😔</span>
+				</div>
+			</label>
+			<label class="cursor-pointer">
+				<input type="radio" name={ name } value="3" class="sr-only peer"/>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
+					<span class="text-xl">😐</span>
+				</div>
+			</label>
+			<label class="cursor-pointer">
+				<input type="radio" name={ name } value="4" class="sr-only peer"/>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
+					<span class="text-xl">🙂</span>
+				</div>
+			</label>
+			<label class="cursor-pointer">
+				<input type="radio" name={ name } value="5" class="sr-only peer"/>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
+					<span class="text-xl">😄</span>
+				</div>
+			</label>
+		</div>
+	</div>
+}
+
+templ checkInModeOption(value, label, description string) {
+	<label class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-navy-600 cursor-pointer hover:border-sage-400 transition-colors has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-sage-900/20 has-[:checked]:border-sage-600">
+		<input
+			type="radio"
+			name="checkInMode"
+			value={ value }
+			data-checkin-mode={ value }
+			class="mt-1 text-sage-600 focus:ring-sage-500"
+			if value == "none" {
+				checked
+			}
+		/>
+		<div>
+			<span class="font-medium text-navy-900 dark:text-white">{ label }</span>
+			<p class="text-sm text-gray-500 dark:text-gray-400">{ description }</p>
+		</div>
+	</label>
+}
+
+// Icons
+templ backIcon() {
+	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+	</svg>
+}
+
+templ vapeIcon() {
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11V9a2 2 0 00-2-2H7a2 2 0 00-2 2v2m14 0v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6m14 0H5"/>
+	</svg>
+}
+
+templ smokeIcon() {
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
+	</svg>
+}
+
+templ edibleIcon() {
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"/>
+	</svg>
+}
+
+templ tinctureIcon() {
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+	</svg>
+}
+
+templ topicalIcon() {
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
+	</svg>
+}
+
+templ dabIcon() {
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+	</svg>
+}
