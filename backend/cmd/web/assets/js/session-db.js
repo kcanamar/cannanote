@@ -65,6 +65,9 @@ const SessionDB = (function() {
         { name: 'sessionId', keyPath: 'sessionId' },
         { name: 'scheduledTime', keyPath: 'scheduledTime' }
       ]
+    },
+    offlineAuth: {
+      keyPath: 'email'
     }
   };
 
@@ -449,6 +452,72 @@ const SessionDB = (function() {
     }
   }
 
+  // Offline Authentication
+  // Uses Web Crypto API to hash passwords for secure local storage
+
+  async function hashPassword(password, salt) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + salt);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function generateSalt() {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function saveOfflineCredentials(email, password) {
+    await init();
+    const salt = generateSalt();
+    const passwordHash = await hashPassword(password, salt);
+
+    const credentials = {
+      email: email.toLowerCase(),
+      passwordHash,
+      salt,
+      savedAt: Date.now()
+    };
+
+    await update('offlineAuth', credentials);
+    console.log('[SessionDB] Offline credentials saved for:', email);
+    return true;
+  }
+
+  async function verifyOfflineCredentials(email, password) {
+    await init();
+    const credentials = await get('offlineAuth', email.toLowerCase());
+
+    if (!credentials) {
+      console.log('[SessionDB] No offline credentials found for:', email);
+      return { valid: false, reason: 'no_credentials' };
+    }
+
+    const passwordHash = await hashPassword(password, credentials.salt);
+
+    if (passwordHash === credentials.passwordHash) {
+      console.log('[SessionDB] Offline login successful for:', email);
+      return { valid: true, email: credentials.email };
+    }
+
+    console.log('[SessionDB] Offline login failed - wrong password');
+    return { valid: false, reason: 'wrong_password' };
+  }
+
+  async function hasOfflineCredentials(email) {
+    await init();
+    const credentials = await get('offlineAuth', email.toLowerCase());
+    return !!credentials;
+  }
+
+  async function clearOfflineCredentials() {
+    await init();
+    await clear('offlineAuth');
+    console.log('[SessionDB] Offline credentials cleared');
+  }
+
   // Data export
   async function exportData() {
     const data = {
@@ -549,7 +618,13 @@ const SessionDB = (function() {
 
     // Export
     exportData,
-    exportCSV
+    exportCSV,
+
+    // Offline Auth
+    saveOfflineCredentials,
+    verifyOfflineCredentials,
+    hasOfflineCredentials,
+    clearOfflineCredentials
   };
 })();
 

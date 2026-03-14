@@ -41,8 +41,9 @@ func shouldFolderBeOpen(folder docs.SidebarItem, currentPath string) bool {
 // docsTOCSidebar renders the table of contents sidebar
 templ docsTOCSidebar(doc *docs.Doc) {
 	if len(doc.TOC) > 0 {
-		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden xl:block">
-			<div class="p-6">
+		<aside id="docs-toc-sidebar" class="hidden xl:block border-l border-neutral-200 dark:border-navy-700 bg-white dark:bg-navy-900">
+			<style>#docs-toc-sidebar .toc-scroll::-webkit-scrollbar { display: none; }</style>
+			<div class="toc-scroll sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto p-6" style="-ms-overflow-style: none; scrollbar-width: none;">
 				<h3 class="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider mb-4">
 					On This Page
 				</h3>
@@ -65,8 +66,8 @@ templ docsTOCSidebar(doc *docs.Doc) {
 		</aside>
 		@tocScrollSpy()
 	} else {
-		<aside id="docs-toc-sidebar" class="docs-toc w-64 bg-white dark:bg-navy-900 border-l border-neutral-200 dark:border-navy-700 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden xl:block">
-			<div class="p-6">
+		<aside id="docs-toc-sidebar" class="hidden xl:block border-l border-neutral-200 dark:border-navy-700 bg-white dark:bg-navy-900">
+			<div class="sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto p-6">
 				<div class="text-sm text-neutral-500 dark:text-neutral-400">
 					No headings on this page
 				</div>
@@ -116,6 +117,17 @@ templ tocScrollSpy() {
 
 			headings.forEach(heading => observer.observe(heading));
 
+			// Detect when at bottom of page - activate last heading
+			function checkBottomOfPage() {
+				const scrolledToBottom = (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 100);
+				if (scrolledToBottom && headings.length > 0) {
+					const lastHeading = headings[headings.length - 1];
+					setActiveLink(lastHeading.id);
+				}
+			}
+
+			window.addEventListener('scroll', checkBottomOfPage, { passive: true });
+
 			// Set initial active state
 			if (headings[0]) setActiveLink(headings[0].id);
 		})();
@@ -124,10 +136,11 @@ templ tocScrollSpy() {
 
 // DocsContentLayout creates the three-column layout for documentation
 templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
-	<div class="flex min-h-screen bg-white dark:bg-navy-950">
+	<!-- CSS Grid: 1 col on mobile, 2 col on lg, 3 col on xl -->
+	<div class="grid grid-cols-1 lg:grid-cols-[18rem_1fr] xl:grid-cols-[18rem_1fr_16rem] min-h-screen bg-white dark:bg-navy-950">
 		<!-- Left Sidebar - Navigation -->
-		<aside class="docs-sidebar w-72 bg-white dark:bg-navy-900 border-r border-neutral-200 dark:border-navy-700 h-[calc(100vh-4rem)] sticky top-16 overflow-y-auto hidden lg:block">
-			<div class="p-6">
+		<aside class="hidden lg:block border-r border-neutral-200 dark:border-navy-700 bg-white dark:bg-navy-900">
+			<div class="sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto p-6">
 				<!-- Search Box -->
 				<div class="mb-6">
 					<div class="relative">
@@ -147,119 +160,112 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 				</nav>
 				<!-- Footer -->
 				<div class="mt-8 pt-6 border-t border-neutral-200 dark:border-navy-700">
-					<div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+					<div class="text-xs text-neutral-500 dark:text-neutral-400">
 						<span>{ version.GetVersion() }</span>
-						<a href="https://github.com/kcanamar/cannanote" target="_blank" rel="noopener" class="hover:text-sage-600 dark:hover:text-sage-400 transition">
-							<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-							</svg>
-						</a>
 					</div>
 				</div>
 			</div>
 		</aside>
 
 		<!-- Main Content Area -->
-		<main class="flex-1 min-w-0">
-			<div class="max-w-4xl mx-auto">
-				<!-- Mobile Navigation Toggle -->
-				<div class="lg:hidden sticky top-0 z-10 bg-white dark:bg-navy-950 border-b border-neutral-200 dark:border-navy-700 p-4">
-					<button
-						id="mobile-nav-toggle"
-						class="flex items-center text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition"
-						onclick="toggleMobileNav()"
-					>
-						<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-						</svg>
-						Navigation
-					</button>
-				</div>
+		<main class="min-w-0">
+			<!-- Mobile Navigation Toggle -->
+			<div class="lg:hidden sticky top-[73px] z-10 bg-white dark:bg-navy-950 border-b border-neutral-200 dark:border-navy-700 p-4">
+				<button
+					id="mobile-nav-toggle"
+					class="flex items-center text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition"
+					onclick="toggleMobileNav()"
+				>
+					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+					</svg>
+					Navigation
+				</button>
+			</div>
 
-				<!-- Main Content Container - HTMX Target -->
-				<div id="main-content">
-					<!-- Article Content -->
-					<article class="px-6 py-8 lg:px-8 lg:py-12">
-						<!-- Article Header -->
-						<header class="mb-8">
-							<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
-							if doc.Description != "" {
-								<p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">{ doc.Description }</p>
-							}
-						</header>
-
-						<!-- Article Body -->
-						<div class="prose prose-lg max-w-none dark:prose-invert">
-							@templ.Raw(doc.ContentHTML)
-						</div>
-
-						<!-- Article Footer -->
-						if len(doc.RelatedPages) > 0 {
-							<footer class="mt-12 pt-8 border-t border-neutral-200 dark:border-navy-700">
-								<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Related Pages</h3>
-								<div class="grid md:grid-cols-2 gap-4">
-									for _, related := range doc.RelatedPages {
-										<a href={ "/docs/" + related } class="block p-4 border border-neutral-200 dark:border-navy-700 rounded-lg hover:border-sage-300 dark:hover:border-sage-600 transition">
-											<span class="text-sage-600 dark:text-sage-400 font-medium">{ related }</span>
-										</a>
-									}
-								</div>
-							</footer>
+			<!-- Main Content Container - HTMX Target -->
+			<div id="main-content">
+				<!-- Article Content -->
+				<article class="px-6 py-8 lg:px-8 lg:py-12 max-w-4xl">
+					<!-- Article Header -->
+					<header class="mb-8">
+						<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
+						if doc.Description != "" {
+							<p class="text-lg text-neutral-600 dark:text-neutral-300 leading-relaxed">{ doc.Description }</p>
 						}
-					</article>
-				</div>
+					</header>
+
+					<!-- Article Body -->
+					<div class="prose prose-lg max-w-none dark:prose-invert">
+						@templ.Raw(doc.ContentHTML)
+					</div>
+
+					<!-- Article Footer -->
+					if len(doc.RelatedPages) > 0 {
+						<footer class="mt-12 pt-8 border-t border-neutral-200 dark:border-navy-700">
+							<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Related Pages</h3>
+							<div class="grid md:grid-cols-2 gap-4">
+								for _, related := range doc.RelatedPages {
+									<a href={ "/docs/" + related } class="block p-4 border border-neutral-200 dark:border-navy-700 rounded-lg hover:border-sage-300 dark:hover:border-sage-600 transition">
+										<span class="text-sage-600 dark:text-sage-400 font-medium">{ related }</span>
+									</a>
+								}
+							</div>
+						</footer>
+					}
+				</article>
 			</div>
 		</main>
 
-		<!-- Right Sidebar - Table of Contents -->
+		<!-- Right Sidebar - TOC -->
 		@docsTOCSidebar(doc)
+	</div>
 
-		<!-- Mobile Navigation Overlay -->
-		<div
-			id="mobile-nav-overlay"
-			class="fixed inset-0 z-50 lg:hidden hidden transition-opacity duration-300"
-			onclick="toggleMobileNav()"
-		>
-			<!-- Background overlay -->
-			<div class="absolute inset-0 bg-navy-900/80 backdrop-blur-sm"></div>
-			
-			<!-- Slide-out navigation panel -->
-			<div class="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-navy-900 shadow-2xl transform transition-transform duration-300 ease-out" onclick="event.stopPropagation()">
-				<!-- Header with logo and close button -->
-				<div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-navy-700 bg-sage-50 dark:bg-navy-800">
-					<div class="flex items-center space-x-3">
-						<svg class="w-8 h-8 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.168 18.477 18.582 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-						</svg>
-						<span class="text-lg font-semibold text-navy-900 dark:text-white">Documentation</span>
-					</div>
-					<button 
-						onclick="toggleMobileNav()" 
-						class="p-2 text-neutral-500 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 hover:bg-sage-100 dark:hover:bg-navy-700 rounded-lg transition-colors"
-						aria-label="Close navigation"
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-						</svg>
-					</button>
+	<!-- Mobile Navigation Overlay (outside grid) -->
+	<div
+		id="mobile-nav-overlay"
+		class="fixed inset-0 z-50 lg:hidden hidden transition-opacity duration-300"
+		onclick="toggleMobileNav()"
+	>
+		<!-- Background overlay -->
+		<div class="absolute inset-0 bg-navy-900/80 backdrop-blur-sm"></div>
+
+		<!-- Slide-out navigation panel -->
+		<div class="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-navy-900 shadow-2xl transform transition-transform duration-300 ease-out" onclick="event.stopPropagation()">
+			<!-- Header with logo and close button -->
+			<div class="flex items-center justify-between p-4 border-b border-neutral-200 dark:border-navy-700 bg-sage-50 dark:bg-navy-800">
+				<div class="flex items-center space-x-3">
+					<svg class="w-8 h-8 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.168 18.477 18.582 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+					</svg>
+					<span class="text-lg font-semibold text-navy-900 dark:text-white">Documentation</span>
 				</div>
-				
-				<!-- Navigation content -->
-				<div class="overflow-y-auto h-full pb-20">
-					<div class="p-4">
-						<nav class="space-y-2">
-							@docsNavigationTree(sidebar, currentPath)
-						</nav>
-					</div>
+				<button
+					onclick="toggleMobileNav()"
+					class="p-2 text-neutral-500 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 hover:bg-sage-100 dark:hover:bg-navy-700 rounded-lg transition-colors"
+					aria-label="Close navigation"
+				>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+					</svg>
+				</button>
+			</div>
+
+			<!-- Navigation content -->
+			<div class="overflow-y-auto h-full pb-20">
+				<div class="p-4">
+					<nav class="space-y-2">
+						@docsNavigationTree(sidebar, currentPath)
+					</nav>
 				</div>
-				
-				<!-- Footer with branding -->
-				<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent dark:from-navy-900 border-t border-neutral-200 dark:border-navy-700">
-					<div class="text-center">
-						<p class="text-xs text-neutral-500 dark:text-neutral-400">
-							CannaNote Documentation
-						</p>
-					</div>
+			</div>
+
+			<!-- Footer with branding -->
+			<div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white to-transparent dark:from-navy-900 border-t border-neutral-200 dark:border-navy-700">
+				<div class="text-center">
+					<p class="text-xs text-neutral-500 dark:text-neutral-400">
+						CannaNote Documentation
+					</p>
 				</div>
 			</div>
 		</div>

@@ -218,6 +218,33 @@ self.addEventListener('message', (event) => {
   if (event.data === 'getVersion') {
     event.ports[0].postMessage({ version: SW_VERSION });
   }
+
+  // Handle account deletion - clear all local data
+  if (event.data && event.data.type === 'ACCOUNT_DELETED') {
+    console.log('[SW] Account deleted - clearing all local data');
+
+    // Delete IndexedDB database
+    if ('indexedDB' in self) {
+      indexedDB.deleteDatabase('cannanote');
+    }
+
+    // Clear all caches
+    caches.keys().then((names) => {
+      return Promise.all(
+        names.map((name) => {
+          console.log(`[SW] Deleting cache: ${name}`);
+          return caches.delete(name);
+        })
+      );
+    }).then(() => {
+      // Notify all clients that deletion is complete
+      self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'ACCOUNT_DELETED_COMPLETE' });
+        });
+      });
+    });
+  }
 });
 
 // Handle notification clicks (for session check-in notifications)

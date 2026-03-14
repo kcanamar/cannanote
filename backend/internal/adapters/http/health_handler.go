@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"backend/internal/adapters/external"
+
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -87,6 +89,11 @@ func HealthHandler(c *gin.Context) {
 		health.Summary.Message = "Critical systems down"
 	}
 
+	// Execute pending account deletions in background (non-blocking)
+	if health.Services["database"].Status == "up" {
+		go executePendingDeletions()
+	}
+
 	// Return appropriate HTTP status
 	// Database is critical - if it's down, return 503
 	if health.Services["database"].Status != "up" {
@@ -103,6 +110,32 @@ func HealthHandler(c *gin.Context) {
 	default:
 		c.JSON(http.StatusServiceUnavailable, health)
 	}
+}
+
+// executePendingDeletions runs pending account deletions in the background
+// This is called on health checks to ensure deletions happen even if no users log in
+func executePendingDeletions() {
+	connStr := os.Getenv("DB_CONNECTION_URI")
+	if connStr == "" {
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		database := os.Getenv("DB_DATABASE")
+		username := os.Getenv("DB_USERNAME")
+		password := os.Getenv("DB_PASSWORD")
+		connStr = fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", username, password, host, port, database)
+	}
+
+	db, err := sql.Open("pgx", connStr)
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	authService := external.NewAuthService(db)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	authService.ExecutePendingDeletions(ctx)
 }
 
 // checkDatabase tests PostgreSQL connectivity

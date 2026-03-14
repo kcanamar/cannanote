@@ -77,7 +77,31 @@ templ Privacy() {
 
             <section>
               <h2 class="text-2xl font-medium text-navy-900 dark:text-white mb-4">7. Data Export & Deletion</h2>
-              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">You can export all your data or delete your account at any time. During beta, account deletion removes all associated data within 7 days.</p>
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4">You can export all your data or delete your account at any time from Settings.</p>
+
+              <div class="bg-neutral-50 dark:bg-navy-900/50 border border-neutral-200 dark:border-navy-700 rounded-lg p-4 mb-4">
+                <p class="text-sm font-medium text-navy-900 dark:text-white mb-2">Account Deletion Process:</p>
+                <ul class="text-sm text-neutral-600 dark:text-neutral-400 space-y-2">
+                  <li class="flex items-start">
+                    <span class="text-sage-600 dark:text-sage-400 mr-2">1.</span>
+                    <span>When you request account deletion, you'll receive a confirmation email and have a <strong class="text-navy-900 dark:text-white">24-hour grace period</strong> to cancel.</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-sage-600 dark:text-sage-400 mr-2">2.</span>
+                    <span>During this period, you retain full access to your account and can export your data or cancel the deletion request.</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-sage-600 dark:text-sage-400 mr-2">3.</span>
+                    <span>After 24 hours, your account and all associated data are permanently deleted from our servers.</span>
+                  </li>
+                  <li class="flex items-start">
+                    <span class="text-sage-600 dark:text-sage-400 mr-2">4.</span>
+                    <span>Local data stored on your device (IndexedDB) is cleared when you next access the app after deletion.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <p class="text-neutral-700 dark:text-neutral-300 leading-relaxed">You can cancel deletion at any time during the grace period via the link in your confirmation email or from your dashboard.</p>
             </section>
 
             <section>

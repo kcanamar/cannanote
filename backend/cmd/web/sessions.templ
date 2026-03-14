@@ -7,7 +7,7 @@ templ Sessions(email string, currentPath string) {
 			<!-- Header with New Session button -->
 			<div class="flex items-center justify-between">
 				<div>
-					<h1 class="text-2xl font-semibold text-navy-900 dark:text-white">Sessions</h1>
+					<h1 data-copy="sessions.title" class="text-2xl font-semibold text-navy-900 dark:text-white">Sessions</h1>
 					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Track your cannabis experiences</p>
 				</div>
 				<a
@@ -15,7 +15,7 @@ templ Sessions(email string, currentPath string) {
 					class="inline-flex items-center gap-2 px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
 				>
 					@plusIcon()
-					<span>Log Session</span>
+					<span data-copy="dashboard.logSession.title">Log Session</span>
 				</a>
 			</div>
 
@@ -36,14 +36,14 @@ templ Sessions(email string, currentPath string) {
 						<div class="w-12 h-12 mx-auto mb-4 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
 							@sessionsIconLarge()
 						</div>
-						<h3 class="text-lg font-medium text-navy-900 dark:text-white mb-1">No sessions yet</h3>
-						<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Start logging your cannabis experiences</p>
+						<h3 data-copy="sessions.empty" class="text-lg font-medium text-navy-900 dark:text-white mb-1">No sessions recorded.</h3>
+						<p data-copy="sessions.startFirst" class="text-sm text-gray-500 dark:text-gray-400 mb-4">Record your first session to begin tracking.</p>
 						<a
 							href="/app/sessions/new"
 							class="inline-flex items-center gap-2 px-4 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
 						>
 							@plusIcon()
-							<span>Log Your First Session</span>
+							<span data-copy="dashboard.logSession.title">Log Session</span>
 						</a>
 					</div>
 				</div>
@@ -100,6 +100,7 @@ templ Sessions(email string, currentPath string) {
 		</template>
 
 		<script src="/assets/js/session-db.js"></script>
+		<script src="/assets/js/copy-service.js"></script>
 		<script>
 			// Feeling labels
 			const feelingLabels = ['', 'Very Low', 'Low', 'Neutral', 'Good', 'Excellent'];

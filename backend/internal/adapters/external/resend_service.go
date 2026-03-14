@@ -160,6 +160,131 @@ If you didn't sign up for CannaNote, you can safely ignore this email.`, activat
 	return r.sendEmail(welcomeEmail)
 }
 
+// SendDeletionConfirmationEmail sends a confirmation email when account deletion is requested
+func (r *ResendService) SendDeletionConfirmationEmail(email, cancelURL string, deletesAt time.Time) error {
+	r.log.Debug("Sending deletion confirmation email",
+		ports.F("email", email),
+		ports.F("deletes_at", deletesAt),
+	)
+
+	if r.apiKey == "" {
+		r.log.Error("RESEND_API_KEY not configured")
+		return fmt.Errorf("RESEND_API_KEY not configured")
+	}
+
+	deletionEmail := ResendEmail{
+		From:    "CannaNote <noreply@mail.cannanote.org>",
+		To:      []string{email},
+		Subject: "Confirm Account Deletion - CannaNote",
+		HTML: fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Account Deletion Confirmation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #dc2626 0%%, #991b1b 100%%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+        .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #e2e8f0; }
+        .cta { background: #48bb78; color: white; padding: 16px 32px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 20px 0; font-weight: bold; font-size: 16px; }
+        .cta:hover { background: #38a169; }
+        .footer { text-align: center; margin-top: 30px; color: #718096; font-size: 14px; }
+        .warning { background: #fef3cd; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #ffc107; }
+        .countdown { font-size: 24px; font-weight: bold; color: #dc2626; text-align: center; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Account Deletion Requested</h1>
+        </div>
+        <div class="content">
+            <p>Hi there,</p>
+            <p>You've requested to delete your CannaNote account. We're sorry to see you go.</p>
+
+            <div class="warning">
+                <strong>Important:</strong> Your account and all data will be permanently deleted on:
+                <div class="countdown">%s</div>
+            </div>
+
+            <p>During this 24-hour grace period, you can:</p>
+            <ul>
+                <li>Continue using CannaNote normally</li>
+                <li>Export your data from Settings</li>
+                <li>Cancel the deletion if you change your mind</li>
+            </ul>
+
+            <h3>Didn't request this?</h3>
+            <p>If you didn't request to delete your account, click the button below to cancel immediately:</p>
+
+            <center>
+                <a href="%s" class="cta">Cancel Deletion</a>
+            </center>
+
+            <p style="font-size: 13px; color: #666;">This link expires when the deletion is processed. You can also cancel from within the app.</p>
+
+            <h3>What happens after deletion?</h3>
+            <ul>
+                <li>All your session history will be erased</li>
+                <li>Your account credentials will be removed</li>
+                <li>Local data on your devices will be cleared</li>
+                <li>This action cannot be undone</li>
+            </ul>
+
+            <p>If you're leaving because something wasn't working right, we'd love to hear from you. Reply to this email with any feedback.</p>
+
+            <p>Thank you for being part of the CannaNote community.</p>
+            <p>The CannaNote Team</p>
+        </div>
+        <div class="footer">
+            <p>CannaNote - Privacy-focused cannabis tracking<br>
+            <a href="https://cannanote.org/privacy">Privacy Policy</a> | <a href="https://cannanote.org/terms">Terms of Service</a></p>
+        </div>
+    </div>
+</body>
+</html>
+		`, deletesAt.Format("January 2, 2006 at 3:04 PM MST"), cancelURL),
+		Text: fmt.Sprintf(`Account Deletion Requested
+
+Hi there,
+
+You've requested to delete your CannaNote account. We're sorry to see you go.
+
+IMPORTANT: Your account and all data will be permanently deleted on:
+%s
+
+During this 24-hour grace period, you can:
+- Continue using CannaNote normally
+- Export your data from Settings
+- Cancel the deletion if you change your mind
+
+DIDN'T REQUEST THIS?
+If you didn't request to delete your account, cancel immediately:
+%s
+
+This link expires when the deletion is processed. You can also cancel from within the app.
+
+WHAT HAPPENS AFTER DELETION?
+- All your session history will be erased
+- Your account credentials will be removed
+- Local data on your devices will be cleared
+- This action cannot be undone
+
+If you're leaving because something wasn't working right, we'd love to hear from you. Reply to this email with any feedback.
+
+Thank you for being part of the CannaNote community.
+The CannaNote Team
+
+---
+CannaNote - Privacy-focused cannabis tracking
+Privacy Policy: https://cannanote.org/privacy
+Terms of Service: https://cannanote.org/terms`, deletesAt.Format("January 2, 2006 at 3:04 PM MST"), cancelURL),
+	}
+
+	return r.sendEmail(deletionEmail)
+}
+
 // sendEmail sends an email via Resend API
 func (r *ResendService) sendEmail(email ResendEmail) error {
 	r.log.Debug("Preparing email",

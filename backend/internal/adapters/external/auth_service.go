@@ -424,3 +424,231 @@ func (a *AuthService) CleanupExpiredSessions(ctx context.Context) (int64, error)
 
 	return rows, nil
 }
+
+// DeletionGracePeriod is the time between deletion request and actual deletion
+const DeletionGracePeriod = 24 * time.Hour
+
+// DeletionStatus represents the current deletion state for a user
+type DeletionStatus struct {
+	Scheduled   bool
+	ScheduledAt *time.Time
+	DeletesAt   *time.Time
+}
+
+// ScheduleDeletion schedules an account for deletion after the grace period
+// User keeps full access during this time and can cancel
+func (a *AuthService) ScheduleDeletion(ctx context.Context, userID uuid.UUID) (string, error) {
+	// Check if deletion is already scheduled
+	var existingScheduled sql.NullTime
+	err := a.db.QueryRowContext(ctx, `
+		SELECT deletion_scheduled_at FROM profiles WHERE id = $1
+	`, userID).Scan(&existingScheduled)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to check existing deletion: %w", err)
+	}
+
+	if existingScheduled.Valid {
+		return "", fmt.Errorf("deletion already scheduled")
+	}
+
+	// Generate cancellation token
+	cancelToken, err := GenerateSecureToken(32)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate cancel token: %w", err)
+	}
+
+	scheduledAt := time.Now()
+	expiresAt := scheduledAt.Add(DeletionGracePeriod)
+
+	_, err = a.db.ExecContext(ctx, `
+		UPDATE profiles
+		SET deletion_scheduled_at = $1,
+		    deletion_cancel_token = $2,
+		    deletion_cancel_expires_at = $3
+		WHERE id = $4
+	`, scheduledAt, HashToken(cancelToken), expiresAt, userID)
+
+	if err != nil {
+		return "", fmt.Errorf("failed to schedule deletion: %w", err)
+	}
+
+	a.log.Info("Account deletion scheduled",
+		ports.F("user_id", userID),
+		ports.F("deletes_at", expiresAt),
+	)
+
+	return cancelToken, nil
+}
+
+// CancelDeletionByToken cancels a scheduled deletion using the email cancel token
+func (a *AuthService) CancelDeletionByToken(ctx context.Context, token string) error {
+	tokenHash := HashToken(token)
+
+	// Find and verify the token
+	var userID uuid.UUID
+	var expiresAt time.Time
+	err := a.db.QueryRowContext(ctx, `
+		SELECT id, deletion_cancel_expires_at
+		FROM profiles
+		WHERE deletion_cancel_token = $1
+		  AND deletion_scheduled_at IS NOT NULL
+	`, tokenHash).Scan(&userID, &expiresAt)
+
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("invalid or expired cancellation token")
+	}
+	if err != nil {
+		return fmt.Errorf("database error: %w", err)
+	}
+
+	// Check if past the grace period (account already deleted or being deleted)
+	if time.Now().After(expiresAt) {
+		return fmt.Errorf("cancellation period has expired")
+	}
+
+	// Clear deletion scheduling
+	_, err = a.db.ExecContext(ctx, `
+		UPDATE profiles
+		SET deletion_scheduled_at = NULL,
+		    deletion_cancel_token = NULL,
+		    deletion_cancel_expires_at = NULL
+		WHERE id = $1
+	`, userID)
+
+	if err != nil {
+		return fmt.Errorf("failed to cancel deletion: %w", err)
+	}
+
+	a.log.Info("Account deletion cancelled via token", ports.F("user_id", userID))
+	return nil
+}
+
+// CancelDeletionByUserID cancels a scheduled deletion for an authenticated user
+func (a *AuthService) CancelDeletionByUserID(ctx context.Context, userID uuid.UUID) error {
+	result, err := a.db.ExecContext(ctx, `
+		UPDATE profiles
+		SET deletion_scheduled_at = NULL,
+		    deletion_cancel_token = NULL,
+		    deletion_cancel_expires_at = NULL
+		WHERE id = $1
+		  AND deletion_scheduled_at IS NOT NULL
+	`, userID)
+
+	if err != nil {
+		return fmt.Errorf("failed to cancel deletion: %w", err)
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("no deletion scheduled for this account")
+	}
+
+	a.log.Info("Account deletion cancelled via dashboard", ports.F("user_id", userID))
+	return nil
+}
+
+// GetDeletionStatus returns the deletion status for a user
+func (a *AuthService) GetDeletionStatus(ctx context.Context, userID uuid.UUID) (*DeletionStatus, error) {
+	var scheduledAt sql.NullTime
+
+	err := a.db.QueryRowContext(ctx, `
+		SELECT deletion_scheduled_at
+		FROM profiles
+		WHERE id = $1
+	`, userID).Scan(&scheduledAt)
+
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("user not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+
+	status := &DeletionStatus{
+		Scheduled: scheduledAt.Valid,
+	}
+
+	if scheduledAt.Valid {
+		status.ScheduledAt = &scheduledAt.Time
+		deletesAt := scheduledAt.Time.Add(DeletionGracePeriod)
+		status.DeletesAt = &deletesAt
+	}
+
+	return status, nil
+}
+
+// ExecutePendingDeletions finds and deletes accounts past their grace period
+// Returns the count of deleted accounts
+func (a *AuthService) ExecutePendingDeletions(ctx context.Context) (int, error) {
+	// Find accounts scheduled for deletion more than 24 hours ago
+	rows, err := a.db.QueryContext(ctx, `
+		SELECT id, email FROM profiles
+		WHERE deletion_scheduled_at IS NOT NULL
+		  AND deletion_scheduled_at < NOW() - INTERVAL '24 hours'
+	`)
+	if err != nil {
+		return 0, fmt.Errorf("failed to query pending deletions: %w", err)
+	}
+	defer rows.Close()
+
+	var deleted int
+	for rows.Next() {
+		var id uuid.UUID
+		var email string
+		if err := rows.Scan(&id, &email); err != nil {
+			a.log.Error("Failed to scan deletion row", ports.F("error", err))
+			continue
+		}
+
+		// Execute deletion in transaction
+		tx, err := a.db.BeginTx(ctx, nil)
+		if err != nil {
+			a.log.Error("Failed to begin deletion transaction", ports.F("error", err))
+			continue
+		}
+
+		// Delete from humans table if exists (cannabis data)
+		_, _ = tx.ExecContext(ctx, "DELETE FROM humans WHERE email = $1", email)
+
+		// Delete from profiles table (cascades to sessions)
+		_, err = tx.ExecContext(ctx, "DELETE FROM profiles WHERE id = $1", id)
+		if err != nil {
+			tx.Rollback()
+			a.log.Error("Failed to delete profile", ports.F("error", err), ports.F("user_id", id))
+			continue
+		}
+
+		if err := tx.Commit(); err != nil {
+			a.log.Error("Failed to commit deletion", ports.F("error", err))
+			continue
+		}
+
+		deleted++
+		// Log with hashed ID for privacy
+		a.log.Info("Account deleted", ports.F("user_id_hash", HashToken(id.String())))
+	}
+
+	if deleted > 0 {
+		a.log.Info("Executed pending account deletions", ports.F("count", deleted))
+	}
+
+	return deleted, nil
+}
+
+// GetUserEmailByID retrieves a user's email by their ID
+func (a *AuthService) GetUserEmailByID(ctx context.Context, userID uuid.UUID) (string, error) {
+	var email string
+	err := a.db.QueryRowContext(ctx, `
+		SELECT email FROM profiles WHERE id = $1
+	`, userID).Scan(&email)
+
+	if err == sql.ErrNoRows {
+		return "", fmt.Errorf("user not found")
+	}
+	if err != nil {
+		return "", fmt.Errorf("database error: %w", err)
+	}
+
+	return email, nil
+}

@@ -13,7 +13,7 @@ templ SessionLog(email string, currentPath string) {
 					@backIcon()
 				</a>
 				<div>
-					<h1 class="text-2xl font-semibold text-navy-900 dark:text-white">Log Session</h1>
+					<h1 data-copy="sessionLog.title" class="text-2xl font-semibold text-navy-900 dark:text-white">New Session</h1>
 					<p class="text-sm text-gray-500 dark:text-gray-400">Track your cannabis experience</p>
 				</div>
 			</div>
@@ -286,13 +286,14 @@ templ SessionLog(email string, currentPath string) {
 						id="submit-btn"
 						class="hidden px-6 py-2 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
 					>
-						Start Session
+						<span data-copy="sessionLog.submit">Begin Session</span>
 					</button>
 				</div>
 			</form>
 		</div>
 
 		<script src="/assets/js/session-db.js"></script>
+		<script src="/assets/js/copy-service.js"></script>
 		<script>
 			let currentStep = 1;
 			let selectedProductId = null;

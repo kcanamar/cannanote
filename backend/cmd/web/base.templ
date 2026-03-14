@@ -2,7 +2,13 @@ package web
 
 import "backend/cmd/web/components"
 
+// Base renders the page layout for unauthenticated users
 templ Base(title string, currentPath string) {
+	@BaseWithAuth(title, currentPath, "")
+}
+
+// BaseWithAuth renders the page layout with optional auth state
+templ BaseWithAuth(title string, currentPath string, userEmail string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -62,7 +68,7 @@ templ Base(title string, currentPath string) {
 			<script src="/assets/js/app.min.js" defer></script>
 		</head>
 		<body class="font-brand antialiased bg-white dark:bg-navy-950">
-			@components.Navigation(currentPath)
+			@components.NavigationWithAuth(currentPath, userEmail)
 			<main role="main">
 				{ children... }
 			</main>

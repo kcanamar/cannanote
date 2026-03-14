@@ -1,0 +1,537 @@
+package web
+
+// Settings displays the unified settings page for all user preferences
+templ Settings(email string, currentPath string) {
+	@AppBase("Settings - CannaNote", currentPath, email) {
+		<div class="max-w-2xl mx-auto">
+			<!-- Header (hidden on mobile - AppBase mobile header shows page title) -->
+			<div class="mb-8 hidden md:block">
+				<h1 class="text-2xl font-semibold text-navy-900 dark:text-white">Settings</h1>
+				<p class="text-gray-500 dark:text-gray-400 mt-1">Customize your experience</p>
+			</div>
+
+			<!-- Appearance Section -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6">
+				<div class="mb-4">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white">Appearance</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Customize how CannaNote looks</p>
+				</div>
+
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+							<svg id="settings-sun-icon" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+							</svg>
+							<svg id="settings-moon-icon" class="w-5 h-5 text-gray-600 dark:text-gray-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+							</svg>
+						</div>
+						<div>
+							<span class="font-medium text-navy-900 dark:text-white">Theme</span>
+							<p id="theme-status" class="text-sm text-gray-500 dark:text-gray-400">Light mode</p>
+						</div>
+					</div>
+					<button
+						onclick="toggleTheme(); updateThemeStatus();"
+						class="px-4 py-2 rounded-lg border border-gray-200 dark:border-navy-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors"
+					>
+						Toggle
+					</button>
+				</div>
+			</div>
+
+			<!-- Voice/Personality Section -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6">
+				<div class="mb-4">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white">Voice</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Choose how CannaNote speaks to you</p>
+				</div>
+
+				<div id="voice-options" class="space-y-3">
+					<!-- Holistic/Professional -->
+					<label class="voice-option flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors border-gray-200 dark:border-navy-600 has-[:checked]:border-sage-600 dark:has-[:checked]:border-sage-500 has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-navy-800 hover:border-sage-400 dark:hover:border-sage-500" data-voice="holistic">
+						<input type="radio" name="voice" value="holistic" class="sr-only"/>
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
+							<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+							</svg>
+						</div>
+						<div class="flex-1">
+							<div class="flex items-center gap-2">
+								<span class="font-medium text-navy-900 dark:text-white">Professional</span>
+								<span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-navy-700 text-gray-600 dark:text-gray-400">Default</span>
+							</div>
+							<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Direct and precise. Clinical without being cold.</p>
+						</div>
+						<div class="voice-check hidden">
+							<svg class="w-5 h-5 text-sage-600 dark:text-sage-400" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+						</div>
+					</label>
+
+					<!-- West Coast/Cali -->
+					<label class="voice-option flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors border-gray-200 dark:border-navy-600 has-[:checked]:border-sage-600 dark:has-[:checked]:border-sage-500 has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-navy-800 hover:border-sage-400 dark:hover:border-sage-500" data-voice="westcoast">
+						<input type="radio" name="voice" value="westcoast" class="sr-only"/>
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
+							<!-- California state outline -->
+							<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+								<path d="M8 2l2 1.5 1.5-.5 2 1 1.5 2 .5 2 1 1.5-.5 2.5-1 1.5.5 2-1 1.5-2 1-1 2-1.5.5-1.5 2H7l-.5-1.5-1-1.5-.5-2 .5-1.5-.5-2-1-1.5.5-2 1-1.5-.5-2L6 4l2-2z"/>
+							</svg>
+						</div>
+						<div class="flex-1">
+							<span class="font-medium text-navy-900 dark:text-white">West Coast</span>
+							<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Laid-back and familiar. Recreational vibes.</p>
+						</div>
+						<div class="voice-check hidden">
+							<svg class="w-5 h-5 text-sage-600 dark:text-sage-400" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+						</div>
+					</label>
+
+					<!-- Ganjier/Enthusiast -->
+					<label class="voice-option flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors border-gray-200 dark:border-navy-600 has-[:checked]:border-sage-600 dark:has-[:checked]:border-sage-500 has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-navy-800 hover:border-sage-400 dark:hover:border-sage-500" data-voice="ganjier">
+						<input type="radio" name="voice" value="ganjier" class="sr-only"/>
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
+							<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+							</svg>
+						</div>
+						<div class="flex-1">
+							<span class="font-medium text-navy-900 dark:text-white">Ganjier</span>
+							<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Connoisseur energy. Deep appreciation for the craft.</p>
+						</div>
+						<div class="voice-check hidden">
+							<svg class="w-5 h-5 text-sage-600 dark:text-sage-400" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+							</svg>
+						</div>
+					</label>
+				</div>
+			</div>
+
+			<!-- Data Section -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6">
+				<div class="mb-4">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white">Your Data</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Export or manage your session data</p>
+				</div>
+
+				<div class="space-y-3">
+					<button
+						onclick="exportJSON()"
+						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+								</svg>
+							</div>
+							<div class="text-left">
+								<span class="font-medium text-navy-900 dark:text-white">Export as JSON</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">Full backup of all your data</p>
+							</div>
+						</div>
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+					</button>
+
+					<button
+						onclick="exportCSV()"
+						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+								</svg>
+							</div>
+							<div class="text-left">
+								<span class="font-medium text-navy-900 dark:text-white">Export as CSV</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">Spreadsheet-compatible format</p>
+							</div>
+						</div>
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+					</button>
+				</div>
+			</div>
+
+			<!-- Account & Security Section -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6">
+				<div class="mb-4">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white">Account & Security</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your account credentials and subscription</p>
+				</div>
+
+				<div class="space-y-3">
+					<!-- Update Email -->
+					<button
+						onclick="showUpdateEmailModal()"
+						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+								</svg>
+							</div>
+							<div class="text-left">
+								<span class="font-medium text-navy-900 dark:text-white">Update Email</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">Change your login email address</p>
+							</div>
+						</div>
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+					</button>
+
+					<!-- Change Password -->
+					<button
+						onclick="showChangePasswordModal()"
+						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+								</svg>
+							</div>
+							<div class="text-left">
+								<span class="font-medium text-navy-900 dark:text-white">Change Password</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">Update your account password</p>
+							</div>
+						</div>
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+					</button>
+
+					<!-- Subscription -->
+					<button
+						onclick="showSubscriptionModal()"
+						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+								</svg>
+							</div>
+							<div class="text-left">
+								<span class="font-medium text-navy-900 dark:text-white">Subscription</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">View or change your subscription plan</p>
+							</div>
+						</div>
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+						</svg>
+					</button>
+				</div>
+
+				<!-- Danger Zone -->
+				<div class="mt-6 pt-6 border-t border-gray-200 dark:border-navy-700">
+					<h3 class="text-sm font-medium text-red-600 dark:text-red-400 mb-3">Danger Zone</h3>
+					<div class="space-y-3">
+						<!-- Delete Data -->
+						<button
+							onclick="showDeleteDataModal()"
+							class="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+						>
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+									<svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+									</svg>
+								</div>
+								<div class="text-left">
+									<span class="font-medium text-red-600 dark:text-red-400">Delete My Data</span>
+									<p class="text-sm text-gray-500 dark:text-gray-400">Erase all sessions and products from this device</p>
+								</div>
+							</div>
+							<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+							</svg>
+						</button>
+
+						<!-- Delete Account -->
+						<button
+							id="delete-account-btn"
+							onclick="showDeleteAccountModal()"
+							data-requires-online="true"
+							class="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							<div class="flex items-center gap-3">
+								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+									<svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
+									</svg>
+								</div>
+								<div class="text-left">
+									<span class="font-medium text-red-600 dark:text-red-400">Delete Account</span>
+									<p id="delete-account-subtitle" class="text-sm text-gray-500 dark:text-gray-400">Permanently delete your CannaNote account</p>
+								</div>
+							</div>
+							<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+							</svg>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<!-- About Section -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
+				<div class="mb-4">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white">About</h2>
+				</div>
+
+				<div class="space-y-3 text-sm text-gray-500 dark:text-gray-400">
+					<div class="flex justify-between">
+						<span>Version</span>
+						<span class="text-navy-900 dark:text-white">Beta</span>
+					</div>
+					<div class="flex justify-between">
+						<span>Data Storage</span>
+						<span class="text-navy-900 dark:text-white">Local (on device)</span>
+					</div>
+					<div class="pt-3 border-t border-gray-200 dark:border-navy-700">
+						<a href="/privacy" class="text-sage-600 dark:text-sage-400 hover:underline">Privacy Policy</a>
+						<span class="mx-2">·</span>
+						<a href="/terms" class="text-sage-600 dark:text-sage-400 hover:underline">Terms of Service</a>
+						<span class="mx-2">·</span>
+						<a href="/docs" class="text-sage-600 dark:text-sage-400 hover:underline">Documentation</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', async () => {
+				await loadSettings();
+				setupVoiceListeners();
+				updateThemeStatus();
+				updateOnlineStatus();
+
+				// Listen for online/offline events
+				window.addEventListener('online', updateOnlineStatus);
+				window.addEventListener('offline', updateOnlineStatus);
+			});
+
+			async function loadSettings() {
+				try {
+					// Load voice preference
+					const voice = await SessionDB.getPreference('voice', 'holistic');
+					selectVoice(voice);
+				} catch (err) {
+					console.error('[Settings] Failed to load:', err);
+				}
+			}
+
+			function selectVoice(voice) {
+				// Update radio buttons - CSS :has(:checked) handles styling
+				const radio = document.querySelector('input[name="voice"][value="' + voice + '"]');
+				if (radio) {
+					radio.checked = true;
+				}
+
+				// Update checkmark visibility
+				document.querySelectorAll('.voice-option').forEach(option => {
+					const isSelected = option.dataset.voice === voice;
+					const check = option.querySelector('.voice-check');
+					check.classList.toggle('hidden', !isSelected);
+				});
+			}
+
+			function setupVoiceListeners() {
+				document.querySelectorAll('input[name="voice"]').forEach(radio => {
+					radio.addEventListener('change', async (e) => {
+						const voice = e.target.value;
+						selectVoice(voice);
+
+						try {
+							await SessionDB.setPreference('voice', voice);
+							console.log('[Settings] Voice set to:', voice);
+
+							// Dispatch event for other components to react
+							window.dispatchEvent(new CustomEvent('voiceChanged', { detail: { voice } }));
+						} catch (err) {
+							console.error('[Settings] Failed to save voice:', err);
+						}
+					});
+				});
+			}
+
+			function updateThemeStatus() {
+				const isDark = document.documentElement.classList.contains('dark');
+				const sunIcon = document.getElementById('settings-sun-icon');
+				const moonIcon = document.getElementById('settings-moon-icon');
+				const status = document.getElementById('theme-status');
+
+				if (isDark) {
+					sunIcon.classList.add('hidden');
+					moonIcon.classList.remove('hidden');
+					status.textContent = 'Dark mode';
+				} else {
+					sunIcon.classList.remove('hidden');
+					moonIcon.classList.add('hidden');
+					status.textContent = 'Light mode';
+				}
+			}
+
+			async function exportJSON() {
+				try {
+					const data = await SessionDB.exportData();
+					const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+					downloadBlob(blob, 'cannanote-backup-' + formatDate(new Date()) + '.json');
+				} catch (err) {
+					console.error('[Settings] Export failed:', err);
+					alert('Export failed. Please try again.');
+				}
+			}
+
+			async function exportCSV() {
+				try {
+					const csv = await SessionDB.exportCSV();
+					const blob = new Blob([csv], { type: 'text/csv' });
+					downloadBlob(blob, 'cannanote-sessions-' + formatDate(new Date()) + '.csv');
+				} catch (err) {
+					console.error('[Settings] Export failed:', err);
+					alert('Export failed. Please try again.');
+				}
+			}
+
+			function downloadBlob(blob, filename) {
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = filename;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
+			}
+
+			function formatDate(date) {
+				return date.toISOString().split('T')[0];
+			}
+
+			// Account & Security modal handlers (initiators)
+			function showUpdateEmailModal() {
+				alert('Update email functionality coming soon. For now, contact support.');
+			}
+
+			function showChangePasswordModal() {
+				alert('Change password functionality coming soon. For now, contact support.');
+			}
+
+			function showSubscriptionModal() {
+				alert('Subscription management coming soon. Beta users have full access.');
+			}
+
+			function showDeleteDataModal() {
+				if (confirm('Are you sure you want to delete all your session data? This cannot be undone.')) {
+					if (confirm('This will permanently erase all sessions, products, and preferences. Type "DELETE" to confirm.')) {
+						const input = prompt('Type DELETE to confirm:');
+						if (input === 'DELETE') {
+							deleteAllData();
+						} else {
+							alert('Deletion cancelled. Text did not match.');
+						}
+					}
+				}
+			}
+
+			async function deleteAllData() {
+				try {
+					await SessionDB.clear('sessions');
+					await SessionDB.clear('checkIns');
+					await SessionDB.clear('products');
+					await SessionDB.clear('producers');
+					await SessionDB.clear('processors');
+					await SessionDB.clear('distributors');
+					await SessionDB.clear('pendingNotifications');
+					// Keep preferences and chemical lists
+					alert('All session data has been deleted.');
+					window.location.reload();
+				} catch (err) {
+					console.error('[Settings] Delete data failed:', err);
+					alert('Failed to delete data. Please try again.');
+				}
+			}
+
+			// Online status handling for server-dependent operations
+			function updateOnlineStatus() {
+				const serverButtons = document.querySelectorAll('[data-requires-online]');
+				const isOnline = navigator.onLine;
+
+				serverButtons.forEach(btn => {
+					btn.disabled = !isOnline;
+					btn.title = isOnline ? '' : 'Requires internet connection';
+					const subtitle = btn.querySelector('#delete-account-subtitle');
+					if (subtitle && !isOnline) {
+						subtitle.textContent = 'Requires internet connection';
+					} else if (subtitle && isOnline) {
+						subtitle.textContent = 'Permanently delete your CannaNote account';
+					}
+				});
+			}
+
+			function showDeleteAccountModal() {
+				// Check online status first
+				if (!navigator.onLine) {
+					alert('Account deletion requires an internet connection. Please try again when online.');
+					return;
+				}
+
+				// Triple confirmation for account deletion
+				if (!confirm('Are you sure you want to delete your account?\n\nYou will have 24 hours to cancel this request. During this time, you can still use CannaNote and export your data.')) {
+					return;
+				}
+
+				if (!confirm('This will permanently delete ALL your data from our servers AND this device after 24 hours.\n\nAre you absolutely sure?')) {
+					return;
+				}
+
+				const confirmation = prompt('Type DELETE ACCOUNT to confirm:');
+				if (confirmation !== 'DELETE ACCOUNT') {
+					alert('Deletion cancelled. Text did not match.');
+					return;
+				}
+
+				requestAccountDeletion();
+			}
+
+			async function requestAccountDeletion() {
+				try {
+					const response = await fetch('/api/account/request-delete', {
+						method: 'POST',
+						credentials: 'include'
+					});
+
+					if (response.ok) {
+						const data = await response.json();
+						alert('Account deletion scheduled. You will receive a confirmation email.\n\nYou have 24 hours to cancel. You can continue using CannaNote until then.');
+						// Reload to show countdown banner on dashboard
+						window.location.href = '/app';
+					} else if (response.status === 409) {
+						alert('Deletion already scheduled. Check your dashboard for the countdown.');
+						window.location.href = '/app';
+					} else {
+						const error = await response.json();
+						alert('Failed to request deletion: ' + (error.error || 'Unknown error'));
+					}
+				} catch (err) {
+					console.error('[Settings] Delete account failed:', err);
+					alert('Failed to request deletion. Please check your internet connection and try again.');
+				}
+			}
+		</script>
+	}
+}

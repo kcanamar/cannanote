@@ -13,7 +13,7 @@ templ SessionCheckIn(email string, sessionID string, currentPath string) {
 					@backIcon()
 				</a>
 				<div class="flex-1">
-					<h1 id="checkin-title" class="text-2xl font-semibold text-navy-900 dark:text-white">Check-in</h1>
+					<h1 id="checkin-title" data-copy="checkin.title" class="text-2xl font-semibold text-navy-900 dark:text-white">Check-in</h1>
 					<p id="session-info" class="text-sm text-gray-500 dark:text-gray-400"></p>
 				</div>
 			</div>
@@ -35,7 +35,7 @@ templ SessionCheckIn(email string, sessionID string, currentPath string) {
 			<form id="checkin-form" class="space-y-6">
 				<!-- Current State -->
 				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
-					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">How are you feeling now?</h2>
+					<h2 data-copy="checkin.howFeeling" class="text-lg font-medium text-navy-900 dark:text-white mb-4">Current state assessment</h2>
 
 					@feelingGrid("mood", "Mood", "Emotional state")
 					<div class="my-4"></div>
@@ -46,7 +46,7 @@ templ SessionCheckIn(email string, sessionID string, currentPath string) {
 
 				<!-- Intensity -->
 				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
-					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Effect Intensity</h2>
+					<h2 data-copy="checkin.intensity" class="text-lg font-medium text-navy-900 dark:text-white mb-4">Effect Intensity</h2>
 					<div class="space-y-3">
 						<div class="flex justify-between text-sm">
 							<span class="text-gray-500 dark:text-gray-400">Light</span>
@@ -79,7 +79,7 @@ templ SessionCheckIn(email string, sessionID string, currentPath string) {
 
 				<!-- Expectations -->
 				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
-					<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Does this match your expectations?</h2>
+					<h2 data-copy="checkin.expectations" class="text-lg font-medium text-navy-900 dark:text-white mb-4">Does this match your expectations?</h2>
 					<div class="flex gap-2">
 						<label class="flex-1 cursor-pointer">
 							<input type="radio" name="expectations" value="yes" class="sr-only peer"/>
@@ -123,14 +123,14 @@ templ SessionCheckIn(email string, sessionID string, currentPath string) {
 						type="submit"
 						class="flex-1 px-6 py-3 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
 					>
-						Save Check-in
+						<span data-copy="checkin.submit">Save Check-in</span>
 					</button>
 					<button
 						type="button"
 						onclick="endSession()"
 						class="px-6 py-3 border border-gray-300 dark:border-navy-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
 					>
-						End Session
+						<span data-copy="checkin.endSession">End Session</span>
 					</button>
 				</div>
 			</form>
@@ -148,6 +148,7 @@ templ SessionCheckIn(email string, sessionID string, currentPath string) {
 		<input type="hidden" id="session-id-data" value={ sessionID }/>
 
 		<script src="/assets/js/session-db.js"></script>
+		<script src="/assets/js/copy-service.js"></script>
 		<script>
 			const sessionID = document.getElementById('session-id-data').value;
 			const feelingEmojis = ['', '😫', '😔', '😐', '🙂', '😄'];

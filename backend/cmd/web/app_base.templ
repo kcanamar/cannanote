@@ -2,18 +2,40 @@ package web
 
 import "strings"
 
-// isMobileNavActive determines if a nav item should be highlighted
-// Uses prefix matching for /app/sessions (except /app/sessions/new)
-func isMobileNavActive(href, currentPath string) bool {
-	// Exact match
+// getPageName extracts the page name from the full title
+// "Settings - CannaNote" -> "Settings"
+// "CannaNote" -> "Home" (dashboard fallback)
+func getPageName(title string) string {
+	if idx := strings.Index(title, " - "); idx != -1 {
+		return title[:idx]
+	}
+	return "Home"
+}
+
+// isNavActive determines if a nav item should be highlighted
+// Unified function for both desktop sidebar and mobile bottom nav
+// Uses smart prefix matching for nested routes
+func isNavActive(href, currentPath string) bool {
+	// Exact match always wins
 	if href == currentPath {
 		return true
 	}
 
-	// Special case: /app/sessions should match all session sub-pages
-	// EXCEPT /app/sessions/new (which has its own "Log" button)
+	// Dashboard (/app) only matches exactly - don't match /app/anything
+	if href == "/app" {
+		return false
+	}
+
+	// For other routes, use prefix matching
+	// /app/sessions matches /app/sessions/:id, /app/sessions/:id/checkin
+	// BUT NOT /app/sessions/new (which has its own "Log" button)
 	if href == "/app/sessions" {
 		return strings.HasPrefix(currentPath, "/app/sessions") && currentPath != "/app/sessions/new"
+	}
+
+	// /app/settings matches /app/settings and any sub-routes
+	if href == "/app/settings" {
+		return strings.HasPrefix(currentPath, "/app/settings")
 	}
 
 	return false
@@ -66,6 +88,14 @@ templ AppBase(title string, currentPath string, email string) {
 				.sidebar-collapsed .user-email,
 				.sidebar-collapsed .logo-text {
 					display: none;
+				}
+				/* Center icons when sidebar is collapsed */
+				.sidebar-collapsed nav a,
+				.sidebar-collapsed nav button,
+				.sidebar-collapsed ul a,
+				.sidebar-collapsed ul button,
+				.sidebar-collapsed ul div {
+					justify-content: center;
 				}
 				/* Main content margin adjustment */
 				.main-content {
@@ -135,41 +165,47 @@ templ AppBase(title string, currentPath string, email string) {
 				</nav>
 
 				<!-- User Section -->
-				<div class="border-t border-gray-200 dark:border-navy-700 p-4">
-					<!-- Theme Toggle -->
-					<button
-						onclick="toggleTheme()"
-						class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors mb-2"
-					>
-						<svg id="app-sun-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-						</svg>
-						<svg id="app-moon-icon" class="w-5 h-5 flex-shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-						</svg>
-						<span class="nav-label ml-3 whitespace-nowrap">Toggle Theme</span>
-					</button>
-
-					<!-- User Email -->
-					<div class="flex items-center px-3 py-2 text-sm text-gray-500 dark:text-gray-400 overflow-hidden">
-						<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-						</svg>
-						<span class="user-email ml-3 truncate">{ email }</span>
-					</div>
-
-					<!-- Sign Out -->
-					<form action="/auth/signout" method="POST">
-						<button
-							type="submit"
-							class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-						>
-							<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-							</svg>
-							<span class="nav-label ml-3 whitespace-nowrap">Sign Out</span>
-						</button>
-					</form>
+				<div class="border-t border-gray-200 dark:border-navy-700 py-4">
+					<ul class="space-y-1 px-2">
+						<!-- Theme Toggle -->
+						<li>
+							<button
+								onclick="toggleTheme()"
+								class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+							>
+								<svg id="app-sun-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+								</svg>
+								<svg id="app-moon-icon" class="w-5 h-5 flex-shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+								</svg>
+								<span class="nav-label ml-3 whitespace-nowrap">Toggle Theme</span>
+							</button>
+						</li>
+						<!-- User Email -->
+						<li>
+							<div class="flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400">
+								<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+								</svg>
+								<span class="nav-label ml-3 truncate text-sm">{ email }</span>
+							</div>
+						</li>
+						<!-- Sign Out -->
+						<li>
+							<form action="/auth/signout" method="POST">
+								<button
+									type="submit"
+									class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+								>
+									<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+									</svg>
+									<span class="nav-label ml-3 whitespace-nowrap">Sign Out</span>
+								</button>
+							</form>
+						</li>
+					</ul>
 				</div>
 
 				<!-- Collapse Toggle (Desktop only) -->
@@ -189,15 +225,17 @@ templ AppBase(title string, currentPath string, email string) {
 			</aside>
 
 			<!-- Mobile Header (simplified - no hamburger) -->
-			<header class="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-navy-700 z-30 flex items-center justify-center px-4">
-				<a href="/app" class="flex items-center gap-2">
+			<header class="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-navy-700 z-30 flex items-center px-4">
+				<a href="/app" class="flex-shrink-0" aria-label="Go to Dashboard">
 					<img
 						src="/assets/images/logos/logo-book.svg"
 						alt="CannaNote"
-						class="w-6 h-6 dark:invert"
+						class="w-7 h-7 dark:invert"
 					/>
-					<span class="text-lg font-semibold text-navy-900 dark:text-white">CannaNote</span>
 				</a>
+				<span class="flex-1 text-center text-lg font-semibold text-navy-900 dark:text-white">{ getPageName(title) }</span>
+				<!-- Spacer to balance the logo width for true centering -->
+				<div class="w-7 flex-shrink-0"></div>
 			</header>
 
 			<!-- Main Content -->
@@ -410,7 +448,7 @@ templ AppBase(title string, currentPath string, email string) {
 // Navigation item helper
 templ appNavItem(href, label, currentPath string, icon templ.Component) {
 	<li>
-		if href == currentPath {
+		if isNavActive(href, currentPath) {
 			<a
 				href={ templ.SafeURL(href) }
 				class="flex items-center px-3 py-2 rounded-lg bg-sage-100 dark:bg-sage-900/30 text-sage-800 dark:text-sage-300 font-medium"
@@ -457,11 +495,9 @@ templ docsIcon() {
 	</svg>
 }
 
-// Mobile navigation item helper with smart path matching
-// - Exact match for most items
-// - Prefix match for /app/sessions (but not /app/sessions/new which has its own "Log" button)
+// Mobile navigation item helper - uses unified isNavActive for consistency
 templ mobileNavItem(href, label, currentPath string, icon templ.Component) {
-	if isMobileNavActive(href, currentPath) {
+	if isNavActive(href, currentPath) {
 		<a
 			href={ templ.SafeURL(href) }
 			class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg text-sage-600 dark:text-sage-400"

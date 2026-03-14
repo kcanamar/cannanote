@@ -24,7 +24,13 @@ templ navLink(href, label, currentPath string) {
 }
 
 // Main Navigation Component
+// Pass empty string for userEmail when not authenticated
 templ Navigation(currentPath string) {
+  @NavigationWithAuth(currentPath, "")
+}
+
+// NavigationWithAuth renders navigation with optional auth state
+templ NavigationWithAuth(currentPath string, userEmail string) {
   <nav class="bg-white dark:bg-navy-900 border-b border-slate-200 dark:border-navy-700 sticky top-0 z-50" aria-label="Main navigation">
     <div class="px-6 py-4 flex items-center justify-between w-full">
       <!-- Logo / Home Link -->
@@ -39,18 +45,7 @@ templ Navigation(currentPath string) {
         @navLink("/pricing", "Pricing", currentPath)
         @navLink("/docs", "Docs", currentPath)
         @navLink("/privacy", "Privacy", currentPath)
-        <a
-          href="https://github.com/kcanamar/cannanote"
-          target="_blank"
-          rel="noopener"
-          class="text-lg text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition flex items-center"
-        >
-          Github
-          <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        </a>
-        
+
         <!-- Dark/Light Mode Toggle -->
         <button
           class="p-2 rounded-lg text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-navy-800 transition-colors"
@@ -64,10 +59,19 @@ templ Navigation(currentPath string) {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
           </svg>
         </button>
-        
-        <a href="/login" class="bg-slate-800 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-slate-900 transition">
-          Sign In
-        </a>
+
+        if userEmail != "" {
+          <a href="/app" class="bg-sage-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-sage-700 transition flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to App
+          </a>
+        } else {
+          <a href="/login" class="bg-slate-800 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-slate-900 transition">
+            Sign In
+          </a>
+        }
       </div>
 
       <!-- Mobile Menu Toggle -->
@@ -95,18 +99,7 @@ templ Navigation(currentPath string) {
             @navLink("/pricing", "Pricing", currentPath)
             @navLink("/docs", "Docs", currentPath)
             @navLink("/privacy", "Privacy", currentPath)
-            <a
-              href="https://github.com/kcanamar/cannanote"
-              target="_blank"
-              rel="noopener"
-              class="px-6 py-3 text-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center"
-            >
-              Open Source
-              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-              </svg>
-            </a>
-            
+
             <!-- Mobile Dark/Light Mode Toggle -->
             <button
               class="px-6 py-3 text-lg text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-navy-800 flex items-center"
@@ -121,10 +114,19 @@ templ Navigation(currentPath string) {
               <span id="mobile-dark-text">Dark Mode</span>
               <span id="mobile-light-text" class="hidden">Light Mode</span>
             </button>
-            
-            <a href="/login" class="px-6 py-4 bg-slate-800 text-white text-lg font-medium hover:bg-slate-900">
-              Sign In
-            </a>
+
+            if userEmail != "" {
+              <a href="/app" class="px-6 py-4 bg-sage-600 text-white text-lg font-medium hover:bg-sage-700 flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to App
+              </a>
+            } else {
+              <a href="/login" class="px-6 py-4 bg-slate-800 text-white text-lg font-medium hover:bg-slate-900">
+                Sign In
+              </a>
+            }
           </div>
         </div>
       </div>

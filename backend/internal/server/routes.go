@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"html"
 	"net"
@@ -452,7 +453,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	if contentDir == "" {
 		conditionalLog("ERROR", "Could not find docs content directory in any of these locations: %v", possiblePaths)
 	}
-	docsHandler, err := httpAdapters.NewDocsHandler(contentDir)
+	docsHandler, err := httpAdapters.NewDocsHandler(contentDir, s.db.GetDB())
 
 	// Always add fallback route
 	r.GET("/docs-fallback", func(c *gin.Context) {
@@ -466,9 +467,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
 		})
 	} else {
-		// Dynamic docs routing - try the new handler
-		r.GET("/docs/*path", docsHandler.HandleDocsRequest)
-		r.GET("/docs", docsHandler.HandleDocsRequest)
+		// Dynamic docs routing with optional auth (shows "Back to App" for logged-in users)
+		docsGroup := r.Group("")
+		docsGroup.Use(authMiddleware.OptionalSession())
+		{
+			docsGroup.GET("/docs/*path", docsHandler.HandleDocsRequest)
+			docsGroup.GET("/docs", docsHandler.HandleDocsRequest)
+		}
 
 		// Search endpoint
 		r.GET("/api/docs/search", docsHandler.HandleDocsSearch)
@@ -508,7 +513,28 @@ func (s *Server) RegisterRoutes() http.Handler {
 		protected.GET("/sessions/new", s.SessionLogHandler)
 		protected.GET("/sessions/:id", s.SessionDetailHandler)
 		protected.GET("/sessions/:id/checkin", s.SessionCheckInHandler)
+
+		// Settings
+		protected.GET("/settings", s.SettingsHandler)
 	}
+
+	// Account deletion API (authenticated)
+	accountAPI := r.Group("/api/account")
+	accountAPI.Use(authMiddleware.RequireSession())
+	{
+		accountAPI.POST("/request-delete", s.RequestAccountDeletionHandler)
+		accountAPI.POST("/cancel-delete", s.CancelDeletionHandler)
+		accountAPI.GET("/deletion-status", s.DeletionStatusHandler)
+	}
+
+	// Cancel deletion via email link (token-based, no auth required)
+	r.GET("/account/cancel-delete", s.CancelDeletionByTokenHandler)
+
+	// Goodbye page (shown after account deletion)
+	r.GET("/goodbye", s.GoodbyeHandler)
+
+	// Deletion cancelled confirmation page
+	r.GET("/deletion-cancelled", s.DeletionCancelledHandler)
 
 	// Login page for unauthenticated users
 	r.GET("/login", s.LoginPageHandler)
@@ -757,17 +783,34 @@ func (s *Server) DashboardHandler(c *gin.Context) {
 	// Get user profile from database
 	var email string
 	var betaStatus string
+	var deletionScheduledAt *time.Time
 	db := s.db.GetDB()
-	err := db.QueryRow("SELECT email, beta_status FROM profiles WHERE id = $1", userID).Scan(&email, &betaStatus)
+
+	var deletionAt sql.NullTime
+	err := db.QueryRow("SELECT email, beta_status, deletion_scheduled_at FROM profiles WHERE id = $1", userID).Scan(&email, &betaStatus, &deletionAt)
 	if err != nil {
 		conditionalLog("ERROR", "Failed to get profile: %v", err)
 		email = "Unknown"
 		betaStatus = "unknown"
 	}
 
+	// Calculate deletion time if scheduled
+	if deletionAt.Valid {
+		deletesAt := deletionAt.Time.Add(external.DeletionGracePeriod)
+		deletionScheduledAt = &deletesAt
+	}
+
+	// Execute any pending deletions (background check)
+	go func() {
+		authService := external.NewAuthService(s.db.GetDB())
+		if _, err := authService.ExecutePendingDeletions(context.Background()); err != nil {
+			conditionalLog("ERROR", "Failed to execute pending deletions: %v", err)
+		}
+	}()
+
 	conditionalLog("DEBUG", "Rendering dashboard for %s (status: %s)", email, betaStatus)
 
-	templ.Handler(web.Dashboard(userID, email, betaStatus)).ServeHTTP(c.Writer, c.Request)
+	templ.Handler(web.Dashboard(userID, email, betaStatus, deletionScheduledAt)).ServeHTTP(c.Writer, c.Request)
 }
 
 // LoginPageHandler displays the login page for unauthenticated users
@@ -906,4 +949,161 @@ func (s *Server) SessionCheckInHandler(c *gin.Context) {
 	}
 
 	templ.Handler(web.SessionCheckIn(email, sessionID, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SettingsHandler displays the unified settings page
+func (s *Server) SettingsHandler(c *gin.Context) {
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.Settings(email, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// RequestAccountDeletionHandler schedules account deletion with 24-hour grace period
+func (s *Server) RequestAccountDeletionHandler(c *gin.Context) {
+	userIDStr := httpAdapters.GetUserIDFromGinContext(c)
+	userID, err := httpAdapters.GetUserIDAsUUID(c)
+	if err != nil {
+		conditionalLog("ERROR", "Invalid user ID in context: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid session"})
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+
+	// Schedule deletion and get cancellation token
+	cancelToken, err := authService.ScheduleDeletion(c.Request.Context(), userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "already scheduled") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Deletion already scheduled"})
+			return
+		}
+		conditionalLog("ERROR", "Failed to schedule deletion for user %s: %v", userIDStr, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to schedule deletion"})
+		return
+	}
+
+	// Get user email for sending confirmation
+	email, err := authService.GetUserEmailByID(c.Request.Context(), userID)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to get user email: %v", err)
+		// Continue anyway - deletion is scheduled, email is nice-to-have
+	}
+
+	// Build cancel URL
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "http://localhost:8080"
+	}
+	cancelURL := fmt.Sprintf("%s/account/cancel-delete?token=%s", appURL, cancelToken)
+	deletesAt := time.Now().Add(external.DeletionGracePeriod)
+
+	// Send confirmation email (non-blocking)
+	if email != "" {
+		go func() {
+			resendService := external.NewResendService()
+			if err := resendService.SendDeletionConfirmationEmail(email, cancelURL, deletesAt); err != nil {
+				conditionalLog("ERROR", "Failed to send deletion confirmation email: %v", err)
+			} else {
+				conditionalLog("INFO", "Deletion confirmation email sent to: %s", email)
+			}
+		}()
+	}
+
+	conditionalLog("INFO", "Account deletion scheduled for user %s, deletes at %v", userIDStr, deletesAt)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":      true,
+		"scheduled_at": time.Now(),
+		"deletes_at":   deletesAt,
+	})
+}
+
+// CancelDeletionHandler cancels a scheduled deletion for authenticated user
+func (s *Server) CancelDeletionHandler(c *gin.Context) {
+	userID, err := httpAdapters.GetUserIDAsUUID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid session"})
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+	err = authService.CancelDeletionByUserID(c.Request.Context(), userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no deletion scheduled") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No deletion scheduled"})
+			return
+		}
+		conditionalLog("ERROR", "Failed to cancel deletion: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel deletion"})
+		return
+	}
+
+	// Return empty banner for HTMX swap
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, "<!-- Deletion cancelled -->")
+}
+
+// CancelDeletionByTokenHandler cancels deletion via email link
+func (s *Server) CancelDeletionByTokenHandler(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		templ.Handler(web.DeletionCancelError("Missing cancellation token. Please check your email for the correct link.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+	err := authService.CancelDeletionByToken(c.Request.Context(), token)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to cancel deletion by token: %v", err)
+		if strings.Contains(err.Error(), "expired") {
+			templ.Handler(web.DeletionCancelError("This cancellation link has expired. Your account may have already been deleted.")).ServeHTTP(c.Writer, c.Request)
+		} else {
+			templ.Handler(web.DeletionCancelError("Invalid cancellation link. Please try cancelling from within the app.")).ServeHTTP(c.Writer, c.Request)
+		}
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/deletion-cancelled")
+}
+
+// DeletionStatusHandler returns the current deletion status for HTMX polling
+func (s *Server) DeletionStatusHandler(c *gin.Context) {
+	userID, err := httpAdapters.GetUserIDAsUUID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid session"})
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+	status, err := authService.GetDeletionStatus(c.Request.Context(), userID)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to get deletion status: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get status"})
+		return
+	}
+
+	// Return HTMX component or empty if not scheduled
+	if !status.Scheduled {
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, "<!-- No deletion scheduled -->")
+		return
+	}
+
+	templ.Handler(web.DeletionBanner(*status.DeletesAt)).ServeHTTP(c.Writer, c.Request)
+}
+
+// GoodbyeHandler shows the farewell page after account deletion
+func (s *Server) GoodbyeHandler(c *gin.Context) {
+	templ.Handler(web.Goodbye()).ServeHTTP(c.Writer, c.Request)
+}
+
+// DeletionCancelledHandler shows confirmation after cancelling deletion
+func (s *Server) DeletionCancelledHandler(c *gin.Context) {
+	templ.Handler(web.DeletionCancelled()).ServeHTTP(c.Writer, c.Request)
 }
