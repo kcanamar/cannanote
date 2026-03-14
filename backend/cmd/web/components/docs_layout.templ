@@ -43,7 +43,7 @@ templ docsTOCSidebar(doc *docs.Doc) {
 	if len(doc.TOC) > 0 {
 		<aside id="docs-toc-sidebar" class="hidden xl:block border-l border-neutral-200 dark:border-navy-700 bg-white dark:bg-navy-900">
 			<style>#docs-toc-sidebar .toc-scroll::-webkit-scrollbar { display: none; }</style>
-			<div class="toc-scroll sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto p-6" style="-ms-overflow-style: none; scrollbar-width: none;">
+			<div class="toc-scroll sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto p-6 pb-32" style="-ms-overflow-style: none; scrollbar-width: none;">
 				<h3 class="text-sm font-semibold text-neutral-900 dark:text-white uppercase tracking-wider mb-4">
 					On This Page
 				</h3>
@@ -67,7 +67,7 @@ templ docsTOCSidebar(doc *docs.Doc) {
 		@tocScrollSpy()
 	} else {
 		<aside id="docs-toc-sidebar" class="hidden xl:block border-l border-neutral-200 dark:border-navy-700 bg-white dark:bg-navy-900">
-			<div class="sticky top-[73px] h-[calc(100vh-73px)] overflow-y-auto p-6">
+			<div class="sticky top-[73px] h-[calc(100vh-73px)] p-6">
 				<div class="text-sm text-neutral-500 dark:text-neutral-400">
 					No headings on this page
 				</div>
@@ -76,25 +76,76 @@ templ docsTOCSidebar(doc *docs.Doc) {
 	}
 }
 
+// navFooterObserver hides the nav when footer comes into view
+templ navFooterObserver() {
+	<script>
+		(function() {
+			const nav = document.querySelector('nav[aria-label="Main navigation"]');
+			const footer = document.querySelector('footer');
+			if (!nav || !footer) return;
+
+			const observer = new IntersectionObserver((entries) => {
+				entries.forEach(entry => {
+					if (entry.isIntersecting) {
+						// Footer is visible - slide nav up out of view
+						nav.style.transform = 'translateY(-100%)';
+						nav.style.transition = 'transform 0.3s ease-out';
+					} else {
+						// Footer not visible - restore nav
+						nav.style.transform = 'translateY(0)';
+					}
+				});
+			}, {
+				threshold: 0.1
+			});
+
+			observer.observe(footer);
+		})();
+	</script>
+}
+
 // tocScrollSpy adds scroll-spy behavior to highlight active TOC item
 templ tocScrollSpy() {
 	<script>
 		(function() {
 			const tocLinks = document.querySelectorAll('.toc-link');
-			if (!tocLinks.length) return;
+			const tocContainer = document.querySelector('#docs-toc-sidebar .toc-scroll');
+			if (!tocLinks.length || !tocContainer) return;
 
 			const activeClass = 'text-sage-600 dark:text-sage-400 font-medium';
 			const inactiveClass = 'text-neutral-600 dark:text-neutral-400';
+			const footerBuffer = 96; // 6rem buffer from bottom
 
 			function setActiveLink(id) {
+				let activeLink = null;
+
 				tocLinks.forEach(link => {
 					const linkId = link.getAttribute('data-toc-link');
 					if (linkId === id) {
 						link.className = `toc-link block py-1 ${activeClass} hover:text-sage-600 dark:hover:text-sage-400 transition truncate`;
+						activeLink = link;
 					} else {
 						link.className = `toc-link block py-1 ${inactiveClass} hover:text-sage-600 dark:hover:text-sage-400 transition truncate`;
 					}
 				});
+
+				// Auto-scroll TOC to keep active link near bottom of visible area
+				if (activeLink) {
+					const containerHeight = tocContainer.clientHeight;
+					const linkOffsetTop = activeLink.offsetTop;
+					const linkHeight = activeLink.offsetHeight;
+
+					// Target position: keep link near bottom (with buffer from edge)
+					const targetScroll = linkOffsetTop - containerHeight + linkHeight + footerBuffer;
+
+					// Clamp scroll position (min 0, no max needed for this direction)
+					const clampedScroll = Math.max(0, targetScroll);
+
+					tocContainer.scrollTo({
+						top: clampedScroll,
+						behavior: 'smooth'
+					});
+				}
 			}
 
 			// Get all heading IDs from TOC links
@@ -136,6 +187,9 @@ templ tocScrollSpy() {
 
 // DocsContentLayout creates the three-column layout for documentation
 templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
+	<!-- Hide nav when footer is visible -->
+	@navFooterObserver()
+
 	<!-- CSS Grid: 1 col on mobile, 2 col on lg, 3 col on xl -->
 	<div class="grid grid-cols-1 lg:grid-cols-[18rem_1fr] xl:grid-cols-[18rem_1fr_16rem] min-h-screen bg-white dark:bg-navy-950">
 		<!-- Left Sidebar - Navigation -->
@@ -186,7 +240,7 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 			<!-- Main Content Container - HTMX Target -->
 			<div id="main-content">
 				<!-- Article Content -->
-				<article class="px-6 py-8 lg:px-8 lg:py-12 max-w-4xl">
+				<article class="px-6 pt-12 pb-8 lg:px-8 lg:pt-16 lg:pb-12 max-w-4xl">
 					<!-- Article Header -->
 					<header class="mb-8">
 						<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-4">{ doc.Title }</h1>
