@@ -69,9 +69,9 @@ templ BaseWithAuth(title string, currentPath string, userEmail string) {
 			<script src="/assets/js/htmx.min.js" defer></script>
 			<script src="/assets/js/app.min.js" defer></script>
 		</head>
-		<body class="font-brand antialiased bg-white dark:bg-navy-950">
+		<body class="font-brand antialiased bg-white dark:bg-navy-950 min-h-screen flex flex-col">
 			@components.NavigationWithAuth(currentPath, userEmail)
-			<main role="main">
+			<main role="main" class="flex-1">
 				{ children... }
 			</main>
 			@components.Footer()
