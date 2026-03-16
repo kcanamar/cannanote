@@ -4,7 +4,7 @@
 
 const SessionDB = (function() {
   const DB_NAME = 'cannanote';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
 
   let db = null;
 
@@ -92,13 +92,31 @@ const SessionDB = (function() {
   }
 
   // Initialize database
-  async function init() {
+  // Handles version mismatch gracefully by resetting if needed
+  async function init(isRetry = false) {
     if (db) return db;
 
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onerror = () => reject(request.error);
+      request.onerror = (event) => {
+        const error = event.target.error;
+
+        // Handle version mismatch (e.g., browser has higher version than code expects)
+        // This can happen when site data is partially cleared or code is rolled back
+        if (error.name === 'VersionError' && !isRetry) {
+          console.warn('[SessionDB] Version mismatch detected, resetting database');
+          const deleteRequest = indexedDB.deleteDatabase(DB_NAME);
+          deleteRequest.onsuccess = () => {
+            console.log('[SessionDB] Database reset, reinitializing');
+            init(true).then(resolve).catch(reject);
+          };
+          deleteRequest.onerror = () => reject(deleteRequest.error);
+          return;
+        }
+
+        reject(error);
+      };
 
       request.onsuccess = () => {
         db = request.result;

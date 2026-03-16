@@ -296,6 +296,7 @@ templ LoginPage() {
 								id="email"
 								name="email"
 								required
+								autocomplete="username"
 								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 								placeholder="you@example.com"
 							/>
@@ -310,6 +311,7 @@ templ LoginPage() {
 								id="password"
 								name="password"
 								required
+								autocomplete="current-password"
 								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 								placeholder="Your password"
 							/>
@@ -458,6 +460,7 @@ templ LoginError(message string) {
 								id="email"
 								name="email"
 								required
+								autocomplete="username"
 								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 								placeholder="you@example.com"
 							/>
@@ -472,6 +475,7 @@ templ LoginError(message string) {
 								id="password"
 								name="password"
 								required
+								autocomplete="current-password"
 								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 								placeholder="Your password"
 							/>

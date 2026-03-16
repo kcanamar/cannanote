@@ -221,6 +221,28 @@ Client                           Server
 - **Hexagonal architecture** - Ports and adapters pattern
 - **Minimal dependencies** - Justify every import
 
+### Templ Patterns
+
+**CRITICAL: Forwarding children in wrapper templates**
+
+When a templ component wraps another component, you MUST explicitly forward children:
+
+```templ
+// WRONG - children are lost, renders blank content
+templ Base(title string) {
+    @BaseWithAuth(title, "")
+}
+
+// CORRECT - children are forwarded to inner component
+templ Base(title string) {
+    @BaseWithAuth(title, "") {
+        { children... }
+    }
+}
+```
+
+Without `{ children... }` inside the wrapper call, any content passed to the outer component will not render. This causes blank pages with no errors.
+
 ### Quality Standards
 - **Offline functionality** - 100% features work offline
 - **30-second logging** - Maximum time for session entry

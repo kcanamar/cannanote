@@ -74,6 +74,7 @@ templ Onboarding(verified bool, email string, resetToken string) {
 											name="password"
 											required
 											minlength="8"
+											autocomplete="new-password"
 											class="w-full px-4 py-2 pr-12 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 											placeholder="Enter a secure password"
 										/>
@@ -103,6 +104,7 @@ templ Onboarding(verified bool, email string, resetToken string) {
 											name="confirm_password"
 											required
 											minlength="8"
+											autocomplete="new-password"
 											class="w-full px-4 py-2 pr-12 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 											placeholder="Confirm your password"
 										/>
