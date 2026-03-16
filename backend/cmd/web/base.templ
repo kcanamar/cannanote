@@ -4,7 +4,9 @@ import "backend/cmd/web/components"
 
 // Base renders the page layout for unauthenticated users
 templ Base(title string, currentPath string) {
-	@BaseWithAuth(title, currentPath, "")
+	@BaseWithAuth(title, currentPath, "") {
+		{ children... }
+	}
 }
 
 // BaseWithAuth renders the page layout with optional auth state
