@@ -109,11 +109,13 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(networkFirst(event.request));
 });
 
-// Check if URL is a static asset
+// Check if URL is a static asset (excluding JS for fresher dev experience)
 function isStaticAsset(pathname) {
+  // JS files use network-first for faster dev iteration
+  if (pathname.endsWith('.js')) return false;
+
   return pathname.startsWith('/assets/') ||
          pathname.endsWith('.css') ||
-         pathname.endsWith('.js') ||
          pathname.endsWith('.svg') ||
          pathname.endsWith('.png') ||
          pathname.endsWith('.jpg') ||

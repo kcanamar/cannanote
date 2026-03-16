@@ -4,9 +4,28 @@
 
 const SessionDB = (function() {
   const DB_NAME = 'cannanote';
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
 
   let db = null;
+
+  // Compact format helpers for cannabinoids/terpenes
+  // Format: "NAME:PERCENTAGE,NAME:PERCENTAGE" or "NAME" if no percentage
+  // Example: "THC:24.5,CBD:0.5,CBG" or "Myrcene:0.8,Limonene,Caryophyllene:0.3"
+  function parseCompact(str) {
+    if (!str) return [];
+    return str.split(',').map(item => {
+      const [name, pct] = item.split(':');
+      return { name: name.trim(), percentage: pct ? parseFloat(pct) : null };
+    });
+  }
+
+  function serializeCompact(arr) {
+    if (!arr || arr.length === 0) return '';
+    return arr.map(item => {
+      if (typeof item === 'string') return item;
+      return item.percentage != null ? `${item.name}:${item.percentage}` : item.name;
+    }).join(',');
+  }
 
   // Store definitions with indexes
   const STORES = {
@@ -333,17 +352,26 @@ const SessionDB = (function() {
   }
 
   // Product (personal collection) operations
+  // Product fields: strainName, producer, processor, distributor, harvestDate
+  // Cannabinoids/terpenes stored as compact strings: "THC:24.5,CBD:0.5,CBG"
   async function createProduct(data) {
+    // Normalize cannabinoids/terpenes to compact string format
+    const cannabinoidsStr = typeof data.cannabinoids === 'string'
+      ? data.cannabinoids
+      : serializeCompact(data.cannabinoids);
+    const terpenesStr = typeof data.terpenes === 'string'
+      ? data.terpenes
+      : serializeCompact(data.terpenes);
+
     const product = {
       id: uuid(),
       strainName: data.strainName,
-      strainType: data.strainType || null,
       producer: data.producer || null,
       processor: data.processor || null,
       distributor: data.distributor || null,
       harvestDate: data.harvestDate || null,
-      terpenes: data.terpenes || [],
-      cannabinoids: data.cannabinoids || [],
+      cannabinoids: cannabinoidsStr,
+      terpenes: terpenesStr,
       timesUsed: 0,
       lastUsed: null,
       createdAt: Date.now()
@@ -356,13 +384,13 @@ const SessionDB = (function() {
     if (data.processor) await addToAutocomplete('processors', data.processor);
     if (data.distributor) await addToAutocomplete('distributors', data.distributor);
 
-    // Update terpene usage counts
-    for (const terp of data.terpenes || []) {
+    // Update terpene usage counts (parse compact format)
+    for (const terp of parseCompact(terpenesStr)) {
       await incrementTerpeneUsage(terp.name);
     }
 
-    // Update cannabinoid usage counts
-    for (const canna of data.cannabinoids || []) {
+    // Update cannabinoid usage counts (parse compact format)
+    for (const canna of parseCompact(cannabinoidsStr)) {
       await incrementCannabinoidUsage(canna.name);
     }
 
@@ -372,6 +400,15 @@ const SessionDB = (function() {
   async function getProducts() {
     const products = await getAll('products');
     return products.sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
+  }
+
+  // Get product with parsed cannabinoids/terpenes for display
+  function getProductDisplay(product) {
+    return {
+      ...product,
+      cannabinoidsParsed: parseCompact(product.cannabinoids),
+      terpenesParsed: parseCompact(product.terpenes)
+    };
   }
 
   async function searchProducts(query) {
@@ -562,7 +599,7 @@ const SessionDB = (function() {
 
     // Build CSV rows
     const rows = [
-      ['Date', 'Time', 'Strain', 'Producer', 'Method', 'Amount', 'Unit', 'Mood Before', 'Mind Before', 'Body Before', 'Status', 'Notes']
+      ['Date', 'Time', 'Strain', 'Producer', 'Processor', 'Distributor', 'Cannabinoids', 'Terpenes', 'Method', 'Amount', 'Unit', 'Mood Before', 'Mind Before', 'Body Before', 'Status', 'Notes']
     ];
 
     for (const s of sessions.sort((a, b) => a.timestamp - b.timestamp)) {
@@ -573,6 +610,10 @@ const SessionDB = (function() {
         date.toLocaleTimeString(),
         product.strainName || '',
         product.producer || '',
+        product.processor || '',
+        product.distributor || '',
+        product.cannabinoids || '',
+        product.terpenes || '',
         s.method || '',
         s.amount || '',
         s.unit || '',
@@ -615,6 +656,7 @@ const SessionDB = (function() {
     // Products
     createProduct,
     getProducts,
+    getProductDisplay,
     searchProducts,
 
     // Autocomplete
@@ -623,6 +665,10 @@ const SessionDB = (function() {
     // Terpenes & Cannabinoids
     getTerpenes,
     getCannabinoids,
+
+    // Compact format helpers (for UI)
+    parseCompact,
+    serializeCompact,
 
     // Preferences
     getPreference,

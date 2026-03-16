@@ -65,15 +65,6 @@ templ SessionLog(email string, currentPath string) {
 							/>
 						</div>
 
-						<div>
-							<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Type</label>
-							<div class="flex gap-2">
-								@strainTypeChip("indica", "Indica")
-								@strainTypeChip("hybrid", "Hybrid")
-								@strainTypeChip("sativa", "Sativa")
-							</div>
-						</div>
-
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 							<div>
 								<label for="producer" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Producer</label>
@@ -297,7 +288,6 @@ templ SessionLog(email string, currentPath string) {
 		<script>
 			let currentStep = 1;
 			let selectedProductId = null;
-			let selectedStrainType = null;
 			let selectedMethod = null;
 			let selectedCheckInMode = 'none';
 			let selectedTerpenes = [];
@@ -433,17 +423,6 @@ templ SessionLog(email string, currentPath string) {
 			}
 
 			function setupEventListeners() {
-				// Strain type selection
-				document.querySelectorAll('[data-strain-type]').forEach(btn => {
-					btn.onclick = () => {
-						document.querySelectorAll('[data-strain-type]').forEach(b => {
-							b.classList.remove('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
-						});
-						btn.classList.add('bg-sage-100', 'dark:bg-sage-900/30', 'border-sage-600');
-						selectedStrainType = btn.dataset.strainType;
-					};
-				});
-
 				// Method selection
 				document.querySelectorAll('[data-method]').forEach(btn => {
 					btn.onclick = () => {
@@ -556,7 +535,6 @@ templ SessionLog(email string, currentPath string) {
 					if (!productId) {
 						const product = await SessionDB.createProduct({
 							strainName: document.getElementById('strain-name').value.trim(),
-							strainType: selectedStrainType,
 							producer: document.getElementById('producer').value.trim() || null,
 							processor: document.getElementById('processor').value.trim() || null,
 							distributor: document.getElementById('distributor').value.trim() || null,
@@ -661,16 +639,6 @@ templ SessionLog(email string, currentPath string) {
 }
 
 // Component helpers
-templ strainTypeChip(value, label string) {
-	<button
-		type="button"
-		data-strain-type={ value }
-		class="px-4 py-2 rounded-full border border-gray-300 dark:border-navy-600 text-sm text-gray-700 dark:text-gray-300 hover:border-sage-500 dark:hover:border-sage-400 transition-colors"
-	>
-		{ label }
-	</button>
-}
-
 templ methodChip(value, label string, icon templ.Component) {
 	<button
 		type="button"
