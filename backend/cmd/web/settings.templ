@@ -41,6 +41,35 @@ templ Settings(email string, currentPath string) {
 				</div>
 			</div>
 
+			<!-- Install App Section (hidden when not available or already installed) -->
+			<div id="install-app-section" class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6 hidden">
+				<div class="mb-4">
+					<h2 class="text-lg font-medium text-navy-900 dark:text-white">Install App</h2>
+					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Add CannaNote to your home screen for quick access</p>
+				</div>
+
+				<button
+					id="install-app-btn"
+					onclick="installApp()"
+					class="w-full flex items-center justify-between p-4 rounded-lg border border-sage-200 dark:border-sage-800 bg-sage-50 dark:bg-sage-900/20 hover:border-sage-400 dark:hover:border-sage-600 transition-colors"
+				>
+					<div class="flex items-center gap-3">
+						<div class="w-10 h-10 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+							<svg class="w-5 h-5 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+							</svg>
+						</div>
+						<div class="text-left">
+							<span class="font-medium text-sage-700 dark:text-sage-300">Install CannaNote</span>
+							<p class="text-sm text-sage-600 dark:text-sage-400">Works offline, launches instantly</p>
+						</div>
+					</div>
+					<svg class="w-5 h-5 text-sage-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+					</svg>
+				</button>
+			</div>
+
 			<!-- Voice/Personality Section -->
 			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 mb-6">
 				<div class="mb-4">
@@ -313,16 +342,88 @@ templ Settings(email string, currentPath string) {
 
 		<script src="/assets/js/session-db.js"></script>
 		<script>
+			// PWA install prompt - captured globally
+			let deferredInstallPrompt = null;
+
 			document.addEventListener('DOMContentLoaded', async () => {
 				await loadSettings();
 				setupVoiceListeners();
 				updateThemeStatus();
 				updateOnlineStatus();
+				checkInstallAvailability();
 
 				// Listen for online/offline events
 				window.addEventListener('online', updateOnlineStatus);
 				window.addEventListener('offline', updateOnlineStatus);
 			});
+
+			// Capture the beforeinstallprompt event
+			window.addEventListener('beforeinstallprompt', (e) => {
+				e.preventDefault();
+				deferredInstallPrompt = e;
+				showInstallSection();
+				console.log('[PWA] Install prompt captured');
+			});
+
+			// Hide install section if app is installed
+			window.addEventListener('appinstalled', () => {
+				deferredInstallPrompt = null;
+				hideInstallSection();
+				console.log('[PWA] App installed successfully');
+			});
+
+			function checkInstallAvailability() {
+				// Check if already running as installed PWA
+				const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+					|| window.navigator.standalone; // iOS Safari
+
+				if (isStandalone) {
+					hideInstallSection();
+					return;
+				}
+
+				// If we have a deferred prompt, show the install section
+				if (deferredInstallPrompt) {
+					showInstallSection();
+				}
+			}
+
+			function showInstallSection() {
+				const section = document.getElementById('install-app-section');
+				if (section) {
+					section.classList.remove('hidden');
+				}
+			}
+
+			function hideInstallSection() {
+				const section = document.getElementById('install-app-section');
+				if (section) {
+					section.classList.add('hidden');
+				}
+			}
+
+			async function installApp() {
+				if (!deferredInstallPrompt) {
+					// Fallback for browsers that don't support beforeinstallprompt (Safari)
+					alert('To install CannaNote:\n\n' +
+						'iOS Safari: Tap the Share button, then "Add to Home Screen"\n\n' +
+						'Android Chrome: Tap the menu (⋮), then "Add to Home Screen"');
+					return;
+				}
+
+				// Show the native install prompt
+				deferredInstallPrompt.prompt();
+
+				const { outcome } = await deferredInstallPrompt.userChoice;
+				console.log('[PWA] Install prompt outcome:', outcome);
+
+				// Clear the deferred prompt - can only be used once
+				deferredInstallPrompt = null;
+
+				if (outcome === 'accepted') {
+					hideInstallSection();
+				}
+			}
 
 			async function loadSettings() {
 				try {

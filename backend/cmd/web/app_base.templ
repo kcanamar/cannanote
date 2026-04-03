@@ -182,13 +182,19 @@ templ AppBase(title string, currentPath string, email string) {
 								<span class="nav-label ml-3 whitespace-nowrap">Toggle Theme</span>
 							</button>
 						</li>
-						<!-- User Email -->
+						<!-- Online/Offline Status -->
 						<li>
-							<div class="flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400">
-								<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+							<div id="connection-status" class="flex items-center px-3 py-2 rounded-lg text-green-600 dark:text-green-400" role="status" aria-live="polite">
+								<!-- Online icon (wifi) -->
+								<svg id="online-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
 								</svg>
-								<span class="nav-label ml-3 truncate text-sm">{ email }</span>
+								<!-- Offline icon (wifi with slash) -->
+								<svg id="offline-icon" class="w-5 h-5 flex-shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3l18 18"/>
+								</svg>
+								<span id="connection-label" class="nav-label ml-3 text-sm">Online</span>
 							</div>
 						</li>
 						<!-- Sign Out -->
@@ -321,14 +327,40 @@ templ AppBase(title string, currentPath string, email string) {
 						</div>
 					</a>
 
-					<!-- User Info -->
-					<div class="flex items-center gap-4 px-4 py-3 text-gray-500 dark:text-gray-400">
-						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
-							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+					<!-- Install App (hidden when not available or already installed) -->
+					<button
+						id="more-menu-install-btn"
+						onclick="installAppFromMenu()"
+						class="hidden w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sage-700 dark:text-sage-300 bg-sage-50 dark:bg-sage-900/20 hover:bg-sage-100 dark:hover:bg-sage-900/30 transition-colors"
+					>
+						<div class="w-10 h-10 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center">
+							<svg class="w-5 h-5 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
 							</svg>
 						</div>
-						<span class="text-sm truncate">{ email }</span>
+						<div class="flex-1 text-left">
+							<span class="font-medium">Install App</span>
+							<p class="text-sm text-sage-600 dark:text-sage-400">Add to home screen</p>
+						</div>
+					</button>
+
+					<!-- Connection Status -->
+					<div id="mobile-connection-status" class="flex items-center gap-4 px-4 py-3 text-green-600 dark:text-green-400" role="status" aria-live="polite">
+						<div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center" id="mobile-connection-bg">
+							<!-- Online icon (wifi) -->
+							<svg id="mobile-online-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+							</svg>
+							<!-- Offline icon (wifi with slash) -->
+							<svg id="mobile-offline-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3l18 18"/>
+							</svg>
+						</div>
+						<div class="flex-1 text-left">
+							<span id="mobile-connection-label" class="font-medium">Online</span>
+							<p id="mobile-connection-desc" class="text-sm text-green-500 dark:text-green-500">Connected to the internet</p>
+						</div>
 					</div>
 
 					<!-- Sign Out -->
@@ -349,6 +381,75 @@ templ AppBase(title string, currentPath string, email string) {
 			</div>
 
 			<script>
+				// PWA install prompt - captured globally for all app pages
+				let deferredInstallPrompt = null;
+
+				// Capture the beforeinstallprompt event early
+				window.addEventListener('beforeinstallprompt', (e) => {
+					e.preventDefault();
+					deferredInstallPrompt = e;
+					showInstallButtons();
+					console.log('[PWA] Install prompt captured');
+				});
+
+				// Hide install buttons if app is installed
+				window.addEventListener('appinstalled', () => {
+					deferredInstallPrompt = null;
+					hideInstallButtons();
+					console.log('[PWA] App installed successfully');
+				});
+
+				function showInstallButtons() {
+					const moreMenuBtn = document.getElementById('more-menu-install-btn');
+					if (moreMenuBtn) {
+						moreMenuBtn.classList.remove('hidden');
+					}
+				}
+
+				function hideInstallButtons() {
+					const moreMenuBtn = document.getElementById('more-menu-install-btn');
+					if (moreMenuBtn) {
+						moreMenuBtn.classList.add('hidden');
+					}
+				}
+
+				async function installAppFromMenu() {
+					toggleMoreMenu(); // Close the menu first
+
+					if (!deferredInstallPrompt) {
+						// Fallback for browsers that don't support beforeinstallprompt (Safari)
+						alert('To install CannaNote:\n\n' +
+							'iOS Safari: Tap the Share button, then "Add to Home Screen"\n\n' +
+							'Android Chrome: Tap the menu (⋮), then "Add to Home Screen"');
+						return;
+					}
+
+					// Show the native install prompt
+					deferredInstallPrompt.prompt();
+
+					const { outcome } = await deferredInstallPrompt.userChoice;
+					console.log('[PWA] Install prompt outcome:', outcome);
+
+					// Clear the deferred prompt - can only be used once
+					deferredInstallPrompt = null;
+
+					if (outcome === 'accepted') {
+						hideInstallButtons();
+					}
+				}
+
+				function checkPWAInstallState() {
+					// Check if already running as installed PWA
+					const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+						|| window.navigator.standalone; // iOS Safari
+
+					if (isStandalone) {
+						hideInstallButtons();
+					} else if (deferredInstallPrompt) {
+						showInstallButtons();
+					}
+				}
+
 				// Desktop sidebar state management
 				const SIDEBAR_EXPANDED_KEY = 'cannanote_sidebar_expanded';
 
@@ -438,8 +539,91 @@ templ AppBase(title string, currentPath string, email string) {
 					}
 				}
 
+				// Connection status management
+				function updateConnectionStatus() {
+					const isOnline = navigator.onLine;
+
+					// Desktop sidebar elements
+					const status = document.getElementById('connection-status');
+					const onlineIcon = document.getElementById('online-icon');
+					const offlineIcon = document.getElementById('offline-icon');
+					const label = document.getElementById('connection-label');
+
+					// Mobile more menu elements
+					const mobileStatus = document.getElementById('mobile-connection-status');
+					const mobileBg = document.getElementById('mobile-connection-bg');
+					const mobileOnlineIcon = document.getElementById('mobile-online-icon');
+					const mobileOfflineIcon = document.getElementById('mobile-offline-icon');
+					const mobileLabel = document.getElementById('mobile-connection-label');
+					const mobileDesc = document.getElementById('mobile-connection-desc');
+
+					if (isOnline) {
+						// Desktop
+						if (status) {
+							status.classList.remove('text-red-600', 'dark:text-red-400');
+							status.classList.add('text-green-600', 'dark:text-green-400');
+						}
+						if (onlineIcon) onlineIcon.classList.remove('hidden');
+						if (offlineIcon) offlineIcon.classList.add('hidden');
+						if (label) label.textContent = 'Online';
+
+						// Mobile
+						if (mobileStatus) {
+							mobileStatus.classList.remove('text-red-600', 'dark:text-red-400');
+							mobileStatus.classList.add('text-green-600', 'dark:text-green-400');
+						}
+						if (mobileBg) {
+							mobileBg.classList.remove('bg-red-50', 'dark:bg-red-900/20');
+							mobileBg.classList.add('bg-green-50', 'dark:bg-green-900/20');
+						}
+						if (mobileOnlineIcon) mobileOnlineIcon.classList.remove('hidden');
+						if (mobileOfflineIcon) mobileOfflineIcon.classList.add('hidden');
+						if (mobileLabel) mobileLabel.textContent = 'Online';
+						if (mobileDesc) {
+							mobileDesc.textContent = 'Connected to the internet';
+							mobileDesc.classList.remove('text-red-500');
+							mobileDesc.classList.add('text-green-500');
+						}
+					} else {
+						// Desktop
+						if (status) {
+							status.classList.remove('text-green-600', 'dark:text-green-400');
+							status.classList.add('text-red-600', 'dark:text-red-400');
+						}
+						if (onlineIcon) onlineIcon.classList.add('hidden');
+						if (offlineIcon) offlineIcon.classList.remove('hidden');
+						if (label) label.textContent = 'Offline';
+
+						// Mobile
+						if (mobileStatus) {
+							mobileStatus.classList.remove('text-green-600', 'dark:text-green-400');
+							mobileStatus.classList.add('text-red-600', 'dark:text-red-400');
+						}
+						if (mobileBg) {
+							mobileBg.classList.remove('bg-green-50', 'dark:bg-green-900/20');
+							mobileBg.classList.add('bg-red-50', 'dark:bg-red-900/20');
+						}
+						if (mobileOnlineIcon) mobileOnlineIcon.classList.add('hidden');
+						if (mobileOfflineIcon) mobileOfflineIcon.classList.remove('hidden');
+						if (mobileLabel) mobileLabel.textContent = 'Offline';
+						if (mobileDesc) {
+							mobileDesc.textContent = 'Working in offline mode';
+							mobileDesc.classList.remove('text-green-500');
+							mobileDesc.classList.add('text-red-500');
+						}
+					}
+				}
+
+				// Listen for connection changes
+				window.addEventListener('online', updateConnectionStatus);
+				window.addEventListener('offline', updateConnectionStatus);
+
 				// Initialize on load
-				document.addEventListener('DOMContentLoaded', initSidebar);
+				document.addEventListener('DOMContentLoaded', function() {
+					initSidebar();
+					updateConnectionStatus();
+					checkPWAInstallState();
+				});
 			</script>
 		</body>
 	</html>
