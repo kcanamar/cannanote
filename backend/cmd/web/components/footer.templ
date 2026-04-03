@@ -4,16 +4,22 @@ templ Footer() {
 	<footer class="bg-white dark:bg-navy-950 border-t dark:border-navy-800">
 		<div class="px-6 py-12 flex flex-col md:flex-row justify-between items-center w-full">
 			<div class="flex items-center mb-4 md:mb-0">
-				<img src="/assets/images/logos/logo-book.svg" alt="CannaNote" class="w-8 h-8 mr-3 dark:invert"/>
+				<img src="/assets/images/logos/logo-book.svg" alt="" class="w-8 h-8 mr-3 dark:invert" aria-hidden="true"/>
 				<span class="text-xl font-medium text-slate-900 dark:text-white">CannaNote</span>
 			</div>
-			<nav class="flex space-x-8 text-slate-600 dark:text-neutral-400 mb-4 md:mb-0">
+			<nav class="flex space-x-8 text-slate-600 dark:text-neutral-400 mb-4 md:mb-0" aria-label="Footer navigation">
 				<a href="/pricing" class="hover:text-slate-900 dark:hover:text-white">Pricing</a>
 				<a href="#beta" class="hover:text-slate-900 dark:hover:text-white">Beta</a>
 				<a href="/docs" class="hover:text-slate-900 dark:hover:text-white">Docs</a>
 				<a href="/privacy" class="hover:text-slate-900 dark:hover:text-white">Privacy</a>
 				<a href="/terms" class="hover:text-slate-900 dark:hover:text-white">Terms</a>
-				<a href="https://github.com/kcanamar/cannanote" target="_blank" class="hover:text-slate-900 dark:hover:text-white">Open Source</a>
+				<a href="https://github.com/kcanamar/cannanote" target="_blank" rel="noopener" class="hover:text-slate-900 dark:hover:text-white inline-flex items-center">
+					Open Source
+					<span class="sr-only">(opens in new tab)</span>
+					<svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+					</svg>
+				</a>
 			</nav>
 			<p class="text-sm text-slate-500 dark:text-neutral-400">© 2026 CannaNote. Made with care.</p>
 		</div>

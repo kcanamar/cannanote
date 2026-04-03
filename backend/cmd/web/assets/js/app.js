@@ -54,13 +54,19 @@ function updateThemeIcons(isDark) {
 // Mobile Menu Management
 function toggleMobileMenu() {
   const mobileMenu = document.getElementById('mobile-menu');
+  const menuToggle = document.getElementById('mobile-menu-toggle');
   const menuOpenIcon = document.getElementById('menu-open-icon');
   const menuCloseIcon = document.getElementById('menu-close-icon');
-  
+
   if (mobileMenu) {
-    mobileMenu.classList.toggle('hidden');
+    const isHidden = mobileMenu.classList.toggle('hidden');
+
+    // Update aria-expanded state (WCAG 4.1.2)
+    if (menuToggle) {
+      menuToggle.setAttribute('aria-expanded', !isHidden);
+    }
   }
-  
+
   if (menuOpenIcon && menuCloseIcon) {
     menuOpenIcon.classList.toggle('hidden');
     menuCloseIcon.classList.toggle('hidden');
@@ -82,19 +88,24 @@ function validateBetaForm() {
 // Click-away handler for mobile menu
 function handleDocumentClick(event) {
   const mobileMenu = document.getElementById('mobile-menu');
-  const mobileMenuToggle = document.querySelector('[onclick*="toggleMobileMenu"]');
-  
+  const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+
   if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
     // Check if click was outside menu and toggle button
     if (!mobileMenu.contains(event.target) && !mobileMenuToggle?.contains(event.target)) {
       mobileMenu.classList.add('hidden');
-      
+
       // Reset menu icons
       const menuOpenIcon = document.getElementById('menu-open-icon');
       const menuCloseIcon = document.getElementById('menu-close-icon');
       if (menuOpenIcon && menuCloseIcon) {
         menuOpenIcon.classList.remove('hidden');
         menuCloseIcon.classList.add('hidden');
+      }
+
+      // Reset aria-expanded state (WCAG 4.1.2)
+      if (mobileMenuToggle) {
+        mobileMenuToggle.setAttribute('aria-expanded', 'false');
       }
     }
   }
@@ -217,12 +228,17 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add click-away listener for mobile menu
   document.addEventListener('click', handleDocumentClick);
 
-  // Close mobile menu on escape key
+  // Close mobile menu on escape key and return focus to trigger (WCAG 2.1.2)
   document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
       const mobileMenu = document.getElementById('mobile-menu');
+      const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
       if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
         toggleMobileMenu();
+        // Return focus to trigger button (WCAG focus management)
+        if (mobileMenuToggle) {
+          mobileMenuToggle.focus();
+        }
       }
     }
   });

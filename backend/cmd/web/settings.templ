@@ -19,7 +19,7 @@ templ Settings(email string, currentPath string) {
 
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-3">
-						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
 							<svg id="settings-sun-icon" class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
 							</svg>
@@ -81,7 +81,7 @@ templ Settings(email string, currentPath string) {
 					<!-- Holistic/Professional -->
 					<label class="voice-option flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors border-gray-200 dark:border-navy-600 has-[:checked]:border-sage-600 dark:has-[:checked]:border-sage-500 has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-navy-800 hover:border-sage-400 dark:hover:border-sage-500" data-voice="holistic">
 						<input type="radio" name="voice" value="holistic" class="sr-only"/>
-						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0" aria-hidden="true">
 							<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
 							</svg>
@@ -103,7 +103,7 @@ templ Settings(email string, currentPath string) {
 					<!-- West Coast/Cali -->
 					<label class="voice-option flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors border-gray-200 dark:border-navy-600 has-[:checked]:border-sage-600 dark:has-[:checked]:border-sage-500 has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-navy-800 hover:border-sage-400 dark:hover:border-sage-500" data-voice="westcoast">
 						<input type="radio" name="voice" value="westcoast" class="sr-only"/>
-						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0" aria-hidden="true">
 							<!-- California state outline -->
 							<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 24 24">
 								<path d="M8 2l2 1.5 1.5-.5 2 1 1.5 2 .5 2 1 1.5-.5 2.5-1 1.5.5 2-1 1.5-2 1-1 2-1.5.5-1.5 2H7l-.5-1.5-1-1.5-.5-2 .5-1.5-.5-2-1-1.5.5-2 1-1.5-.5-2L6 4l2-2z"/>
@@ -123,7 +123,7 @@ templ Settings(email string, currentPath string) {
 					<!-- Ganjier/Enthusiast -->
 					<label class="voice-option flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition-colors border-gray-200 dark:border-navy-600 has-[:checked]:border-sage-600 dark:has-[:checked]:border-sage-500 has-[:checked]:bg-sage-50 dark:has-[:checked]:bg-navy-800 hover:border-sage-400 dark:hover:border-sage-500" data-voice="ganjier">
 						<input type="radio" name="voice" value="ganjier" class="sr-only"/>
-						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0">
+						<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-700 flex items-center justify-center flex-shrink-0" aria-hidden="true">
 							<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
 							</svg>
@@ -154,7 +154,7 @@ templ Settings(email string, currentPath string) {
 						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
 					>
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
 								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
 								</svg>
@@ -164,7 +164,7 @@ templ Settings(email string, currentPath string) {
 								<p class="text-sm text-gray-500 dark:text-gray-400">Full backup of all your data</p>
 							</div>
 						</div>
-						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 						</svg>
 					</button>
@@ -174,7 +174,7 @@ templ Settings(email string, currentPath string) {
 						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
 					>
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
 								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
 								</svg>
@@ -184,7 +184,7 @@ templ Settings(email string, currentPath string) {
 								<p class="text-sm text-gray-500 dark:text-gray-400">Spreadsheet-compatible format</p>
 							</div>
 						</div>
-						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 						</svg>
 					</button>
@@ -205,7 +205,7 @@ templ Settings(email string, currentPath string) {
 						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
 					>
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
 								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
 								</svg>
@@ -215,7 +215,7 @@ templ Settings(email string, currentPath string) {
 								<p class="text-sm text-gray-500 dark:text-gray-400">Change your login email address</p>
 							</div>
 						</div>
-						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 						</svg>
 					</button>
@@ -226,7 +226,7 @@ templ Settings(email string, currentPath string) {
 						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
 					>
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
 								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
 								</svg>
@@ -236,7 +236,7 @@ templ Settings(email string, currentPath string) {
 								<p class="text-sm text-gray-500 dark:text-gray-400">Update your account password</p>
 							</div>
 						</div>
-						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 						</svg>
 					</button>
@@ -247,7 +247,7 @@ templ Settings(email string, currentPath string) {
 						class="w-full flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-navy-600 hover:border-sage-400 dark:hover:border-sage-500 transition-colors"
 					>
 						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
 								<svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
 								</svg>
@@ -257,7 +257,7 @@ templ Settings(email string, currentPath string) {
 								<p class="text-sm text-gray-500 dark:text-gray-400">View or change your subscription plan</p>
 							</div>
 						</div>
-						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 						</svg>
 					</button>
@@ -273,7 +273,7 @@ templ Settings(email string, currentPath string) {
 							class="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
 						>
 							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center" aria-hidden="true">
 									<svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
 									</svg>
@@ -283,7 +283,7 @@ templ Settings(email string, currentPath string) {
 									<p class="text-sm text-gray-500 dark:text-gray-400">Erase all sessions and products from this device</p>
 								</div>
 							</div>
-							<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 							</svg>
 						</button>
@@ -296,7 +296,7 @@ templ Settings(email string, currentPath string) {
 							class="w-full flex items-center justify-between p-4 rounded-lg border border-red-200 dark:border-red-900/50 hover:border-red-400 dark:hover:border-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							<div class="flex items-center gap-3">
-								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
+								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center" aria-hidden="true">
 									<svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6v1h12v-1a6 6 0 00-6-6zM21 12h-6"/>
 									</svg>
@@ -306,7 +306,7 @@ templ Settings(email string, currentPath string) {
 									<p id="delete-account-subtitle" class="text-sm text-gray-500 dark:text-gray-400">Permanently delete your CannaNote account</p>
 								</div>
 							</div>
-							<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 							</svg>
 						</button>

@@ -198,11 +198,13 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 				<!-- Search Box -->
 				<div class="mb-6">
 					<div class="relative">
-						<svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<label for="docs-search" class="sr-only">Search documentation</label>
+						<svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
 						</svg>
 						<input
 							type="search"
+							id="docs-search"
 							placeholder="Search docs..."
 							class="w-full pl-10 pr-4 py-2 text-sm border border-neutral-200 dark:border-navy-700 rounded-lg bg-neutral-50 dark:bg-navy-800 text-navy-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-sage-500 focus:border-transparent"
 						/>
@@ -229,8 +231,11 @@ templ DocsContentLayout(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath s
 					id="mobile-nav-toggle"
 					class="flex items-center text-neutral-600 dark:text-neutral-400 hover:text-sage-600 dark:hover:text-sage-400 transition"
 					onclick="toggleMobileNav()"
+					aria-expanded="false"
+					aria-controls="mobile-nav-overlay"
+					aria-label="Toggle documentation navigation"
 				>
-					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
 					</svg>
 					Navigation

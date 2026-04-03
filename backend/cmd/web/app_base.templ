@@ -184,6 +184,10 @@ templ AppBase(title string, currentPath string, email string) {
 			</style>
 		</head>
 		<body class="font-brand antialiased bg-gray-50 dark:bg-navy-950">
+			<!-- Skip Navigation Link (WCAG 2.4.1) -->
+			<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-sage-600 focus:text-white focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-sage-400">
+				Skip to main content
+			</a>
 			<!-- Desktop Sidebar (hidden on mobile) -->
 			<aside
 				id="sidebar"

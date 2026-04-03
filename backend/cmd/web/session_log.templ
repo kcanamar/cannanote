@@ -9,6 +9,7 @@ templ SessionLog(email string, currentPath string) {
 				<a
 					href="/app/sessions"
 					class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+					aria-label="Back to sessions"
 				>
 					@backIcon()
 				</a>
@@ -18,14 +19,14 @@ templ SessionLog(email string, currentPath string) {
 				</div>
 			</div>
 
-			<!-- Progress Steps -->
-			<div class="flex items-center justify-center gap-2 mb-8">
-				<div id="step-1-indicator" class="w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium">1</div>
-				<div class="w-12 h-0.5 bg-gray-200 dark:bg-navy-700"></div>
-				<div id="step-2-indicator" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium">2</div>
-				<div class="w-12 h-0.5 bg-gray-200 dark:bg-navy-700"></div>
-				<div id="step-3-indicator" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium">3</div>
-			</div>
+			<!-- Progress Steps (WCAG 1.3.1 - accessible step indicator) -->
+			<nav aria-label="Form progress" class="flex items-center justify-center gap-2 mb-8">
+				<div id="step-1-indicator" class="w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium" role="status" aria-current="step" aria-label="Step 1 of 3: Product Selection, current">1</div>
+				<div class="w-12 h-0.5 bg-gray-200 dark:bg-navy-700" aria-hidden="true"></div>
+				<div id="step-2-indicator" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium" aria-label="Step 2 of 3: Consumption Details">2</div>
+				<div class="w-12 h-0.5 bg-gray-200 dark:bg-navy-700" aria-hidden="true"></div>
+				<div id="step-3-indicator" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium" aria-label="Step 3 of 3: Check-in Settings">3</div>
+			</nav>
 
 			<!-- Form Steps -->
 			<form id="session-form" class="space-y-6">
@@ -167,30 +168,38 @@ templ SessionLog(email string, currentPath string) {
 					</div>
 
 					<!-- Amount Input -->
-					<div class="mb-6">
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount</label>
+					<fieldset class="mb-6">
+						<legend class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Amount</legend>
 						<div class="flex gap-2">
-							<input
-								type="number"
-								id="amount"
-								name="amount"
-								step="0.1"
-								min="0"
-								placeholder="0"
-								class="flex-1 px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-							/>
-							<select
-								id="unit"
-								name="unit"
-								class="px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
-							>
-								<option value="puffs">puffs</option>
-								<option value="hits">hits</option>
-								<option value="g">grams</option>
-								<option value="mg">mg</option>
-							</select>
+							<div class="flex-1">
+								<label for="amount" class="sr-only">Quantity</label>
+								<input
+									type="number"
+									id="amount"
+									name="amount"
+									step="0.1"
+									min="0"
+									placeholder="0"
+									aria-describedby="amount-hint"
+									class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								/>
+							</div>
+							<div>
+								<label for="unit" class="sr-only">Unit of measurement</label>
+								<select
+									id="unit"
+									name="unit"
+									class="px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								>
+									<option value="puffs">puffs</option>
+									<option value="hits">hits</option>
+									<option value="g">grams</option>
+									<option value="mg">mg</option>
+								</select>
+							</div>
 						</div>
-					</div>
+						<p id="amount-hint" class="sr-only">Enter the amount consumed and select the unit</p>
+					</fieldset>
 
 					<!-- Pre-Session State -->
 					<div class="space-y-4">
@@ -221,8 +230,8 @@ templ SessionLog(email string, currentPath string) {
 
 					<!-- Check-in Timing (shown when mode != none) -->
 					<div id="checkin-timing" class="hidden mb-6">
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Check-in after <span id="timing-value">30</span> minutes
+						<label for="checkin-interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+							Check-in after <span id="timing-value" aria-hidden="true">30</span> minutes
 						</label>
 						<input
 							type="range"
@@ -232,9 +241,13 @@ templ SessionLog(email string, currentPath string) {
 							max="240"
 							step="5"
 							value="30"
+							aria-valuemin="5"
+							aria-valuemax="240"
+							aria-valuenow="30"
+							aria-valuetext="30 minutes"
 							class="w-full h-2 bg-gray-200 dark:bg-navy-700 rounded-lg appearance-none cursor-pointer accent-sage-600"
 						/>
-						<div class="flex justify-between text-xs text-gray-400 mt-1">
+						<div class="flex justify-between text-xs text-gray-400 mt-1" aria-hidden="true">
 							<span>5 min</span>
 							<span>4 hours</span>
 						</div>
@@ -448,10 +461,13 @@ templ SessionLog(email string, currentPath string) {
 					};
 				});
 
-				// Timing slider
+				// Timing slider with accessible value updates (WCAG 4.1.2)
 				const slider = document.getElementById('checkin-interval');
 				slider.oninput = () => {
-					document.getElementById('timing-value').textContent = slider.value;
+					const value = slider.value;
+					document.getElementById('timing-value').textContent = value;
+					slider.setAttribute('aria-valuenow', value);
+					slider.setAttribute('aria-valuetext', value + ' minutes');
 				};
 
 				// Form submission
@@ -505,18 +521,27 @@ templ SessionLog(email string, currentPath string) {
 				// Show current step
 				document.getElementById(`step-${currentStep}`).classList.remove('hidden');
 
-				// Update indicators
+				// Step names for accessibility
+				const stepNames = ['Product Selection', 'Consumption Details', 'Check-in Settings'];
+
+				// Update indicators with accessibility (WCAG 4.1.2)
 				for (let i = 1; i <= 3; i++) {
 					const indicator = document.getElementById(`step-${i}-indicator`);
 					if (i < currentStep) {
 						indicator.className = 'w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium';
 						indicator.innerHTML = '&#10003;';
+						indicator.setAttribute('aria-label', `Step ${i} of 3: ${stepNames[i-1]}, completed`);
+						indicator.removeAttribute('aria-current');
 					} else if (i === currentStep) {
 						indicator.className = 'w-8 h-8 rounded-full bg-sage-600 text-white flex items-center justify-center text-sm font-medium';
 						indicator.textContent = i;
+						indicator.setAttribute('aria-label', `Step ${i} of 3: ${stepNames[i-1]}, current`);
+						indicator.setAttribute('aria-current', 'step');
 					} else {
 						indicator.className = 'w-8 h-8 rounded-full bg-gray-200 dark:bg-navy-700 text-gray-500 dark:text-gray-400 flex items-center justify-center text-sm font-medium';
 						indicator.textContent = i;
+						indicator.setAttribute('aria-label', `Step ${i} of 3: ${stepNames[i-1]}`);
+						indicator.removeAttribute('aria-current');
 					}
 				}
 
@@ -670,44 +695,44 @@ templ cannabinoidInput(name string) {
 }
 
 templ feelingGrid(name, label, description string) {
-	<div class="space-y-2">
-		<div class="flex items-center justify-between">
+	<fieldset class="space-y-2">
+		<legend class="flex items-center justify-between w-full">
 			<span class="text-sm font-medium text-gray-700 dark:text-gray-300">{ label }</span>
 			<span class="text-xs text-gray-400">{ description }</span>
-		</div>
-		<div class="grid grid-cols-5 gap-2">
+		</legend>
+		<div class="grid grid-cols-5 gap-2" role="radiogroup" aria-label={ label + " rating" }>
 			<label class="cursor-pointer">
 				<input type="radio" name={ name } value="1" class="sr-only peer"/>
-				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
-					<span class="text-xl">😫</span>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+					<span class="text-xl" role="img" aria-label="Very bad - 1 of 5">😫</span>
 				</div>
 			</label>
 			<label class="cursor-pointer">
 				<input type="radio" name={ name } value="2" class="sr-only peer"/>
-				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
-					<span class="text-xl">😔</span>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+					<span class="text-xl" role="img" aria-label="Bad - 2 of 5">😔</span>
 				</div>
 			</label>
 			<label class="cursor-pointer">
 				<input type="radio" name={ name } value="3" class="sr-only peer"/>
-				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
-					<span class="text-xl">😐</span>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+					<span class="text-xl" role="img" aria-label="Neutral - 3 of 5">😐</span>
 				</div>
 			</label>
 			<label class="cursor-pointer">
 				<input type="radio" name={ name } value="4" class="sr-only peer"/>
-				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
-					<span class="text-xl">🙂</span>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+					<span class="text-xl" role="img" aria-label="Good - 4 of 5">🙂</span>
 				</div>
 			</label>
 			<label class="cursor-pointer">
 				<input type="radio" name={ name } value="5" class="sr-only peer"/>
-				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors">
-					<span class="text-xl">😄</span>
+				<div class="p-3 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+					<span class="text-xl" role="img" aria-label="Very good - 5 of 5">😄</span>
 				</div>
 			</label>
 		</div>
-	</div>
+	</fieldset>
 }
 
 templ checkInModeOption(value, label, description string) {
@@ -729,46 +754,46 @@ templ checkInModeOption(value, label, description string) {
 	</label>
 }
 
-// Icons
+// Icons (all decorative icons have aria-hidden="true" per WCAG 1.1.1)
 templ backIcon() {
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
 	</svg>
 }
 
 templ vapeIcon() {
-	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11V9a2 2 0 00-2-2H7a2 2 0 00-2 2v2m14 0v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6m14 0H5"/>
 	</svg>
 }
 
 templ smokeIcon() {
-	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"/>
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"/>
 	</svg>
 }
 
 templ edibleIcon() {
-	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"/>
 	</svg>
 }
 
 templ tinctureIcon() {
-	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
 	</svg>
 }
 
 templ topicalIcon() {
-	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"/>
 	</svg>
 }
 
 templ dabIcon() {
-	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
 	</svg>
 }

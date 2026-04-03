@@ -39,20 +39,31 @@
 	});
 })();
 
-// Mobile navigation toggle
+// Mobile navigation toggle (for docs)
 function toggleMobileNav() {
 	const overlay = document.getElementById('mobile-nav-overlay');
+	const toggle = document.getElementById('mobile-nav-toggle');
 	if (overlay) {
-		overlay.classList.toggle('hidden');
+		const isHidden = overlay.classList.toggle('hidden');
+		// Update aria-expanded state (WCAG 4.1.2)
+		if (toggle) {
+			toggle.setAttribute('aria-expanded', !isHidden);
+		}
 	}
 }
 
-// Close mobile nav on escape key
+// Close mobile nav on escape key (WCAG 2.1.2)
 document.addEventListener('keydown', function(e) {
 	if (e.key === 'Escape') {
 		const overlay = document.getElementById('mobile-nav-overlay');
+		const toggle = document.getElementById('mobile-nav-toggle');
 		if (overlay && !overlay.classList.contains('hidden')) {
 			overlay.classList.add('hidden');
+			// Reset aria-expanded state
+			if (toggle) {
+				toggle.setAttribute('aria-expanded', 'false');
+				toggle.focus(); // Return focus to trigger
+			}
 		}
 	}
 });
