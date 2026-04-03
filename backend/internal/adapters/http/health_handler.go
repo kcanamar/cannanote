@@ -9,10 +9,14 @@ import (
 	"time"
 
 	"backend/internal/adapters/external"
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
+
+var healthLog = logging.With("health")
 
 type HealthResponse struct {
 	Status    string                 `json:"status"`
@@ -127,6 +131,9 @@ func executePendingDeletions() {
 
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
+		healthLog.Error("Failed to connect to database for pending deletions",
+			ports.F("error", err),
+		)
 		return
 	}
 	defer db.Close()
@@ -135,7 +142,19 @@ func executePendingDeletions() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	authService.ExecutePendingDeletions(ctx)
+	count, err := authService.ExecutePendingDeletions(ctx)
+	if err != nil {
+		healthLog.Error("Failed to execute pending deletions",
+			ports.F("error", err),
+		)
+		return
+	}
+
+	if count > 0 {
+		healthLog.Info("Executed pending account deletions via health check",
+			ports.F("count", count),
+		)
+	}
 }
 
 // checkDatabase tests PostgreSQL connectivity

@@ -614,7 +614,13 @@ func (a *AuthService) ExecutePendingDeletions(ctx context.Context) (int, error) 
 		// Delete from profiles table (cascades to sessions)
 		_, err = tx.ExecContext(ctx, "DELETE FROM profiles WHERE id = $1", id)
 		if err != nil {
-			tx.Rollback()
+			if rbErr := tx.Rollback(); rbErr != nil {
+				a.log.Error("Failed to rollback deletion transaction",
+					ports.F("rollback_error", rbErr),
+					ports.F("original_error", err),
+					ports.F("user_id", id),
+				)
+			}
 			a.log.Error("Failed to delete profile", ports.F("error", err), ports.F("user_id", id))
 			continue
 		}

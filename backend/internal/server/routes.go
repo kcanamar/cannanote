@@ -65,6 +65,9 @@ func SecurityHeaders() gin.HandlerFunc {
 		// Force HTTPS (HSTS)
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
 
+		// Permissions Policy - restrict browser features
+		c.Header("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()")
+
 		// Content Security Policy - development friendly but still secure
 		appEnv := os.Getenv("APP_ENV")
 		var csp string
@@ -96,6 +99,17 @@ func SecurityHeaders() gin.HandlerFunc {
 		// Remove server information
 		c.Header("Server", "")
 
+		c.Next()
+	})
+}
+
+// NoCacheHeaders middleware adds cache-control headers for authenticated responses
+// Prevents sensitive data from being cached by browsers or proxies
+func NoCacheHeaders() gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, private")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
 		c.Next()
 	})
 }
@@ -191,6 +205,18 @@ func getRateLimitSettings() (int, int) {
 var signupRateLimiter = func() *rateLimiter {
 	maxAttempts, windowMinutes := getRateLimitSettings()
 	return newRateLimiter(maxAttempts, windowMinutes)
+}()
+
+// Rate limiters for authentication endpoints (more strict than signup)
+var authRateLimiter = func() *rateLimiter {
+	// 5 attempts per 15 minutes for signin/password reset
+	return newRateLimiter(5, 15)
+}()
+
+// Rate limiter for password reset requests (prevent email enumeration spam)
+var passwordResetRateLimiter = func() *rateLimiter {
+	// 3 attempts per 30 minutes
+	return newRateLimiter(3, 30)
 }()
 
 // checkRateLimit checks if IP has exceeded rate limit (max 3 attempts per 15 minutes)
@@ -355,6 +381,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.Use(SecurityHeaders())
 	r.Use(RequestSizeLimit(8 << 20)) // 8MB request limit
 
+	// Set CSRF cookie on all requests (for forms to use)
+	r.Use(httpAdapters.CSRFProtection())
+
 	// Create auth middleware
 	authMiddleware := httpAdapters.NewAuthMiddleware(s.db.GetDB())
 
@@ -504,6 +533,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Protected routes (require authentication)
 	protected := r.Group("/app")
 	protected.Use(authMiddleware.RequireSession())
+	protected.Use(NoCacheHeaders())               // Prevent caching of authenticated content
+	protected.Use(httpAdapters.CSRFProtection()) // CSRF protection for state-changing requests
 	{
 		protected.GET("", s.DashboardHandler)
 		protected.GET("/", s.DashboardHandler)
@@ -521,6 +552,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Account deletion API (authenticated)
 	accountAPI := r.Group("/api/account")
 	accountAPI.Use(authMiddleware.RequireSession())
+	accountAPI.Use(NoCacheHeaders())              // Prevent caching of account data
+	accountAPI.Use(httpAdapters.CSRFProtection()) // CSRF protection
 	{
 		accountAPI.POST("/request-delete", s.RequestAccountDeletionHandler)
 		accountAPI.POST("/cancel-delete", s.CancelDeletionHandler)
@@ -719,7 +752,20 @@ func (s *Server) OnboardingHandler(c *gin.Context) {
 
 // ResetPasswordHandler handles the password reset form submission
 func (s *Server) ResetPasswordHandler(c *gin.Context) {
+	clientIP := getTrustedClientIP(c)
 	conditionalLog("DEBUG", "ResetPasswordHandler called")
+
+	// Rate limit check for password reset attempts
+	if !passwordResetRateLimiter.checkRateLimit(clientIP) {
+		attempts, maxAttempts := passwordResetRateLimiter.getRateLimitStatus(clientIP)
+		routesLog.Warn("AUTH_RATE_LIMIT: Password reset rate limit exceeded",
+			ports.F("ip", clientIP),
+			ports.F("attempts", attempts),
+			ports.F("max", maxAttempts),
+		)
+		templ.Handler(web.PasswordResetError("Too many password reset attempts. Please try again in 30 minutes.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
 
 	token := c.PostForm("token")
 	password := c.PostForm("password")
@@ -728,6 +774,12 @@ func (s *Server) ResetPasswordHandler(c *gin.Context) {
 	// Validate inputs
 	if token == "" {
 		templ.Handler(web.PasswordResetError("Missing reset token. Please try the activation link again.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Validate password length (prevent DoS with extremely long passwords)
+	if len(password) > 128 {
+		templ.Handler(web.PasswordResetError("Password is too long (max 128 characters).")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
 
@@ -745,14 +797,36 @@ func (s *Server) ResetPasswordHandler(c *gin.Context) {
 	authService := external.NewAuthService(s.db.GetDB())
 	user, err := authService.SetPassword(c.Request.Context(), token, password)
 	if err != nil {
-		conditionalLog("ERROR", "Password reset failed: %v", err)
+		routesLog.Warn("AUTH_FAILED: Password reset failed",
+			ports.F("ip", clientIP),
+			ports.F("reason", err.Error()),
+		)
 		templ.Handler(web.PasswordResetError("Failed to reset password. The link may have expired.")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
 
-	conditionalLog("INFO", "Password set for user: %s", user.Email)
+	// Log successful password change for security monitoring
+	routesLog.Info("AUTH_PASSWORD_CHANGE: Password set successfully",
+		ports.F("user_id", user.ID),
+		ports.F("email", user.Email),
+		ports.F("ip", clientIP),
+	)
 
-	// Create session for the user (auto-login)
+	// Session rotation: Revoke all existing sessions for this user
+	// This invalidates any sessions that may have been compromised
+	if err := authService.RevokeAllUserSessions(c.Request.Context(), user.ID); err != nil {
+		routesLog.Error("AUTH_ERROR: Failed to revoke existing sessions during password reset",
+			ports.F("user_id", user.ID),
+			ports.F("error", err),
+		)
+		// Continue anyway - password was reset successfully
+	} else {
+		routesLog.Info("AUTH_SESSION_ROTATION: All sessions revoked after password change",
+			ports.F("user_id", user.ID),
+		)
+	}
+
+	// Create new session for the user (auto-login with fresh session)
 	sessionToken, err := authService.CreateSession(
 		c.Request.Context(),
 		user.ID,
@@ -760,7 +834,10 @@ func (s *Server) ResetPasswordHandler(c *gin.Context) {
 		getTrustedClientIP(c),
 	)
 	if err != nil {
-		conditionalLog("ERROR", "Failed to create session: %v", err)
+		routesLog.Error("AUTH_ERROR: Failed to create session after password reset",
+			ports.F("user_id", user.ID),
+			ports.F("error", err),
+		)
 		// Session creation failed, but password was reset - show success and let them log in manually
 		templ.Handler(web.PasswordResetSuccess()).ServeHTTP(c.Writer, c.Request)
 		return
@@ -832,6 +909,20 @@ func (s *Server) LoginPageHandler(c *gin.Context) {
 
 // SignInHandler processes the login form and creates a session
 func (s *Server) SignInHandler(c *gin.Context) {
+	clientIP := getTrustedClientIP(c)
+
+	// Rate limit check for signin attempts
+	if !authRateLimiter.checkRateLimit(clientIP) {
+		attempts, maxAttempts := authRateLimiter.getRateLimitStatus(clientIP)
+		routesLog.Warn("AUTH_RATE_LIMIT: Sign in rate limit exceeded",
+			ports.F("ip", clientIP),
+			ports.F("attempts", attempts),
+			ports.F("max", maxAttempts),
+		)
+		templ.Handler(web.LoginError("Too many sign in attempts. Please try again in 15 minutes.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 
@@ -847,12 +938,23 @@ func (s *Server) SignInHandler(c *gin.Context) {
 	authService := external.NewAuthService(s.db.GetDB())
 	user, err := authService.SignIn(c.Request.Context(), email, password)
 	if err != nil {
-		conditionalLog("DEBUG", "Sign in failed: %v", err)
+		// Log failed authentication attempt for security monitoring
+		routesLog.Warn("AUTH_FAILED: Sign in failed",
+			ports.F("email", email),
+			ports.F("ip", clientIP),
+			ports.F("user_agent", c.Request.UserAgent()),
+			ports.F("reason", err.Error()),
+		)
 		templ.Handler(web.LoginError("Invalid email or password.")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
 
-	conditionalLog("INFO", "Sign in successful for user: %s", user.Email)
+	// Log successful authentication
+	routesLog.Info("AUTH_SUCCESS: Sign in successful",
+		ports.F("user_id", user.ID),
+		ports.F("email", user.Email),
+		ports.F("ip", clientIP),
+	)
 
 	// Create session
 	sessionToken, err := authService.CreateSession(
@@ -862,7 +964,10 @@ func (s *Server) SignInHandler(c *gin.Context) {
 		getTrustedClientIP(c),
 	)
 	if err != nil {
-		conditionalLog("ERROR", "Failed to create session: %v", err)
+		routesLog.Error("AUTH_ERROR: Failed to create session",
+			ports.F("user_id", user.ID),
+			ports.F("error", err),
+		)
 		templ.Handler(web.LoginError("Failed to create session. Please try again.")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
@@ -878,6 +983,7 @@ func (s *Server) SignInHandler(c *gin.Context) {
 
 // SignOutHandler destroys the session and redirects to home
 func (s *Server) SignOutHandler(c *gin.Context) {
+	clientIP := getTrustedClientIP(c)
 	conditionalLog("DEBUG", "SignOutHandler called")
 
 	// Get session token from cookie
@@ -885,7 +991,14 @@ func (s *Server) SignOutHandler(c *gin.Context) {
 		// Revoke session in database
 		authService := external.NewAuthService(s.db.GetDB())
 		if err := authService.RevokeSession(c.Request.Context(), cookie); err != nil {
-			conditionalLog("ERROR", "Error revoking session: %v", err)
+			routesLog.Error("AUTH_ERROR: Error revoking session on signout",
+				ports.F("error", err),
+				ports.F("ip", clientIP),
+			)
+		} else {
+			routesLog.Info("AUTH_SIGNOUT: User signed out",
+				ports.F("ip", clientIP),
+			)
 		}
 	}
 
