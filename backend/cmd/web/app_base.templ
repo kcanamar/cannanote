@@ -1,0 +1,909 @@
+package web
+
+import "strings"
+
+// getPageName extracts the page name from the full title
+// "Settings - CannaNote" -> "Settings"
+// "CannaNote" -> "Home" (dashboard fallback)
+func getPageName(title string) string {
+	if idx := strings.Index(title, " - "); idx != -1 {
+		return title[:idx]
+	}
+	return "Home"
+}
+
+// isNavActive determines if a nav item should be highlighted
+// Unified function for both desktop sidebar and mobile bottom nav
+// Uses smart prefix matching for nested routes
+func isNavActive(href, currentPath string) bool {
+	// Exact match always wins
+	if href == currentPath {
+		return true
+	}
+
+	// Dashboard (/app) only matches exactly - don't match /app/anything
+	if href == "/app" {
+		return false
+	}
+
+	// For other routes, use prefix matching
+	// /app/sessions matches /app/sessions/:id, /app/sessions/:id/checkin
+	// BUT NOT /app/sessions/new (which has its own "Log" button)
+	if href == "/app/sessions" {
+		return strings.HasPrefix(currentPath, "/app/sessions") && currentPath != "/app/sessions/new"
+	}
+
+	// /app/settings matches /app/settings and any sub-routes
+	if href == "/app/settings" {
+		return strings.HasPrefix(currentPath, "/app/settings")
+	}
+
+	return false
+}
+
+// AppBase is the layout template for authenticated /app routes
+// Features a collapsible sidebar (Slack/Discord style) instead of top navigation
+templ AppBase(title string, currentPath string, email string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>{ title }</title>
+
+			<!-- Favicon -->
+			<link rel="icon" type="image/x-icon" href="/assets/images/favicon/favicon.ico">
+			<link rel="icon" type="image/png" sizes="96x96" href="/assets/images/favicon/favicon-96x96.png">
+			<link rel="icon" type="image/svg+xml" href="/assets/images/favicon/favicon.svg">
+			<link rel="apple-touch-icon" href="/assets/images/favicon/apple-touch-icon.png">
+			<link rel="manifest" href="/assets/images/favicon/site.webmanifest">
+			<meta name="theme-color" content="#1a1f36">
+
+			<!-- Fonts -->
+			<link rel="preconnect" href="https://fonts.googleapis.com">
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+			<!-- Styles -->
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+
+			<!-- Scripts -->
+			<script src="/assets/js/theme.js"></script>
+			<script src="/assets/js/csrf.js"></script>
+			<script src="/assets/js/htmx.min.js" defer></script>
+			<script src="/assets/js/app.min.js" defer></script>
+
+			<style>
+				/* Sidebar transitions (desktop only) */
+				.sidebar {
+					transition: width 200ms ease-in-out;
+				}
+				.sidebar-collapsed {
+					width: 4.5rem;
+				}
+				.sidebar-expanded {
+					width: 16rem;
+				}
+				/* Hide text when collapsed */
+				.sidebar-collapsed .nav-label,
+				.sidebar-collapsed .user-email,
+				.sidebar-collapsed .logo-text {
+					display: none;
+				}
+				/* Center icons when sidebar is collapsed */
+				.sidebar-collapsed nav a,
+				.sidebar-collapsed nav button,
+				.sidebar-collapsed ul a,
+				.sidebar-collapsed ul button,
+				.sidebar-collapsed ul div {
+					justify-content: center;
+				}
+				/* Main content margin adjustment */
+				.main-content {
+					transition: margin-left 200ms ease-in-out;
+				}
+				@media (min-width: 768px) {
+					.main-content-expanded {
+						margin-left: 16rem;
+					}
+					.main-content-collapsed {
+						margin-left: 4.5rem;
+					}
+				}
+				/* Mobile bottom nav - thumb zone optimized (44px min touch targets per WCAG 2.5.8 AAA) */
+				.mobile-bottom-nav {
+					padding-bottom: env(safe-area-inset-bottom, 0);
+				}
+				.mobile-bottom-nav a,
+				.mobile-bottom-nav button {
+					min-width: 44px;
+					min-height: 44px;
+				}
+
+				/* HTML5 Dialog - More menu */
+				#more-menu-dialog {
+					/* Reset default dialog styles */
+					border: none;
+					padding: 0;
+					max-width: 100%;
+					max-height: 100%;
+					width: 100%;
+					height: 100%;
+					background: transparent;
+					/* Position at bottom */
+					margin: 0;
+					position: fixed;
+					inset: 0;
+				}
+				#more-menu-dialog::backdrop {
+					background: rgba(0, 0, 0, 0.5);
+					-webkit-tap-highlight-color: transparent;
+				}
+				#more-menu-dialog[open] {
+					display: flex;
+					flex-direction: column;
+					justify-content: flex-end;
+				}
+				/* Panel slide animation */
+				.more-menu-panel {
+					transform: translateY(100%);
+					transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+					-webkit-transition: -webkit-transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+				}
+				#more-menu-dialog[open] .more-menu-panel {
+					transform: translateY(0);
+					-webkit-transform: translateY(0);
+				}
+				/* iOS Safari scroll fix */
+				.more-menu-panel {
+					-webkit-overflow-scrolling: touch;
+					overscroll-behavior: contain;
+				}
+
+				/* Focus indicators (WCAG 2.4.7) */
+				.focus-visible-ring:focus-visible {
+					outline: 2px solid #4f7c5f;
+					outline-offset: 2px;
+				}
+				/* Ensure focus is visible in dark mode */
+				@media (prefers-color-scheme: dark) {
+					.focus-visible-ring:focus-visible {
+						outline-color: #7fa88a;
+					}
+				}
+
+				/* Respect reduced motion preference (WCAG 2.3.3) */
+				@media (prefers-reduced-motion: reduce) {
+					.sidebar,
+					.main-content,
+					.more-menu-panel,
+					#more-menu-dialog::backdrop {
+						transition: none !important;
+						-webkit-transition: none !important;
+					}
+				}
+			</style>
+		</head>
+		<body class="font-brand antialiased bg-gray-50 dark:bg-navy-950">
+			<!-- Skip Navigation Link (WCAG 2.4.1) -->
+			<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-sage-600 focus:text-white focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-sage-400">
+				Skip to main content
+			</a>
+			<!-- Desktop Sidebar (hidden on mobile) -->
+			<aside
+				id="sidebar"
+				class="sidebar sidebar-collapsed fixed top-0 left-0 h-full bg-white dark:bg-navy-900 border-r border-gray-200 dark:border-navy-700 z-50 flex-col hidden md:flex"
+			>
+				<!-- Logo Section -->
+				<div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-navy-700">
+					<a href="/app" class="flex items-center space-x-3 overflow-hidden">
+						<img
+							src="/assets/images/logos/logo-book.svg"
+							alt="CannaNote"
+							class="w-8 h-8 flex-shrink-0 dark:invert"
+						/>
+						<span class="logo-text text-xl font-semibold text-navy-900 dark:text-white whitespace-nowrap">
+							CannaNote
+						</span>
+					</a>
+				</div>
+
+				<!-- Navigation -->
+				<nav class="flex-1 py-4 overflow-y-auto">
+					<ul class="space-y-1 px-2">
+						@appNavItem("/app", "Dashboard", currentPath, dashboardIcon())
+						@appNavItem("/app/sessions", "Sessions", currentPath, sessionsIcon())
+						@appNavItem("/app/settings", "Settings", currentPath, settingsIcon())
+					</ul>
+
+					<!-- External Links -->
+					<div class="mt-4 pt-4 border-t border-gray-200 dark:border-navy-700 px-2">
+						<a
+							href="/docs"
+							target="_blank"
+							rel="noopener"
+							class="flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+						>
+							@docsIcon()
+							<span class="nav-label ml-3 whitespace-nowrap">Docs</span>
+						</a>
+					</div>
+				</nav>
+
+				<!-- User Section -->
+				<div class="border-t border-gray-200 dark:border-navy-700 py-4">
+					<ul class="space-y-1 px-2">
+						<!-- Theme Toggle -->
+						<li>
+							<button
+								onclick="toggleTheme()"
+								class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+							>
+								<svg id="app-sun-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+								</svg>
+								<svg id="app-moon-icon" class="w-5 h-5 flex-shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+								</svg>
+								<span class="nav-label ml-3 whitespace-nowrap">Toggle Theme</span>
+							</button>
+						</li>
+						<!-- Online/Offline Status -->
+						<li>
+							<div id="connection-status" class="flex items-center px-3 py-2 rounded-lg text-green-600 dark:text-green-400" role="status" aria-live="polite">
+								<!-- Online icon (wifi) -->
+								<svg id="online-icon" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+								</svg>
+								<!-- Offline icon (wifi with slash) -->
+								<svg id="offline-icon" class="w-5 h-5 flex-shrink-0 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3l18 18"/>
+								</svg>
+								<span id="connection-label" class="nav-label ml-3 text-sm">Online</span>
+							</div>
+						</li>
+						<!-- Sign Out -->
+						<li>
+							<form action="/auth/signout" method="POST">
+								<button
+									type="submit"
+									class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+								>
+									<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+									</svg>
+									<span class="nav-label ml-3 whitespace-nowrap">Sign Out</span>
+								</button>
+							</form>
+						</li>
+					</ul>
+				</div>
+
+				<!-- Collapse Toggle (Desktop only) -->
+				<button
+					id="sidebar-collapse-btn"
+					onclick="toggleSidebarCollapse()"
+					class="hidden md:flex items-center justify-center h-12 border-t border-gray-200 dark:border-navy-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+					aria-label="Toggle sidebar"
+				>
+					<svg id="collapse-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+					</svg>
+					<svg id="expand-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+					</svg>
+				</button>
+			</aside>
+
+			<!-- Mobile Header (simplified - no hamburger) -->
+			<header class="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-navy-900 border-b border-gray-200 dark:border-navy-700 z-30 flex items-center px-4">
+				<a href="/app" class="flex-shrink-0" aria-label="Go to Dashboard">
+					<img
+						src="/assets/images/logos/logo-book.svg"
+						alt="CannaNote"
+						class="w-7 h-7 dark:invert"
+					/>
+				</a>
+				<span class="flex-1 text-center text-lg font-semibold text-navy-900 dark:text-white">{ getPageName(title) }</span>
+				<!-- Spacer to balance the logo width for true centering -->
+				<div class="w-7 flex-shrink-0"></div>
+			</header>
+
+			<!-- Main Content -->
+			<main
+				id="main-content"
+				class="main-content main-content-collapsed min-h-screen pt-14 pb-20 md:pt-0 md:pb-0"
+				role="main"
+			>
+				<div class="p-4 md:p-6">
+					{ children... }
+				</div>
+			</main>
+
+			<!-- Mobile Bottom Navigation (thumb-zone optimized) -->
+			<nav class="mobile-bottom-nav md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-navy-900 border-t border-gray-200 dark:border-navy-700 z-40">
+				<div class="flex items-center justify-around h-16 px-2">
+					@mobileNavItem("/app", "Home", currentPath, mobileHomeIcon())
+					@mobileNavItem("/app/sessions", "Sessions", currentPath, mobileSessionsIcon())
+					@mobileNavItem("/app/sessions/new", "Log", currentPath, mobileAddIcon())
+					@mobileNavItem("/app/settings", "Settings", currentPath, mobileSettingsIcon())
+					<!-- More menu trigger (W3C Menu Button Pattern) -->
+					<button
+						id="more-menu-trigger"
+						onclick="openMoreMenu()"
+						class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 focus-visible-ring"
+						aria-haspopup="dialog"
+						aria-expanded="false"
+						aria-controls="more-menu-dialog"
+						aria-label="More options menu"
+					>
+						@mobileMoreIcon()
+						<span class="text-xs">More</span>
+					</button>
+				</div>
+			</nav>
+
+			<!-- More Menu Dialog (W3C Dialog Pattern - mobile only) -->
+			<dialog
+				id="more-menu-dialog"
+				class="md:hidden"
+				aria-labelledby="more-menu-title"
+				aria-modal="true"
+			>
+				<!-- Backdrop click handler (using invisible button for accessibility) -->
+				<button
+					class="fixed inset-0 w-full h-full cursor-default bg-transparent -z-10"
+					onclick="closeMoreMenu()"
+					aria-label="Close menu"
+					tabindex="-1"
+				></button>
+
+				<!-- Panel (slides up from bottom) -->
+				<div
+					id="more-menu-panel"
+					class="more-menu-panel bg-white dark:bg-navy-900 rounded-t-2xl w-full"
+					role="document"
+				>
+					<!-- Handle bar (drag indicator) -->
+					<div class="flex justify-center pt-3 pb-2">
+						<div class="w-10 h-1 bg-gray-300 dark:bg-navy-600 rounded-full" aria-hidden="true"></div>
+					</div>
+
+					<!-- Hidden title for screen readers -->
+					<h2 id="more-menu-title" class="sr-only">More options</h2>
+
+					<!-- Close button (visible, first in tab order per W3C) -->
+					<div class="px-4 pb-2 flex justify-end">
+						<button
+							id="more-menu-close-btn"
+							onclick="closeMoreMenu()"
+							class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 focus-visible-ring"
+							aria-label="Close menu"
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+							</svg>
+						</button>
+					</div>
+
+					<div class="px-4 pb-8 space-y-1" style="padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0));">
+						<!-- Theme Toggle -->
+						<button
+							onclick="toggleTheme(); closeMoreMenu();"
+							class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors focus-visible-ring"
+						>
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
+								<svg id="more-sun-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+								</svg>
+								<svg id="more-moon-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+								</svg>
+							</div>
+							<div class="flex-1 text-left">
+								<span class="font-medium">Toggle Theme</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">Switch light/dark mode</p>
+							</div>
+						</button>
+
+						<!-- Docs Link -->
+						<a
+							href="/docs"
+							target="_blank"
+							rel="noopener"
+							onclick="closeMoreMenu()"
+							class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors focus-visible-ring"
+						>
+							<div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center" aria-hidden="true">
+								@docsIcon()
+							</div>
+							<div class="flex-1 text-left">
+								<span class="font-medium">Documentation</span>
+								<p class="text-sm text-gray-500 dark:text-gray-400">Learn how to use CannaNote</p>
+							</div>
+						</a>
+
+						<!-- Install App (hidden when not available or already installed) -->
+						<button
+							id="more-menu-install-btn"
+							onclick="installAppFromMenu()"
+							class="hidden w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sage-700 dark:text-sage-300 bg-sage-50 dark:bg-sage-900/20 hover:bg-sage-100 dark:hover:bg-sage-900/30 transition-colors focus-visible-ring"
+						>
+							<div class="w-10 h-10 rounded-full bg-sage-100 dark:bg-sage-900/30 flex items-center justify-center" aria-hidden="true">
+								<svg class="w-5 h-5 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+								</svg>
+							</div>
+							<div class="flex-1 text-left">
+								<span class="font-medium">Install App</span>
+								<p class="text-sm text-sage-600 dark:text-sage-400">Add to home screen</p>
+							</div>
+						</button>
+
+						<!-- Connection Status -->
+						<div id="mobile-connection-status" class="flex items-center gap-4 px-4 py-3 text-green-600 dark:text-green-400" role="status" aria-live="polite">
+							<div class="w-10 h-10 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center" id="mobile-connection-bg">
+								<!-- Online icon (wifi) -->
+								<svg id="mobile-online-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+								</svg>
+								<!-- Offline icon (wifi with slash) -->
+								<svg id="mobile-offline-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"/>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3l18 18"/>
+								</svg>
+							</div>
+							<div class="flex-1 text-left">
+								<span id="mobile-connection-label" class="font-medium">Online</span>
+								<p id="mobile-connection-desc" class="text-sm text-green-500 dark:text-green-500">Connected to the internet</p>
+							</div>
+						</div>
+
+						<!-- Sign Out -->
+						<form action="/auth/signout" method="POST" class="pt-2 border-t border-gray-200 dark:border-navy-700 mt-2">
+							<button
+								type="submit"
+								class="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus-visible-ring"
+							>
+								<div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center" aria-hidden="true">
+									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+									</svg>
+								</div>
+								<span class="font-medium">Sign Out</span>
+							</button>
+						</form>
+					</div>
+				</div>
+			</dialog>
+
+			<script>
+				// PWA install prompt - captured globally for all app pages
+				let deferredInstallPrompt = null;
+
+				// Capture the beforeinstallprompt event early
+				window.addEventListener('beforeinstallprompt', (e) => {
+					e.preventDefault();
+					deferredInstallPrompt = e;
+					showInstallButtons();
+					console.log('[PWA] Install prompt captured');
+				});
+
+				// Hide install buttons if app is installed
+				window.addEventListener('appinstalled', () => {
+					deferredInstallPrompt = null;
+					hideInstallButtons();
+					console.log('[PWA] App installed successfully');
+				});
+
+				function showInstallButtons() {
+					const moreMenuBtn = document.getElementById('more-menu-install-btn');
+					if (moreMenuBtn) {
+						moreMenuBtn.classList.remove('hidden');
+					}
+				}
+
+				function hideInstallButtons() {
+					const moreMenuBtn = document.getElementById('more-menu-install-btn');
+					if (moreMenuBtn) {
+						moreMenuBtn.classList.add('hidden');
+					}
+				}
+
+				async function installAppFromMenu() {
+					closeMoreMenu(); // Close the menu first
+
+					if (!deferredInstallPrompt) {
+						// Fallback for browsers that don't support beforeinstallprompt (Safari)
+						alert('To install CannaNote:\n\n' +
+							'iOS Safari: Tap the Share button, then "Add to Home Screen"\n\n' +
+							'Android Chrome: Tap the menu (⋮), then "Add to Home Screen"');
+						return;
+					}
+
+					// Show the native install prompt
+					deferredInstallPrompt.prompt();
+
+					const { outcome } = await deferredInstallPrompt.userChoice;
+					console.log('[PWA] Install prompt outcome:', outcome);
+
+					// Clear the deferred prompt - can only be used once
+					deferredInstallPrompt = null;
+
+					if (outcome === 'accepted') {
+						hideInstallButtons();
+					}
+				}
+
+				function checkPWAInstallState() {
+					// Check if already running as installed PWA
+					const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+						|| window.navigator.standalone; // iOS Safari
+
+					if (isStandalone) {
+						hideInstallButtons();
+					} else if (deferredInstallPrompt) {
+						showInstallButtons();
+					}
+				}
+
+				// Desktop sidebar state management
+				const SIDEBAR_EXPANDED_KEY = 'cannanote_sidebar_expanded';
+
+				function initSidebar() {
+					const sidebar = document.getElementById('sidebar');
+					const mainContent = document.getElementById('main-content');
+					const collapseIcon = document.getElementById('collapse-icon');
+					const expandIcon = document.getElementById('expand-icon');
+
+					// Desktop only - check saved preference
+					if (window.innerWidth >= 768 && sidebar) {
+						const isExpanded = localStorage.getItem(SIDEBAR_EXPANDED_KEY) === 'true';
+						if (isExpanded) {
+							sidebar.classList.remove('sidebar-collapsed');
+							sidebar.classList.add('sidebar-expanded');
+							mainContent.classList.remove('main-content-collapsed');
+							mainContent.classList.add('main-content-expanded');
+							if (collapseIcon) collapseIcon.classList.remove('hidden');
+							if (expandIcon) expandIcon.classList.add('hidden');
+						}
+					}
+
+					// Sync theme icons in more menu
+					syncMoreMenuThemeIcons();
+				}
+
+				function toggleSidebarCollapse() {
+					const sidebar = document.getElementById('sidebar');
+					const mainContent = document.getElementById('main-content');
+					const collapseIcon = document.getElementById('collapse-icon');
+					const expandIcon = document.getElementById('expand-icon');
+
+					const isCurrentlyExpanded = sidebar.classList.contains('sidebar-expanded');
+
+					if (isCurrentlyExpanded) {
+						sidebar.classList.remove('sidebar-expanded');
+						sidebar.classList.add('sidebar-collapsed');
+						mainContent.classList.remove('main-content-expanded');
+						mainContent.classList.add('main-content-collapsed');
+						collapseIcon.classList.add('hidden');
+						expandIcon.classList.remove('hidden');
+						localStorage.setItem(SIDEBAR_EXPANDED_KEY, 'false');
+					} else {
+						sidebar.classList.remove('sidebar-collapsed');
+						sidebar.classList.add('sidebar-expanded');
+						mainContent.classList.remove('main-content-collapsed');
+						mainContent.classList.add('main-content-expanded');
+						collapseIcon.classList.remove('hidden');
+						expandIcon.classList.add('hidden');
+						localStorage.setItem(SIDEBAR_EXPANDED_KEY, 'true');
+					}
+				}
+
+				// Mobile "More" menu (W3C Dialog Pattern)
+				const moreMenuDialog = document.getElementById('more-menu-dialog');
+				const moreMenuTrigger = document.getElementById('more-menu-trigger');
+				let scrollPosition = 0;
+
+				function openMoreMenu() {
+					if (!moreMenuDialog) return;
+
+					// Update aria-expanded on trigger
+					if (moreMenuTrigger) {
+						moreMenuTrigger.setAttribute('aria-expanded', 'true');
+					}
+
+					// iOS Safari: Save scroll position and lock body
+					scrollPosition = window.pageYOffset;
+					document.body.style.position = 'fixed';
+					document.body.style.top = `-${scrollPosition}px`;
+					document.body.style.width = '100%';
+
+					// Sync theme icons before showing
+					syncMoreMenuThemeIcons();
+
+					// Show dialog using native method (handles focus trap automatically)
+					moreMenuDialog.showModal();
+
+					// Focus the close button (W3C recommendation)
+					const closeBtn = document.getElementById('more-menu-close-btn');
+					if (closeBtn) {
+						// Small delay to allow animation to start
+						setTimeout(() => closeBtn.focus(), 50);
+					}
+				}
+
+				function closeMoreMenu() {
+					if (!moreMenuDialog) return;
+
+					// Update aria-expanded on trigger
+					if (moreMenuTrigger) {
+						moreMenuTrigger.setAttribute('aria-expanded', 'false');
+					}
+
+					// Close dialog using native method
+					moreMenuDialog.close();
+
+					// iOS Safari: Restore scroll position
+					document.body.style.position = '';
+					document.body.style.top = '';
+					document.body.style.width = '';
+					window.scrollTo(0, scrollPosition);
+
+					// Return focus to trigger button (W3C requirement)
+					if (moreMenuTrigger) {
+						moreMenuTrigger.focus();
+					}
+				}
+
+				// Handle native dialog close events (Escape key, form submission)
+				if (moreMenuDialog) {
+					moreMenuDialog.addEventListener('close', () => {
+						// Ensure cleanup happens on any close
+						if (moreMenuTrigger) {
+							moreMenuTrigger.setAttribute('aria-expanded', 'false');
+						}
+						document.body.style.position = '';
+						document.body.style.top = '';
+						document.body.style.width = '';
+						window.scrollTo(0, scrollPosition);
+					});
+
+					// Handle click on backdrop (the ::backdrop pseudo-element)
+					moreMenuDialog.addEventListener('click', (e) => {
+						// Only close if clicking the dialog itself (backdrop area)
+						if (e.target === moreMenuDialog) {
+							closeMoreMenu();
+						}
+					});
+
+					// iOS Safari: Prevent touchmove on backdrop to stop body scroll
+					moreMenuDialog.addEventListener('touchmove', (e) => {
+						// Allow scroll inside the panel, prevent on backdrop
+						const panel = document.getElementById('more-menu-panel');
+						if (!panel.contains(e.target)) {
+							e.preventDefault();
+						}
+					}, { passive: false });
+				}
+
+				// Legacy function name for backwards compatibility
+				function toggleMoreMenu() {
+					if (moreMenuDialog && moreMenuDialog.open) {
+						closeMoreMenu();
+					} else {
+						openMoreMenu();
+					}
+				}
+
+				// Sync theme icons in the more menu
+				function syncMoreMenuThemeIcons() {
+					const isDark = document.documentElement.classList.contains('dark');
+					const sunIcon = document.getElementById('more-sun-icon');
+					const moonIcon = document.getElementById('more-moon-icon');
+
+					if (sunIcon && moonIcon) {
+						if (isDark) {
+							sunIcon.classList.add('hidden');
+							moonIcon.classList.remove('hidden');
+						} else {
+							sunIcon.classList.remove('hidden');
+							moonIcon.classList.add('hidden');
+						}
+					}
+				}
+
+				// Connection status management
+				function updateConnectionStatus() {
+					const isOnline = navigator.onLine;
+
+					// Desktop sidebar elements
+					const status = document.getElementById('connection-status');
+					const onlineIcon = document.getElementById('online-icon');
+					const offlineIcon = document.getElementById('offline-icon');
+					const label = document.getElementById('connection-label');
+
+					// Mobile more menu elements
+					const mobileStatus = document.getElementById('mobile-connection-status');
+					const mobileBg = document.getElementById('mobile-connection-bg');
+					const mobileOnlineIcon = document.getElementById('mobile-online-icon');
+					const mobileOfflineIcon = document.getElementById('mobile-offline-icon');
+					const mobileLabel = document.getElementById('mobile-connection-label');
+					const mobileDesc = document.getElementById('mobile-connection-desc');
+
+					if (isOnline) {
+						// Desktop
+						if (status) {
+							status.classList.remove('text-red-600', 'dark:text-red-400');
+							status.classList.add('text-green-600', 'dark:text-green-400');
+						}
+						if (onlineIcon) onlineIcon.classList.remove('hidden');
+						if (offlineIcon) offlineIcon.classList.add('hidden');
+						if (label) label.textContent = 'Online';
+
+						// Mobile
+						if (mobileStatus) {
+							mobileStatus.classList.remove('text-red-600', 'dark:text-red-400');
+							mobileStatus.classList.add('text-green-600', 'dark:text-green-400');
+						}
+						if (mobileBg) {
+							mobileBg.classList.remove('bg-red-50', 'dark:bg-red-900/20');
+							mobileBg.classList.add('bg-green-50', 'dark:bg-green-900/20');
+						}
+						if (mobileOnlineIcon) mobileOnlineIcon.classList.remove('hidden');
+						if (mobileOfflineIcon) mobileOfflineIcon.classList.add('hidden');
+						if (mobileLabel) mobileLabel.textContent = 'Online';
+						if (mobileDesc) {
+							mobileDesc.textContent = 'Connected to the internet';
+							mobileDesc.classList.remove('text-red-500');
+							mobileDesc.classList.add('text-green-500');
+						}
+					} else {
+						// Desktop
+						if (status) {
+							status.classList.remove('text-green-600', 'dark:text-green-400');
+							status.classList.add('text-red-600', 'dark:text-red-400');
+						}
+						if (onlineIcon) onlineIcon.classList.add('hidden');
+						if (offlineIcon) offlineIcon.classList.remove('hidden');
+						if (label) label.textContent = 'Offline';
+
+						// Mobile
+						if (mobileStatus) {
+							mobileStatus.classList.remove('text-green-600', 'dark:text-green-400');
+							mobileStatus.classList.add('text-red-600', 'dark:text-red-400');
+						}
+						if (mobileBg) {
+							mobileBg.classList.remove('bg-green-50', 'dark:bg-green-900/20');
+							mobileBg.classList.add('bg-red-50', 'dark:bg-red-900/20');
+						}
+						if (mobileOnlineIcon) mobileOnlineIcon.classList.add('hidden');
+						if (mobileOfflineIcon) mobileOfflineIcon.classList.remove('hidden');
+						if (mobileLabel) mobileLabel.textContent = 'Offline';
+						if (mobileDesc) {
+							mobileDesc.textContent = 'Working in offline mode';
+							mobileDesc.classList.remove('text-green-500');
+							mobileDesc.classList.add('text-red-500');
+						}
+					}
+				}
+
+				// Listen for connection changes
+				window.addEventListener('online', updateConnectionStatus);
+				window.addEventListener('offline', updateConnectionStatus);
+
+				// Initialize on load
+				document.addEventListener('DOMContentLoaded', function() {
+					initSidebar();
+					updateConnectionStatus();
+					checkPWAInstallState();
+				});
+			</script>
+		</body>
+	</html>
+}
+
+// Navigation item helper
+templ appNavItem(href, label, currentPath string, icon templ.Component) {
+	<li>
+		if isNavActive(href, currentPath) {
+			<a
+				href={ templ.SafeURL(href) }
+				class="flex items-center px-3 py-2 rounded-lg bg-sage-100 dark:bg-sage-900/30 text-sage-800 dark:text-sage-300 font-medium"
+				aria-current="page"
+			>
+				@icon
+				<span class="nav-label ml-3 whitespace-nowrap">{ label }</span>
+			</a>
+		} else {
+			<a
+				href={ templ.SafeURL(href) }
+				class="flex items-center px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+			>
+				@icon
+				<span class="nav-label ml-3 whitespace-nowrap">{ label }</span>
+			</a>
+		}
+	</li>
+}
+
+// Icon components
+templ dashboardIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+	</svg>
+}
+
+templ sessionsIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+	</svg>
+}
+
+templ settingsIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+	</svg>
+}
+
+templ docsIcon() {
+	<svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+	</svg>
+}
+
+// Mobile navigation item helper - uses unified isNavActive for consistency
+templ mobileNavItem(href, label, currentPath string, icon templ.Component) {
+	if isNavActive(href, currentPath) {
+		<a
+			href={ templ.SafeURL(href) }
+			class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg text-sage-600 dark:text-sage-400"
+			aria-current="page"
+		>
+			@icon
+			<span class="text-xs font-medium">{ label }</span>
+		</a>
+	} else {
+		<a
+			href={ templ.SafeURL(href) }
+			class="flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg text-gray-500 dark:text-gray-400 active:bg-gray-100 dark:active:bg-navy-800"
+		>
+			@icon
+			<span class="text-xs">{ label }</span>
+		</a>
+	}
+}
+
+// Mobile navigation icons (larger touch targets, filled when active)
+templ mobileHomeIcon() {
+	<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+	</svg>
+}
+
+templ mobileSessionsIcon() {
+	<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+	</svg>
+}
+
+templ mobileAddIcon() {
+	<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+	</svg>
+}
+
+templ mobileSettingsIcon() {
+	<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+	</svg>
+}
+
+templ mobileMoreIcon() {
+	<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>
+	</svg>
+}

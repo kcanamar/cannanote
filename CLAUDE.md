@@ -4,331 +4,318 @@
 
 The primary metric for success is reducing cannabis session logging to under 30 seconds on mobile devices. All features and infrastructure decisions must align with our privacy promises—kina'ole development where our actions match our values.
 
-## 🌱 GERMINATION CYCLE: Privacy Foundation
+## Architecture Principles
 
-**Status**: Our privacy promises exceed our technical implementation. This foundation must be established before other cultivation can begin.
+### Minimal Dependencies
+- Prefer custom implementations over third-party libraries
+- Each dependency must justify its inclusion
+- Lifetime project mentality: code that stands the test of time
 
-**Historical Context**: After performance optimization work (Alpine.js → vanilla JS, Tailwind v4 migration), we recognized that true privacy requires architectural changes, not just framework choices.
+### Hexagonal Architecture (Client + Server)
+Both frontend and backend follow hexagonal architecture:
+- **Core Domain** - Pure business logic, no external dependencies
+- **Ports** - Interfaces defining external needs
+- **Adapters** - Concrete implementations for external services
 
-### Data Encryption & Local-First
-- **Local Storage Primary** - Web: IndexedDB, Mobile: Drift as primary storage
-- **Encrypted Cloud Sync** - Sync only encrypted blobs and metadata (paid feature)
-- **Human-Controlled Keys** - Keys from human credentials, never server-side
-- **Data Export** - Complete portable data export
+This enables swapping implementations without changing business logic.
 
-### True Consent Management
-- **Granular Permissions** - Specific, revocable consent per data type
-- **Local-Only Default** - Cloud sync as explicit opt-in (premium feature)
-- **Transparency Dashboard** - Real-time view of data storage locations
-- **Complete Deletion** - Full data purging including backups
-- **Consent History** - Audit trail of permission changes
+### Local-First Data
+- Cannabis data never leaves the device unless user explicitly opts into paid sync
+- Browser is the distribution vehicle; app works offline indefinitely
+- Server only handles authentication and optional sync
 
-### Privacy Validation Through Beta
-- **Beta Launch as Privacy Test** - Real humans testing local-first architecture
-- **Automated Privacy Tests** - Verify encryption and access controls
-- **Data Flow Mapping** - Document all personal data paths
-- **Encryption Test Suite** - Comprehensive client-side crypto testing
-- **Cross-Platform Consistency** - Identical privacy on web and mobile
+---
 
-**Goal**: Technical delivery of "radical data transparency" promise validated by real cannabis community members.
+## 🌱 GERMINATION CYCLE: Offline-First Foundation
 
-## 🌿 SEEDLING CYCLE: PWA-First Beta Launch
+**Status**: Current focus. Building the local-first PWA infrastructure.
 
-**Strategic Decision**: PWA-first approach validates core experience and API design before Flutter investment, getting cannabis community feedback faster.
+### Client-Side Architecture
 
-**Business Model Foundation**: Local-first with optional premium sync establishes sustainable revenue while respecting human autonomy.
+#### Storage Layer (Ports & Adapters)
+```
+cmd/web/assets/js/
+  core/
+    domain/
+      session.js           # Domain entity definitions
+      strain.js
+    ports/
+      storage-port.js      # Storage interface contract
+      sync-port.js         # Sync interface contract (future)
+  adapters/
+    storage/
+      indexed-db-adapter.js  # Implements storage-port
+    sync/
+      rest-sync-adapter.js   # Implements sync-port (future)
+  application/
+    session-service.js     # Business logic, depends on ports
+```
 
-### Authentication Foundation
+#### Storage Port Contract
+```javascript
+// What any storage adapter must implement
+{
+  init: async () => {},
+  addSession: async (session) => {},
+  getSession: async (id) => {},
+  updateSession: async (id, updates) => {},
+  deleteSession: async (id) => {},
+  getAllSessions: async () => {},
+  getSessionsByStatus: async (status) => {},
+  getSessionsInRange: async (startTime, endTime) => {},
+  getPendingSessions: async () => {},
+  markSessionsSynced: async (ids) => {}
+}
+```
 
-#### Supabase Integration (Auth Only - No Cannabis Data)
-- **Email Signup Flow** - Email verification → profile creation → beta status
-- **Database Schema**:
-  ```sql
-  profiles (
-    id UUID REFERENCES auth.users(id),
-    email TEXT,
-    beta_joined_at TIMESTAMP,
-    subscription_tier TEXT DEFAULT 'beta_grandfathered',
-    beta_status TEXT DEFAULT 'waitlist', -- waitlist, invited, active
-    referral_code TEXT UNIQUE,
-    invited_at TIMESTAMP,
-    activated_at TIMESTAMP
-  )
-  ```
-- **Row Level Security** - Humans can only access their own profile data
-- **Beta Grandfathering** - Lifetime sync access for early community members
+#### IndexedDB Adapter
+- Custom implementation (~150 lines, zero dependencies)
+- Promise-based API
+- Schema versioning and migrations
+- Index-based querying
 
-#### Email System Setup (Resend + cannanote.org)
-- **Welcome Email** - Immediate signup confirmation with privacy commitment
-- **Beta Invitation** - Personal access link when spots available  
-- **Onboarding Sequence** - PWA installation and first session guidance
-- **Privacy-Focused Tone** - Cannabis wellness aligned, educational approach
+#### Data Schema
+```javascript
+sessions: {
+  id: uuid,
+  timestamp: number,
+  strain: string,
+  method: string,  // vape, smoke, edible, tincture, topical
+  amount: string,
+  effects: string[],
+  intensity: number,  // 1-10
+  duration: number,   // minutes
+  notes: string,
+  rating: number,     // 1-5
+  syncStatus: string  // local, pending, synced
+}
+```
 
-### PWA Foundation
+### Service Worker
+- Cache app shell for offline loading
+- Static asset caching (CSS, JS, fonts)
+- Network-first for API calls
+- Offline fallback page
 
-#### Progressive Web App Implementation
-- **Web App Manifest** - Home screen installation capability
-- **Service Worker** - Full offline functionality for cannabis sessions
-- **Install Prompts** - Native-like installation experience
-- **Offline-First Architecture** - All core features work without network
+### PWA Manifest Enhancement
+- `start_url: "/app"`
+- Proper icons for all sizes
+- `display: standalone`
+- Offline capability declaration
 
-#### Local Cannabis Data Storage
-- **IndexedDB Schema** - Complete cannabis session storage
-  ```javascript
-  sessions: {
-    id: uuid,
-    timestamp: datetime,
-    strain: { name, type, thc_percent, cbd_percent },
-    consumption: { method, amount, unit },
-    setting: { location_type, mood_before, social_context },
-    effects: { onset_minutes, duration_hours, intensity_1_10, feelings: [] },
-    notes: encrypted_string,
-    rating: 1_to_5,
-    privacy_level: local_only_or_sync_eligible
-  }
-  ```
-- **Client-Side Encryption** - All personal cannabis data encrypted before storage
-- **Data Export Tools** - Complete human data portability (CSV/JSON formats)
+---
 
-### Core Cannabis Experience
+## 🌿 SEEDLING CYCLE: Core Cannabis Experience
 
-#### 30-Second Session Logging
-- **Quick Entry Interface** - Touch-optimized for immediate post-consumption logging
-- **Strain Database** - Local searchable cannabis strain library
-- **Consumption Methods** - Vaping, smoking, edibles, tinctures, topicals
-- **Effects Tracking** - Standardized feelings taxonomy + personal notes
-- **Pattern Recognition** - Client-side analytics for personal insights
+### 30-Second Session Logging
+- **Quick entry form** - Touch-optimized, minimal taps
+- **Smart defaults** - Remember last strain, method
+- **Offline-first** - Works without network
+- **Immediate feedback** - Session saved confirmation
 
-#### Beta Community Management
-- **Waitlist Strategy** - Creates scarcity and quality control for early adoption
-- **Manual Invitation System** - Curated onboarding for better community experience
-- **Admin Dashboard** - Manage beta invitations, track community growth metrics
-- **Community Feedback Collection** - In-app feedback and usage pattern analysis
+### Session List & History
+- **Chronological view** - Recent sessions first
+- **Filter by strain** - Find patterns
+- **Filter by date range** - Weekly/monthly views
+- **Search notes** - Full-text search in IndexedDB
 
-### Growth Metrics (Seedling Health)
-- **PWA Install Rate** - Percentage of humans adding to home screen
-- **Session Logging Speed** - Time from app open to session saved (<30s target)
-- **Offline Usage** - Sessions logged without network connection
-- **Beta Community Satisfaction** - NPS and retention rates among early adopters
+### Data Export
+- **JSON export** - Complete data portability
+- **CSV export** - Spreadsheet compatible
+- **User-initiated** - Manual export button
+- **No server involvement** - Client-side generation
 
-## 🍃 VEGETATIVE CYCLE: Mobile App Development & API Maturation
+---
 
-**Transition Point**: After PWA beta validates core experience and API design, begin Flutter development informed by real human usage patterns.
+## 🍃 VEGETATIVE CYCLE: Sync Infrastructure
 
-### Flutter + Drift Implementation
-- **Native Mobile Experience** - iOS and Android apps with offline-first Drift database
-- **API Optimization** - Backend endpoints refined based on PWA beta feedback
-- **Cross-Platform Sync** - Local data synchronization between PWA and mobile
-- **Performance Optimization** - Sub-2-second startup, immediate session logging
+**Prerequisite**: Germination and Seedling cycles complete.
 
-### Essential Harm Reduction Features
-- **Dosage Calculator Service** - `core/application/dosage_service.go` with evidence-based calculations
-- **Session Timing System** - Built-in reminders and spacing recommendations
-- **Tolerance Break Suggestions** - Pattern-based recommendations for mindful usage
-- **Safety Guardrails** - Dosage warnings and consumption frequency alerts
-- **Educational Integration** - Contextual harm reduction information during logging
+### Paid Sync Feature
+- **Opt-in only** - Explicit user consent required
+- **NeonDB storage** - PostgreSQL with Row Level Security
+- **Simple REST sync** - POST pending sessions, receive merged state
+- **Conflict resolution** - Last-write-wins with timestamp comparison
 
-### Backend Services Expansion
-- **Mobile API Endpoints** - Designed for offline-sync patterns based on PWA learnings
-- **Authentication Flow** - Streamlined mobile auth with existing Supabase integration
-- **Data Synchronization** - Conflict resolution and delta sync capabilities
-- **Health Check Enhancement** - Mobile-specific connectivity and sync status monitoring
+### Sync Protocol
+```
+Client                           Server
+  |                                |
+  |-- POST /api/sessions/sync ---->|
+  |   { sessions: [...],           |
+  |     lastSyncTimestamp }        |
+  |                                |
+  |<-- { merged: [...],         ---|
+  |      serverTimestamp }         |
+  |                                |
+  |-- Mark synced locally          |
+```
 
-## 🌸 PRE-FLOWER CYCLE: Experience & Documentation Polish
+### Server-Side (Go)
+- **sqlc** for type-safe database access
+- **Sync endpoint** - `/api/sessions/sync`
+- **Conflict detection** - Compare timestamps
+- **User isolation** - RLS policies on all tables
 
-### Documentation Enhancement
-- **Root README Overhaul** - Quick-start guide reflecting PWA-first then mobile approach
-- **Architecture Diagram** - Visual representation of local-first hexagonal architecture
-- **Values Integration** - Cannabis wellness culture throughout technical documentation
-- **CONTRIBUTING.md Creation** - Community contribution guidelines emphasizing evidence-based development
-- **Mobile Development Guide** - Flutter development documentation informed by PWA experience
+---
 
-### Testing Foundation
-- **Domain Logic Coverage** - High test coverage for `core/domain/` and `core/application/`
-- **Mobile Integration Testing** - Flutter widget and integration test suites
-- **Auth Flow Testing** - Comprehensive authentication and authorization scenarios
-- **Database Migration Testing** - Supabase RLS and schema validation testing
-- **API Contract Testing** - Mobile-backend contract validation based on PWA API usage
+## 🌸 PRE-FLOWER CYCLE: Pattern Recognition
 
-### Core Features Expansion
-- **Pattern Recognition Engine** - Advanced consumption pattern analysis and insights
-- **Entry Enhancement** - Rich consumption method tracking and effects correlation
-- **Search and Filtering** - Efficient local search with optional cloud backup
-- **Data Export Enhancement** - Multiple format support for human data ownership
-- **Privacy Dashboard** - Granular privacy controls and data transparency
+### Client-Side Analytics
+- **Strain effectiveness** - Which strains work best for you
+- **Time-of-day patterns** - When do you consume
+- **Method preferences** - Consumption method trends
+- **Effect correlations** - What predicts good experiences
 
-## 💐 FLOWERING CYCLE: Intelligence & Environmental Integration
+### Visualization
+- **Simple charts** - Consumption frequency over time
+- **Effect heatmaps** - Common effects by strain
+- **Personal insights** - "Evening indicas improve your sleep"
 
-### Advanced Analytics (Local-First)
-- **Machine Learning Pipeline** - Local ML models for personalized insights
-- **Correlation Analysis** - Environmental factors and consumption outcome analysis
-- **Recommendation Engine** - Strain and dosage recommendations based on patterns
-- **Trend Visualization** - Charts and graphs for long-term pattern recognition
-- **Health Integration** - Optional integration with health tracking platforms
+---
 
-### Environmental Responsibility
-- **Carbon Footprint Integration** - Simple endpoint for consumption environmental impact
-- **Sustainable Cannabis Tracking** - Cultivation method and packaging impact awareness
-- **Environmental Education** - Content about regenerative cannabis practices
-- **Eco-Conscious Features** - Features that promote sustainable consumption practices
+## 💐 FLOWERING CYCLE: Mobile Application
 
-### Privacy-Optional Community Features
-- **Anonymous Insights Sharing** - Community pattern sharing without personal identification
-- **Research Participation** - Opt-in anonymous data contribution for cannabis research
-- **Educational Content Platform** - Peer-reviewed cannabis research integration
-- **Expert Content Curation** - Integration with cannabis researchers and medical professionals
+**Prerequisite**: PWA beta validates core experience and API design.
 
-## 🔥 HARVEST CYCLE: Platform Maturation & Scaling
+### Flutter + Drift
+- **iOS and Android** - Single codebase
+- **Drift database** - SQLite-based local storage
+- **Same sync protocol** - Reuse server endpoints
+- **Offline-first** - Same architecture as PWA
 
-### Advanced Technical Infrastructure
-- **Microservice Architecture** - Domain extraction for independent scaling
-- **GraphQL API** - Flexible query interface for advanced client applications
-- **Real-Time Features** - WebSocket integration for live synchronization
-- **Performance Optimization** - Advanced caching and rendering optimizations
-- **Monitoring & Observability** - Comprehensive application performance monitoring
+### Cross-Platform Sync
+- **PWA ↔ Mobile** - Seamless data sync
+- **Conflict resolution** - Same algorithm
+- **Subscription sharing** - One payment, all platforms
 
-### Platform Integration
-- **Health App Integration** - Apple Health and Google Fit data sharing
-- **Wearable Device Support** - Heart rate and activity data correlation
-- **Calendar Integration** - Lifestyle correlation with calendar events
-- **Third-Party APIs** - Integration with other wellness tracking platforms
-- **Dispensary Integrations** - Product information and availability APIs
+---
 
-### Enterprise & Research Capabilities
-- **Healthcare Provider Integration** - Secure data sharing with medical professionals
-- **Research Platform** - Anonymized aggregate data for scientific research
-- **Compliance Framework** - Legal compliance monitoring for medical cannabis patients
-- **Multi-Device Sync** - Seamless experience across multiple devices and platforms
-- **Family Sharing** - Secure sharing between trusted family members and caregivers
+## 🔥 HARVEST CYCLE: Advanced Features
 
-## 🏺 CURING CYCLE: Optimization & Community Scaling
+### Harm Reduction Tools
+- **Dosage guidance** - Evidence-based recommendations
+- **Tolerance tracking** - Break suggestions
+- **Session spacing** - Mindful consumption reminders
+- **Safety information** - Contextual education
 
-### Performance Refinement
-- **Advanced Caching Strategies** - Multi-layer caching for optimal performance
-- **Database Optimization** - Query optimization and indexing strategies
-- **CDN Implementation** - Global content delivery for educational resources
-- **Load Testing** - Community scale stress testing and optimization
+### Privacy Dashboard
+- **Data location transparency** - Where is your data
+- **Sync status** - What's local vs synced
+- **Export history** - When you exported
+- **Delete options** - Granular data removal
 
-### Community Platform Evolution
-- **Community Guidelines** - Cannabis culture aligned community standards
-- **Peer Support Systems** - Human-to-human wellness support networks
-- **Educational Content Curation** - Community-contributed harm reduction resources
-- **Research Collaboration** - Academic and medical research partnerships
-
-## Risk Mitigation Strategies
-
-### Technical Dependencies
-- **Supabase Migration Path** - Documented PostgreSQL self-hosting migration strategy
-- **Database Abstraction** - Maintain vendor-agnostic domain layer for database independence
-- **Mobile Platform Changes** - Flexible architecture to adapt to iOS/Android policy changes
-- **Network Dependency** - Full offline functionality as primary design constraint
-
-### Product-Market Fit
-- **Mobile vs Web Balance** - 80% of development decisions driven by mobile human experience
-- **Feature Complexity** - Prioritize "breath-like" simplicity over feature richness
-- **App Store Compliance** - "Wellness journaling" positioning to avoid cannabis-specific restrictions
-- **Privacy Regulations** - Proactive compliance with evolving privacy legislation
-
-### Business Sustainability
-- **Open Source Strategy** - Core functionality remains open with optional premium features
-- **Data Ownership** - Human data portability and ownership as competitive advantage
-- **Community Building** - Evidence-based community contributions over marketing-driven growth
-- **Values Alignment** - Consistent harm reduction and privacy focus in all decisions
-
-## Growth Metrics
-
-### Primary Metrics (Mobile-First Focus)
-- **Logging Time** - Average time from app open to session logged (target: <30 seconds)
-- **Offline Functionality** - Percentage of features available without network (target: >95%)
-- **Community Retention** - Monthly active humans with consistent logging behavior
-- **Data Quality** - Completeness and accuracy of human-entered consumption data
-
-### Secondary Metrics (Supporting Infrastructure)
-- **Sync Reliability** - Successful background synchronization rate
-- **App Performance** - Load times, battery usage, and crash rates
-- **Privacy Compliance** - Human privacy preference adherence rate
-- **Educational Impact** - Community engagement with harm reduction content
-
-### Long-Term Metrics (Platform Value)
-- **Pattern Recognition Accuracy** - Quality of personalized insights and recommendations
-- **Health Outcome Correlation** - Human-reported wellness improvements
-- **Community Contribution** - Anonymous research data contribution rate
-- **Environmental Impact** - Carbon footprint reduction through informed consumption
+---
 
 ## Implementation Principles
 
 ### Development Philosophy
-- **Evidence-Based Features** - All features backed by research or human data
-- **Privacy by Design** - Privacy considerations integrated at architecture level
-- **Harm Reduction First** - Human safety prioritized over engagement metrics
-- **Sustainable Technology** - Environmental impact considered in technical decisions
-- **Cannabis Culture Alignment** - Language and features reflect cannabis wellness values
+- **Evidence-based features** - Backed by research or user data
+- **Privacy by design** - Privacy at architecture level
+- **Harm reduction first** - Safety over engagement
+- **Cannabis culture alignment** - Language reflects community values
+
+### Code Standards
+- **Pure JavaScript** - No TypeScript, no transpilation
+- **Zero framework frontend** - Vanilla JS only
+- **Hexagonal architecture** - Ports and adapters pattern
+- **Minimal dependencies** - Justify every import
+
+### Templ Patterns
+
+**CRITICAL: Forwarding children in wrapper templates**
+
+When a templ component wraps another component, you MUST explicitly forward children:
+
+```templ
+// WRONG - children are lost, renders blank content
+templ Base(title string) {
+    @BaseWithAuth(title, "")
+}
+
+// CORRECT - children are forwarded to inner component
+templ Base(title string) {
+    @BaseWithAuth(title, "") {
+        { children... }
+    }
+}
+```
+
+Without `{ children... }` inside the wrapper call, any content passed to the outer component will not render. This causes blank pages with no errors.
 
 ### Quality Standards
-- **Test Coverage** - Minimum 85% coverage for domain logic and critical paths
-- **Performance Benchmarks** - Mobile app startup time <2 seconds, API response <500ms
-- **Accessibility Compliance** - Full screen reader support and keyboard navigation
-- **Security Standards** - Regular penetration testing and dependency security scanning
+- **Offline functionality** - 100% features work offline
+- **30-second logging** - Maximum time for session entry
+- **Sub-2-second startup** - App loads instantly
+- **Zero tracking** - No analytics, no telemetry
 
-## Security & Privacy Cultivation
+---
 
-### Germination Security (With Privacy Foundation)
-- **RLS Policy Audit** - Strengthen Row Level Security on all tables
-- **Human Isolation** - Zero cross-human data access capability
-- **Auth Hardening** - Rate limiting, email confirmation, CAPTCHA
-- **Service Key Restriction** - Server-side only access controls
-- **Transparency Documentation** - Human-facing privacy technical documentation
+## Risk Mitigation
 
-### Seedling Security (Beta Launch Security)
-- **Security Linting** - gosec with cannabis data sensitivity rules
-- **Dependency Scanning** - govulncheck and OSV Scanner
-- **PII Exposure Prevention** - Automated detection of data leaks
-- **Privacy-Safe CI/CD** - Pre-commit hooks for encryption validation
-- **Beta Privacy Auditing** - Real-world privacy validation with beta community
+### Technical
+- **Database abstraction** - Can swap NeonDB if needed
+- **Storage abstraction** - Can swap IndexedDB adapter
+- **No vendor lock-in** - All custom implementations
 
-### Vegetative Security (Mobile Security)
-- **Secret Management** - Infisical or Doppler for cannabis data classification
-- **Environment Isolation** - Production key separation
-- **Key Rotation** - Automated rotation without human disruption
-- **Configuration Transparency** - Human documentation of third-party sharing
-- **Mobile Security Standards** - Platform-specific security implementations
+### Business
+- **Open source core** - Premium features fund development
+- **Beta grandfathering** - Early supporters get lifetime access
+- **Data portability** - Users can always export and leave
 
-### Flowering Security (Runtime Protection)
-- **Privacy-Safe Monitoring** - Sentry with PII filtering
-- **Data Access Logging** - Audit trail without storing personal data
-- **Encryption Monitoring** - Alerts for unencrypted personal data
-- **Human Privacy Dashboard** - Real-time data handling visibility
-- **Privacy Incident Response** - Procedures aligned with harm reduction
+---
 
-### Harvest Security (Advanced Validation)
-- **Regular Privacy Audits** - Quarterly technical reviews
-- **Human Privacy Education** - In-app technical protection explanations
-- **Privacy Innovation** - Research emerging protection technologies
-- **Cannabis Community Advocacy** - Share learnings with cannabis tech community
-- **Values-Aligned Evolution** - Privacy enhancements supporting harm reduction
+## Open Discussion Items
 
-## Privacy Validation Metrics
+### Data Persistence & Browser "Clear Site Data" Problem
 
-- **Encryption Coverage** - 100% of personal consumption data encrypted
-- **Local-First Functionality** - 95%+ features available offline
-- **Human Data Control** - Complete export/deletion <24hr fulfillment
-- **Access Isolation** - Zero cross-human data access incidents
-- **Encryption Reliability** - 99.9%+ success rate for crypto operations
-- **Community Trust** - Human satisfaction with privacy transparency
-- **Beta Grandfathering Success** - Lifetime access retention and satisfaction rates
+**The Issue:**
+When users "clear site data" in browsers, IndexedDB gets wiped alongside cache storage. Users may think they're just clearing cached pages, but they lose their session history.
 
-## Historical Context & Decision Points
+**Potential Solution (to discuss):**
+Filesystem-based backup - user downloads a backup file to their system, can reimport later. This provides:
+- True data ownership (file lives on their device/cloud storage)
+- Protection against browser data clearing
+- Easy migration between browsers
+- Backup before PWA uninstall
 
-### Performance Optimization Era (Completed)
-- **Framework Migration** - Alpine.js → Vanilla JS for reliability and performance
-- **CSS Architecture** - Tailwind v3 → v4 with local build process
-- **Bundle Optimization** - 28KB → 3KB JavaScript bundle with minification
-- **Cache Strategy** - Static asset caching and CDN optimization
+**Questions to resolve:**
+- File format? (JSON is portable, encrypted JSON for privacy?)
+- Auto-prompt for backup before destructive actions?
+- Import/export UX flow?
+- How to detect "first launch after data loss" to prompt restore?
 
-### PWA-First Strategic Decision
-- **Rationale** - Faster community validation than waiting for Flutter development
-- **Local-First Commitment** - Cannabis data never leaves device unless explicitly paid for sync
-- **Beta Grandfathering** - Lifetime sync access rewards early community supporters
-- **Cannabis Culture Language** - Cultivation terminology aligns with our community values
+**Related to:** Data Export feature in Seedling Cycle
 
-This roadmap represents our evolution from technical optimization to community-focused cannabis wellness platform, maintaining privacy promises while building sustainable business model through optional premium features.
+---
+
+### Documentation Header Linking
+
+**The Need:**
+Add clickable anchor links to documentation headers for better:
+- Direct linking to specific sections in support conversations
+- Backlinks between related documentation
+- Shareable URLs that jump to exact content
+- Improved navigation for humans seeking specific answers
+
+**Implementation:**
+- Headers already have auto-generated IDs (via goldmark parser)
+- Need to add visible anchor links (hover or always-visible)
+- Consider copy-to-clipboard functionality for easy sharing
+- Update docs CSS/JS to support anchor link styling
+
+**Related to:** Documentation system, support workflow
+
+---
+
+## Metrics
+
+### Primary (User Experience)
+- **Logging time** - Target: <30 seconds
+- **Offline availability** - Target: 100%
+- **App startup** - Target: <2 seconds
+
+### Secondary (Business)
+- **PWA installs** - Home screen additions
+- **Beta retention** - Monthly active users
+- **Sync conversion** - Free → paid upgrades

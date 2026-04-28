@@ -215,5 +215,3 @@ layer stacking.
 1. Use `fix:` for any broken functionality
 2. Use `chore:` for dependency updates and cleanup
 3. Use `refactor:` when improving code without changing behavior
-
-This convention ensures clear communication about all changes to the CannaNote project, whether they're technical improvements, brand development, or content updates.

@@ -21,4 +21,17 @@ var (
 	// Role errors
 	ErrRoleNotFound        = errors.New("role not found")
 	ErrInvalidRole         = errors.New("invalid role")
+
+	// Session errors
+	ErrInvalidSession      = errors.New("invalid session data")
+	ErrSessionNotFound     = errors.New("session not found")
+	ErrSessionCompleted    = errors.New("session already completed")
+
+	// Check-in errors
+	ErrInvalidCheckIn      = errors.New("invalid check-in data")
+	ErrCheckInNotAllowed   = errors.New("check-ins not allowed for this session")
+
+	// Product errors
+	ErrInvalidProduct      = errors.New("invalid product data")
+	ErrProductNotFound     = errors.New("product not found")
 )

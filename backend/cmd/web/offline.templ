@@ -1,0 +1,186 @@
+package web
+
+// Offline page shown when network is unavailable
+// Uses inline styles to work even if CSS isn't cached
+templ Offline() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<title>Offline - CannaNote</title>
+			<meta name="theme-color" content="#1a1f36"/>
+			<style>
+				* { margin: 0; padding: 0; box-sizing: border-box; }
+				body {
+					font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+					background: #1a1f36;
+					color: #e5e7eb;
+					min-height: 100vh;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 1.5rem;
+				}
+				.container {
+					text-align: center;
+					max-width: 480px;
+				}
+				.icon {
+					width: 56px;
+					height: 56px;
+					margin: 0 auto 1.25rem;
+					opacity: 0.7;
+				}
+				h1 {
+					font-size: 1.5rem;
+					font-weight: 600;
+					margin-bottom: 0.5rem;
+					color: #fff;
+				}
+				.subtitle {
+					color: #9ca3af;
+					line-height: 1.5;
+					margin-bottom: 1.5rem;
+					font-size: 1rem;
+				}
+				.card {
+					background: rgba(255,255,255,0.05);
+					border-radius: 12px;
+					padding: 1.25rem;
+					margin-bottom: 1.25rem;
+					text-align: left;
+				}
+				.card-title {
+					font-size: 0.875rem;
+					font-weight: 600;
+					color: #6ee7b7;
+					margin-bottom: 0.5rem;
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+				}
+				.card-title svg {
+					width: 16px;
+					height: 16px;
+				}
+				.card p {
+					font-size: 0.875rem;
+					color: #d1d5db;
+					line-height: 1.5;
+				}
+				.tip-list {
+					list-style: none;
+					margin-top: 0.75rem;
+				}
+				.tip-list li {
+					font-size: 0.8125rem;
+					color: #9ca3af;
+					padding: 0.375rem 0;
+					padding-left: 1.25rem;
+					position: relative;
+				}
+				.tip-list li::before {
+					content: "→";
+					position: absolute;
+					left: 0;
+					color: #6ee7b7;
+				}
+				.actions {
+					display: flex;
+					gap: 0.75rem;
+					justify-content: center;
+					flex-wrap: wrap;
+					margin-top: 1.5rem;
+				}
+				button, .btn {
+					padding: 0.75rem 1.25rem;
+					background: #4b5563;
+					color: #fff;
+					border: none;
+					border-radius: 8px;
+					cursor: pointer;
+					font-size: 0.9375rem;
+					text-decoration: none;
+					display: inline-block;
+				}
+				button:hover, .btn:hover {
+					background: #6b7280;
+				}
+				.btn-primary {
+					background: #059669;
+				}
+				.btn-primary:hover {
+					background: #047857;
+				}
+				.divider {
+					height: 1px;
+					background: rgba(255,255,255,0.1);
+					margin: 1.5rem 0;
+				}
+				.footer-note {
+					font-size: 0.75rem;
+					color: #6b7280;
+					margin-top: 1.5rem;
+				}
+			</style>
+		</head>
+		<body>
+			<div class="container">
+				<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a5 5 0 01-1.414-7.072m0 0L9.879 9.879"/>
+				</svg>
+
+				<h1>You're offline</h1>
+				<p class="subtitle">
+					The page you requested isn't saved on your device yet.
+				</p>
+
+				<div class="card">
+					<div class="card-title">
+						<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						Your data is safe
+					</div>
+					<p>
+						CannaNote stores your sessions locally on your device. Your journal entries are right where you left them.
+					</p>
+				</div>
+
+				<div class="card">
+					<div class="card-title">
+						<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						How offline mode works
+					</div>
+					<p>
+						Pages you've visited while online are automatically saved for offline access. To save a page:
+					</p>
+					<ul class="tip-list">
+						<li>Visit it once while connected to the internet</li>
+						<li>It's now available offline automatically</li>
+						<li>Your app dashboard is always saved first</li>
+					</ul>
+				</div>
+
+				<div class="actions">
+					<button onclick="location.reload()">
+						Try again
+					</button>
+					<a href="/app" class="btn btn-primary">
+						Go to your journal
+					</a>
+				</div>
+
+				<div class="divider"></div>
+
+				<p class="footer-note">
+					Want to learn more about managing your data offline?<br/>
+					Visit <strong>/docs/offline</strong> when you're back online.
+				</p>
+			</div>
+		</body>
+	</html>
+}

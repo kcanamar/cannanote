@@ -1,26 +1,141 @@
-# Simple Makefile for a Go project
+# CannaNote Backend Makefile
+# Development-focused commands for local workflow
 
-# Build the application
-all: build
+# ==============================================================================
+# VERSION INJECTION
+# ==============================================================================
 
+# Build timestamp for local development (changes every build)
+BUILD_TIME := $(shell date +%Y%m%d%H%M%S)
+
+# Git commit hash for production (changes only when code changes)
+GIT_HASH := $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+
+# Full git hash for Fly.io deployments
+GIT_HASH_FULL := $(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
+
+# Version package path for ldflags injection
+VERSION_PKG := backend/internal/version
+
+# ldflags for local development (uses timestamp)
+LDFLAGS_DEV := -X $(VERSION_PKG).BuildHash=$(BUILD_TIME) \
+               -X $(VERSION_PKG).BuildTime=$(BUILD_TIME) \
+               -X $(VERSION_PKG).Environment=development
+
+# ldflags for production (uses git hash)
+LDFLAGS_PROD := -X $(VERSION_PKG).BuildHash=$(GIT_HASH) \
+                -X $(VERSION_PKG).BuildTime=$(BUILD_TIME) \
+                -X $(VERSION_PKG).Environment=production
+
+# ==============================================================================
+# DEVELOPMENT COMMANDS
+# ==============================================================================
+
+# Primary development command - build assets and start server with hot reload
+dev:
+	@echo "🌱 Starting CannaNote development environment..."
+	@$(MAKE) dev-setup dev-build
+	@echo "🚀 Starting server with hot reload..."
+	@if command -v air > /dev/null; then \
+	    air; \
+	else \
+	    read -p "Go's 'air' is not installed. Install it? [Y/n] " choice; \
+	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
+	        go install github.com/air-verse/air@latest; \
+	        air; \
+	    else \
+	        echo "❌ Cannot run dev mode without air. Exiting..."; \
+	        exit 1; \
+	    fi; \
+	fi
+
+# Install development dependencies
+dev-setup:
+	@echo "Installing development dependencies..."
+	@command -v air > /dev/null || go install github.com/air-verse/air@latest
+	@command -v templ > /dev/null || go install github.com/a-h/templ/cmd/templ@latest
+	@command -v golangci-lint > /dev/null || echo "⚠️  Consider installing golangci-lint for linting"
+	@command -v govulncheck > /dev/null || echo "⚠️  Consider installing govulncheck: go install golang.org/x/vuln/cmd/govulncheck@latest"
+	@command -v npx > /dev/null || echo "⚠️  npm not found - JS minification will be skipped"
+	@echo "Development setup complete"
+
+# Build all development assets (CSS, JS, templates)
+dev-build:
+	@echo "Building CSS..."
+	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ"
+	@echo "Generating templates..."
+	@templ generate
+	@echo "Assets built successfully"
+
+# Run server without hot reload (with version injection)
+run:
+	@echo "Starting server with version: $(BUILD_TIME)..."
+	@go run -ldflags "$(LDFLAGS_DEV)" cmd/api/main.go
+
+# Watch CSS for changes (run in separate terminal)
+css-watch:
+	@echo "👀 Watching CSS for changes..."
+	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --watch
+
+# Run tests
+test:
+	@echo "Running tests..."
+	@go test ./tests -v
+
+# Run tests with coverage
+test-coverage:
+	@echo "Running tests with coverage..."
+	@go test ./tests -v -cover -coverprofile=coverage.out
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: coverage.html"
+
+# Lint the code
+lint:
+	@echo "🔍 Linting code..."
+	@golangci-lint run || echo "⚠️  Install golangci-lint for better linting"
+
+# Security scan
+security:
+	@echo "Running security scan..."
+	@govulncheck ./... || echo "⚠️  Install govulncheck: go install golang.org/x/vuln/cmd/govulncheck@latest"
+
+# Clean build artifacts
+clean:
+	@echo "Cleaning build artifacts..."
+	@rm -f main
+	@rm -f coverage.out coverage.html
+	@echo "Cleaned"
+
+# ==============================================================================
+# PRODUCTION BUILD
+# ==============================================================================
+
+# Build for production (local - uses timestamp for cache busting)
 build:
-	@echo "Building..."
+	@echo "Building for production..."
+	@echo "  Version: $(BUILD_TIME) (timestamp)"
+	@echo "  Git: $(GIT_HASH)"
 	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
 	@echo "Minifying JavaScript..."
-	@if command -v npx > /dev/null && npx terser --version > /dev/null 2>&1; then \
-		npx terser cmd/web/assets/js/app.js -o cmd/web/assets/js/app.min.js -c -m; \
+	@if command -v npx > /dev/null; then \
+		npx --yes terser cmd/web/assets/js/app.js -o cmd/web/assets/js/app.min.js -c -m; \
 	else \
-		echo "terser not available, copying unminified JS"; \
+		echo "npx not available, copying unminified JS"; \
 		cp cmd/web/assets/js/app.js cmd/web/assets/js/app.min.js; \
 	fi
 	@templ generate
-	@go build -o main cmd/api/main.go
+	@echo "Compiling binary with version injection..."
+	@go build -ldflags "$(LDFLAGS_DEV)" -o main cmd/api/main.go
+	@echo "Production build complete (version: $(BUILD_TIME))"
 
-# Run the application
-run:
-	@go run cmd/api/main.go
+# Full pre-deploy checks
+pre-deploy: clean lint security test build
+	@echo "All pre-deploy checks passed"
 
-# Create DB container
+# ==============================================================================
+# DOCKER COMMANDS (if needed for local PostgreSQL)
+# ==============================================================================
+
 docker-run:
 	@if docker compose up 2>/dev/null; then \
 		: ; \
@@ -29,7 +144,6 @@ docker-run:
 		docker-compose up; \
 	fi
 
-# Shutdown DB container
 docker-down:
 	@if docker compose down 2>/dev/null; then \
 		: ; \
@@ -38,92 +152,32 @@ docker-down:
 		docker-compose down; \
 	fi
 
-# Build CSS
-css:
-	@echo "Building CSS..."
-	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ"
+# ==============================================================================
+# FLY.IO DEPLOYMENT (Production - NeonDB + Resend)
+# ==============================================================================
 
-# Build CSS for production (minified)
-css-prod:
-	@echo "Building production CSS..."
-	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --minify
-
-# Watch CSS for changes
-css-watch:
-	@echo "Watching CSS..."
-	@./tailwindcss -i ./cmd/web/assets/css/input.css -o ./cmd/web/assets/css/output.css --content "./cmd/**/*.templ" --watch
-
-# Test the application
-test:
-	@echo "Testing..."
-	@go test ./tests -v
-
-# Clean the binary
-clean:
-	@echo "Cleaning..."
-	@rm -f main
-
-# Live Reload
-watch:
-	@if command -v air > /dev/null; then \
-	    air; \
-	    echo "Watching...";\
-	else \
-	    read -p "Go's 'air' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
-	    if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
-	        go install github.com/air-verse/air@latest; \
-	        air; \
-	        echo "Watching...";\
-	    else \
-	        echo "You chose not to install air. Exiting..."; \
-	        exit 1; \
-	    fi; \
-	fi
-
-# Development with hot reload
-dev: watch
-
-# Lint the code
-lint:
-	@echo "Linting..."
-	@golangci-lint run || echo "Install golangci-lint for better linting"
-
-# Security scan
-security:
-	@echo "Security scanning..."
-	@govulncheck ./... || echo "Install govulncheck: go install golang.org/x/vuln/cmd/govulncheck@latest"
-
-# Full pre-deploy checks
-pre-deploy: clean lint security test build
-	@echo "All pre-deploy checks passed"
-
-# Fly.io deployment commands
 fly-auth:
 	@echo "Checking Fly.io authentication..."
-	@flyctl auth whoami || (echo "ERROR: Please run: flyctl auth login" && exit 1)
+	@flyctl auth whoami || (echo "❌ Please run: flyctl auth login" && exit 1)
 
 fly-secrets:
 	@echo "Setting up Fly.io secrets..."
-	@echo "Checking .env file exists..."
-	@test -f .env || (echo "ERROR: .env file not found!" && exit 1)
-	@echo "Setting database configuration..."
+	@test -f .env || (echo "❌ .env file not found!" && exit 1)
+	@echo "Reading environment variables..."
 	@DB_HOST=$$(grep '^DB_HOST=' .env | cut -d'=' -f2-); \
 	 DB_PORT=$$(grep '^DB_PORT=' .env | cut -d'=' -f2-); \
 	 DB_DATABASE=$$(grep '^DB_DATABASE=' .env | cut -d'=' -f2-); \
 	 DB_USERNAME=$$(grep '^DB_USERNAME=' .env | cut -d'=' -f2-); \
 	 DB_PASSWORD=$$(grep '^DB_PASSWORD=' .env | cut -d'=' -f2-); \
 	 DB_SCHEMA=$$(grep '^DB_SCHEMA=' .env | cut -d'=' -f2-); \
-	 SUPABASE_URL=$$(grep '^SUPABASE_URL=' .env | cut -d'=' -f2-); \
-	 SUPABASE_ANON_KEY=$$(grep '^SUPABASE_ANON_KEY=' .env | cut -d'=' -f2-); \
-	 SUPABASE_SECRET_KEY=$$(grep '^SUPABASE_SECRET_KEY=' .env | cut -d'=' -f2-); \
 	 APP_URL=$$(grep '^APP_URL=' .env | cut -d'=' -f2-); \
 	 RESEND_API_KEY=$$(grep '^RESEND_API_KEY=' .env | cut -d'=' -f2-); \
-	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$SUPABASE_URL" ] || [ -z "$$SUPABASE_ANON_KEY" ] || [ -z "$$SUPABASE_SECRET_KEY" ] || [ -z "$$APP_URL" ] || [ -z "$$RESEND_API_KEY" ]; then \
-	   echo "ERROR: Missing required environment variables in .env file!"; \
-	   echo "Required: DB_PASSWORD, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SECRET_KEY, APP_URL, RESEND_API_KEY"; \
+	 if [ -z "$$DB_PASSWORD" ] || [ -z "$$APP_URL" ] || [ -z "$$RESEND_API_KEY" ]; then \
+	   echo "❌ Missing required environment variables!"; \
+	   echo "Required: DB_PASSWORD, APP_URL, RESEND_API_KEY"; \
 	   exit 1; \
 	 fi; \
-	 echo "Setting secrets..."; \
+	 echo "Setting secrets on Fly.io..."; \
 	 flyctl secrets set \
 	   "DB_HOST=$$DB_HOST" \
 	   "DB_PORT=$$DB_PORT" \
@@ -131,43 +185,45 @@ fly-secrets:
 	   "DB_USERNAME=$$DB_USERNAME" \
 	   "DB_PASSWORD=$$DB_PASSWORD" \
 	   "DB_SCHEMA=$$DB_SCHEMA" \
-	   "SUPABASE_URL=$$SUPABASE_URL" \
-	   "SUPABASE_ANON_KEY=$$SUPABASE_ANON_KEY" \
-	   "SUPABASE_SECRET_KEY=$$SUPABASE_SECRET_KEY" \
 	   "APP_ENV=production" \
 	   "GIN_MODE=release" \
 	   "DEBUG=false" \
 	   "APP_URL=$$APP_URL" \
 	   "RESEND_API_KEY=$$RESEND_API_KEY"
-	@echo "All secrets configured successfully"
+	@echo "All secrets configured"
 
 fly-secrets-verify:
-	@echo "Verifying secrets are set..."
-	@flyctl secrets list | grep -q "DB_PASSWORD" || (echo "ERROR: DB_PASSWORD not set!" && exit 1)
-	@flyctl secrets list | grep -q "SUPABASE_URL" || (echo "ERROR: SUPABASE_URL not set!" && exit 1)
-	@flyctl secrets list | grep -q "SUPABASE_ANON_KEY" || (echo "ERROR: SUPABASE_ANON_KEY not set!" && exit 1)
-	@flyctl secrets list | grep -q "SUPABASE_SECRET_KEY" || (echo "ERROR: SUPABASE_SECRET_KEY not set!" && exit 1)
-	@flyctl secrets list | grep -q "APP_ENV" || (echo "ERROR: APP_ENV not set!" && exit 1)
-	@flyctl secrets list | grep -q "APP_URL" || (echo "ERROR: APP_URL not set!" && exit 1)
-	@echo "All required secrets are set"
+	@echo "Verifying secrets..."
+	@flyctl secrets list | grep -q "DB_PASSWORD" || (echo "❌ DB_PASSWORD not set!" && exit 1)
+	@flyctl secrets list | grep -q "APP_ENV" || (echo "❌ APP_ENV not set!" && exit 1)
+	@flyctl secrets list | grep -q "APP_URL" || (echo "❌ APP_URL not set!" && exit 1)
+	@flyctl secrets list | grep -q "RESEND_API_KEY" || (echo "❌ RESEND_API_KEY not set!" && exit 1)
+	@echo "All required secrets verified"
 
 fly-deploy:
 	@echo "Deploying to Fly.io..."
-	@echo "Using Fly.io remote builder (no local Docker needed)..."
-	@echo "Deploying from project root for monorepo build context..."
-	@cd .. && flyctl deploy . --config backend/fly.toml --dockerfile backend/Dockerfile --remote-only -a cannanote-backend
-	@echo "Deployment complete"
+	@echo "  Git hash: $(GIT_HASH_FULL)"
+	@echo "  Short hash: $(GIT_HASH)"
+	@echo "Using Fly.io remote builder with version injection..."
+	@cd .. && flyctl deploy . \
+		--config backend/fly.toml \
+		--dockerfile backend/Dockerfile \
+		--build-arg GIT_HASH=$(GIT_HASH) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) \
+		--remote-only \
+		-a cannanote-backend
+	@echo "Deployment complete (version: $(GIT_HASH))"
 
 fly-status:
 	@echo "Checking deployment status..."
 	@flyctl status
-	@echo "\nApplication URLs:"
+	@echo "\n  Application URLs:"
 	@flyctl info
-	@echo "\nHealth check:"
-	@curl -s https://cannanote-backend.fly.dev/health | jq . || echo "Health check endpoint not ready yet"
+	@echo "\n  Health check:"
+	@curl -s https://cannanote-backend.fly.dev/health | jq . || echo "  Health check not ready yet"
 
 fly-logs:
-	@echo "Showing recent logs..."
+	@echo "Recent logs:"
 	@flyctl logs
 
 fly-ssh:
@@ -183,9 +239,9 @@ fly-stop:
 	@flyctl scale count 0
 
 fly-destroy:
-	@echo "Destroying machines (WARNING: This will delete data)..."
+	@echo "WARNING: Destroying machines (data will be deleted)..."
 	@flyctl machines list
-	@read -p "Are you sure? Type 'yes' to continue: " confirm; \
+	@read -p "Type 'yes' to continue: " confirm; \
 	if [ "$$confirm" = "yes" ]; then \
 		flyctl machines destroy --force; \
 	else \
@@ -195,18 +251,18 @@ fly-destroy:
 # Complete deployment pipeline
 deploy: fly-auth pre-deploy fly-secrets fly-secrets-verify fly-deploy fly-status
 	@echo "Deployment pipeline complete"
-	@echo "Your app is live at: https://cannanote-backend.fly.dev"
-	@echo "Health check: https://cannanote-backend.fly.dev/health"
+	@echo "Live at: https://cannanote-backend.fly.dev"
+	@echo "Health: https://cannanote-backend.fly.dev/health"
 
-# Quick deploy (skip checks - use with caution)
+# Quick deploy (skip pre-deploy checks)
 deploy-fast: fly-auth fly-secrets fly-secrets-verify fly-deploy fly-status
-	@echo "Fast deployment complete"
+	@echo "⚡ Fast deployment complete"
 
-# Rollback deployment
+# Rollback to previous version
 rollback:
 	@echo "Rolling back deployment..."
 	@flyctl releases list
 	@read -p "Enter release version to rollback to: " version; \
 	flyctl releases rollback $$version
 
-.PHONY: all build run css css-prod css-watch test clean watch dev lint security pre-deploy fly-auth fly-secrets fly-secrets-verify fly-deploy fly-status fly-logs fly-ssh fly-machines fly-stop fly-destroy deploy deploy-fast rollback
+.PHONY: dev dev-setup dev-build run css-watch test test-coverage lint security clean build pre-deploy docker-run docker-down fly-auth fly-secrets fly-secrets-verify fly-deploy fly-status fly-logs fly-ssh fly-machines fly-stop fly-destroy deploy deploy-fast rollback

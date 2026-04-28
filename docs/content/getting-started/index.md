@@ -35,12 +35,28 @@ CannaNote is a privacy-first cannabis consumption tracker that helps you:
 
 We're currently in private beta. You'll receive an email when your access is ready. Beta invites are sent weekly.
 
-### Step 3: Download the App
+### Step 3: Install the App
 
-Once you receive your invitation:
+Once you receive your invitation and activate your account, you can install CannaNote as an app on your device:
 
-1. **Mobile users**: Download from the App Store or Google Play
-2. **Web users**: Access directly at [app.cannanote.com](https://app.cannanote.com)
+**From the App (Recommended)**
+
+1. Go to **Settings** in the CannaNote app
+2. Look for the "Install App" section at the top
+3. Tap "Install CannaNote" and follow the prompts
+
+**Manual Installation**
+
+- **iOS Safari**: Tap the Share button (square with arrow), then "Add to Home Screen"
+- **Android Chrome**: Tap the menu (three dots), then "Add to Home Screen" or "Install app"
+- **Desktop Chrome/Edge**: Click the install icon in the address bar, or go to Settings > Install CannaNote
+
+**Why Install?**
+
+- Launches instantly from your home screen
+- Works offline - no internet required
+- Full-screen experience without browser UI
+- Faster performance
 
 ### Step 4: Create Your Account
 

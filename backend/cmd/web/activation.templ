@@ -1,0 +1,309 @@
+package web
+
+// ActivationError displays an error message for failed activation attempts
+templ ActivationError(message string) {
+	@Base("Activation Error - CannaNote", "/activate") {
+		<div class="min-h-screen flex items-center justify-center px-4">
+			<div class="max-w-md w-full">
+				<div class="text-center mb-8">
+					<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">Activation Issue</h1>
+					<p class="text-gray-600 dark:text-gray-400">We couldn't activate your account</p>
+				</div>
+
+				<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+					<div class="flex items-start">
+						<svg class="w-6 h-6 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<div>
+							<h3 class="text-red-800 dark:text-red-300 font-semibold">{ message }</h3>
+							<p class="text-red-700 dark:text-red-400 text-sm mt-2">
+								If you continue to have issues, please contact us at support@cannanote.org
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-6 text-center">
+					<a href="/" class="text-sage-600 dark:text-sage-400 hover:underline">
+						Return to homepage
+					</a>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// Onboarding displays the password setup page for newly verified users
+templ Onboarding(verified bool, email string, resetToken string) {
+	@Base("Complete Your Account - CannaNote", "/onboarding") {
+		<div class="min-h-screen flex items-center justify-center px-4 py-12">
+			<div class="max-w-md w-full">
+				if verified {
+					<!-- Success state - email verified -->
+					<div class="text-center mb-8">
+						<div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+							<svg class="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+							</svg>
+						</div>
+						<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">Email Verified!</h1>
+						<p class="text-gray-600 dark:text-gray-400">
+							Welcome to CannaNote, { email }
+						</p>
+					</div>
+
+					<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 shadow-sm">
+						<h2 class="text-xl font-semibold text-navy-900 dark:text-white mb-4">Set Your Password</h2>
+						<p class="text-gray-600 dark:text-gray-400 text-sm mb-6">
+							Create a secure password to complete your account setup.
+						</p>
+
+						if resetToken != "" {
+							<form action="/auth/reset-password" method="POST" class="space-y-4">
+								<input type="hidden" name="token" value={ resetToken }/>
+
+								<div>
+									<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+										Password
+									</label>
+									<div class="relative">
+										<input
+											type="password"
+											id="password"
+											name="password"
+											required
+											minlength="8"
+											autocomplete="new-password"
+											class="w-full px-4 py-2 pr-12 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+											placeholder="Enter a secure password"
+										/>
+										<button
+											type="button"
+											onclick="togglePasswordVisibility('password', 'password-icon')"
+											class="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+											aria-label="Toggle password visibility"
+										>
+											<svg id="password-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+											</svg>
+										</button>
+									</div>
+									<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Minimum 8 characters</p>
+								</div>
+
+								<div>
+									<label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+										Confirm Password
+									</label>
+									<div class="relative">
+										<input
+											type="password"
+											id="confirm_password"
+											name="confirm_password"
+											required
+											minlength="8"
+											autocomplete="new-password"
+											class="w-full px-4 py-2 pr-12 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+											placeholder="Confirm your password"
+										/>
+										<button
+											type="button"
+											onclick="togglePasswordVisibility('confirm_password', 'confirm-password-icon')"
+											class="absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+											aria-label="Toggle password visibility"
+										>
+											<svg id="confirm-password-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+											</svg>
+										</button>
+									</div>
+								</div>
+
+								<button
+									type="submit"
+									class="w-full py-3 px-4 bg-sage-600 hover:bg-sage-700 text-white font-semibold rounded-lg transition-colors"
+								>
+									Complete Setup
+								</button>
+							</form>
+							<script>
+								function togglePasswordVisibility(inputId, iconId) {
+									const input = document.getElementById(inputId);
+									const icon = document.getElementById(iconId);
+									if (input.type === 'password') {
+										input.type = 'text';
+										icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>';
+									} else {
+										input.type = 'password';
+										icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+									}
+								}
+							</script>
+						} else {
+							<!-- No reset token - show manual password reset option -->
+							<div class="text-center">
+								<p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
+									To set your password, we'll send you a password reset link.
+								</p>
+								<a
+									href={ templ.SafeURL("/auth/request-password-reset?email=" + email) }
+									class="inline-block py-3 px-6 bg-sage-600 hover:bg-sage-700 text-white font-semibold rounded-lg transition-colors"
+								>
+									Send Password Reset Email
+								</a>
+							</div>
+						}
+					</div>
+
+					<div class="mt-6 p-4 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg">
+						<h3 class="font-semibold text-sage-800 dark:text-sage-300 mb-2">Beta Perks</h3>
+						<ul class="text-sm text-sage-700 dark:text-sage-400 space-y-1">
+							<li>Lifetime access to premium sync features</li>
+							<li>Direct input on feature development</li>
+							<li>Priority support</li>
+						</ul>
+					</div>
+				} else {
+					<!-- Not verified state -->
+					<div class="text-center mb-8">
+						<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">Welcome to CannaNote</h1>
+						<p class="text-gray-600 dark:text-gray-400">Complete your account setup</p>
+					</div>
+
+					<div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+						<div class="flex items-start">
+							<svg class="w-6 h-6 text-amber-600 dark:text-amber-400 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+							</svg>
+							<div>
+								<h3 class="text-amber-800 dark:text-amber-300 font-semibold">Email Not Verified</h3>
+								<p class="text-amber-700 dark:text-amber-400 text-sm mt-2">
+									Please check your inbox for the activation email and click the activation link to continue.
+								</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="mt-6 text-center">
+						<a href="/" class="text-sage-600 dark:text-sage-400 hover:underline">
+							Return to homepage
+						</a>
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
+
+// PasswordResetError displays an error during password reset
+templ PasswordResetError(message string) {
+	@Base("Password Reset Error - CannaNote", "/auth/reset-password") {
+		<div class="min-h-screen flex items-center justify-center px-4">
+			<div class="max-w-md w-full">
+				<div class="text-center mb-8">
+					<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">Password Reset Issue</h1>
+				</div>
+
+				<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+					<div class="flex items-start">
+						<svg class="w-6 h-6 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<div>
+							<h3 class="text-red-800 dark:text-red-300 font-semibold">{ message }</h3>
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-6 text-center">
+					<a href="/" class="text-sage-600 dark:text-sage-400 hover:underline">
+						Return to homepage
+					</a>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+// PasswordResetSuccessWithRedirect displays success and auto-redirects to /app
+// Uses client-side redirect to ensure session cookies are processed first
+templ PasswordResetSuccessWithRedirect() {
+	@Base("Account Ready - CannaNote", "/auth/reset-password") {
+		<div class="min-h-screen flex items-center justify-center px-4">
+			<div class="max-w-md w-full text-center">
+				<div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+					<svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+					</svg>
+				</div>
+				<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">You're All Set!</h1>
+				<p class="text-gray-600 dark:text-gray-400 mb-6">
+					Taking you to your dashboard...
+				</p>
+				<div class="animate-pulse">
+					<div class="w-8 h-8 border-4 border-sage-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+				</div>
+				<noscript>
+					<p class="mt-4">
+						<a href="/app" class="text-sage-600 dark:text-sage-400 hover:underline">
+							Click here if you're not redirected
+						</a>
+					</p>
+				</noscript>
+			</div>
+		</div>
+		<script>
+			// Small delay to ensure cookies are processed
+			setTimeout(function() {
+				window.location.href = '/app';
+			}, 500);
+		</script>
+	}
+}
+
+// PasswordResetSuccess displays success after password is set
+templ PasswordResetSuccess() {
+	@Base("Account Ready - CannaNote", "/auth/reset-password") {
+		<div class="min-h-screen flex items-center justify-center px-4">
+			<div class="max-w-md w-full">
+				<div class="text-center mb-8">
+					<div class="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+						<svg class="w-10 h-10 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+						</svg>
+					</div>
+					<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">You're All Set!</h1>
+					<p class="text-gray-600 dark:text-gray-400">
+						Your password has been set and your account is ready.
+					</p>
+				</div>
+
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 shadow-sm text-center">
+					<h2 class="text-xl font-semibold text-navy-900 dark:text-white mb-4">Welcome to the Beta!</h2>
+					<p class="text-gray-600 dark:text-gray-400 text-sm mb-6">
+						You now have full access to CannaNote. Start tracking your cannabis wellness journey.
+					</p>
+
+					<a
+						href="/app"
+						class="inline-block w-full py-3 px-4 bg-sage-600 hover:bg-sage-700 text-white font-semibold rounded-lg transition-colors text-center"
+					>
+						Go to Dashboard
+					</a>
+				</div>
+
+				<div class="mt-6 p-4 bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg">
+					<h3 class="font-semibold text-sage-800 dark:text-sage-300 mb-2">What's Next?</h3>
+					<ul class="text-sm text-sage-700 dark:text-sage-400 space-y-1">
+						<li>Log your first cannabis session</li>
+						<li>Explore your personal insights</li>
+						<li>Your data stays local on your device</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	}
+}

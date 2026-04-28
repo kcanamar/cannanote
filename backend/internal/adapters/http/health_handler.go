@@ -6,407 +6,348 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"sync"
 	"time"
+
+	"backend/internal/adapters/external"
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	_ "github.com/joho/godotenv/autoload"
 )
+
+var healthLog = logging.With("health")
 
 type HealthResponse struct {
-	Status     string                    `json:"status"`
-	Timestamp  string                    `json:"timestamp"`
-	Database   DatabaseHealth            `json:"database"`
-	APIs       map[string]APIHealth      `json:"apis"`
-	Message    string                    `json:"message,omitempty"`
-	Summary    ConnectionSummary         `json:"summary"`
+	Status    string                 `json:"status"`
+	Timestamp string                 `json:"timestamp"`
+	Services  map[string]ServiceHealth `json:"services"`
+	Summary   HealthSummary          `json:"summary"`
 }
 
-type DatabaseHealth struct {
+type ServiceHealth struct {
 	Status         string `json:"status"`
-	Connection     string `json:"connection"`
-	Error          string `json:"error,omitempty"`
 	ResponseTimeMs int64  `json:"response_time_ms,omitempty"`
-}
-
-type APIHealth struct {
-	Status         string `json:"status"`
-	Endpoint       string `json:"endpoint"`
+	Details        string `json:"details,omitempty"`
 	Error          string `json:"error,omitempty"`
-	ResponseTimeMs int64  `json:"response_time_ms,omitempty"`
 }
 
-type ConnectionSummary struct {
-	TotalConnections int `json:"total_connections"`
-	HealthyCount     int `json:"healthy_count"`
-	UnhealthyCount   int `json:"unhealthy_count"`
-	OverallHealth    int `json:"overall_health_percentage"`
+type HealthSummary struct {
+	Healthy   int    `json:"healthy"`
+	Unhealthy int    `json:"unhealthy"`
+	Total     int    `json:"total"`
+	Percent   int    `json:"percent"`
+	Message   string `json:"message"`
 }
 
-// Simple rate limiting for health checks
-var (
-	healthCheckCache    *HealthResponse
-	healthCheckTime     time.Time
-	healthCheckMutex    sync.RWMutex
-	healthCheckInterval = 10 * time.Second // Cache health results for 10 seconds
-)
-
-// HealthHandler provides comprehensive health check for all external connections
+// HealthHandler provides health check for all services
 func HealthHandler(c *gin.Context) {
 	health := HealthResponse{
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		APIs:      make(map[string]APIHealth),
+		Services:  make(map[string]ServiceHealth),
 	}
 
-	// Test direct PostgreSQL connection
-	dbHealth := testDirectPostgresConnection()
-	health.Database = dbHealth
+	// Check database connection
+	health.Services["database"] = checkDatabase()
 
-	// Test critical production endpoints
-	health.APIs["consumption_methods"] = testSupabaseAPIEndpoint("consumption_methods", "?select=name&limit=1")
-	health.APIs["cannabinoids"] = testSupabaseAPIEndpoint("cannabinoids", "?select=name,full_name,description,psychoactive,reported_experiences,compound_notes&order=name&limit=1")
-	health.APIs["profiles"] = testSupabaseAPIEndpoint("profiles", "?select=id&limit=1")
-	
-	// Test Supabase Auth service
-	health.APIs["supabase_auth"] = testSupabaseAuthHealth()
-	
-	// Add environment configuration check
-	health.APIs["environment"] = testEnvironmentConfig()
+	// Check sessions table exists and is accessible
+	health.Services["sessions"] = checkSessionsTable()
 
-	// Calculate summary statistics
-	totalConnections := 1 + len(health.APIs) // 1 for database + APIs
-	healthyCount := 0
-	
-	if dbHealth.Status == "up" {
-		healthyCount++
-	}
-	
-	for _, api := range health.APIs {
-		if api.Status == "up" {
-			healthyCount++
+	// Check profiles table exists and is accessible
+	health.Services["profiles"] = checkProfilesTable()
+
+	// Check Resend API key is configured (optional - emails still work without it in dev)
+	health.Services["email"] = checkEmailConfig()
+
+	// Calculate summary
+	healthy := 0
+	for _, svc := range health.Services {
+		if svc.Status == "up" {
+			healthy++
 		}
 	}
-	
-	health.Summary = ConnectionSummary{
-		TotalConnections: totalConnections,
-		HealthyCount:     healthyCount,
-		UnhealthyCount:   totalConnections - healthyCount,
-		OverallHealth:    (healthyCount * 100) / totalConnections,
+
+	total := len(health.Services)
+	percent := (healthy * 100) / total
+
+	health.Summary = HealthSummary{
+		Healthy:   healthy,
+		Unhealthy: total - healthy,
+		Total:     total,
+		Percent:   percent,
 	}
 
-	// Determine overall status based on health percentage
-	if health.Summary.OverallHealth == 100 {
+	// Determine overall status
+	switch {
+	case percent == 100:
 		health.Status = "up"
-		health.Message = "All systems operational"
-	} else if health.Summary.OverallHealth >= 75 {
+		health.Summary.Message = "All systems operational"
+	case percent >= 75:
 		health.Status = "degraded"
-		health.Message = fmt.Sprintf("Partial service - %d%% systems healthy", health.Summary.OverallHealth)
-	} else if health.Summary.OverallHealth >= 25 {
+		health.Summary.Message = "Most systems operational"
+	case percent >= 50:
 		health.Status = "degraded"
-		health.Message = fmt.Sprintf("Major issues - %d%% systems healthy", health.Summary.OverallHealth)
-	} else {
+		health.Summary.Message = "Some systems degraded"
+	default:
 		health.Status = "down"
-		health.Message = "Critical failure - multiple systems down"
+		health.Summary.Message = "Critical systems down"
 	}
 
-	// Return appropriate HTTP status - sanitize for production
-	appEnv := os.Getenv("APP_ENV")
-	if appEnv == "production" {
-		// Production mode - minimal information disclosure
-		sanitizedHealth := sanitizeHealthForProduction(health)
-		switch health.Status {
-		case "up":
-			c.JSON(http.StatusOK, sanitizedHealth)
-		case "degraded":
-			c.JSON(http.StatusPartialContent, sanitizedHealth)
-		default:
-			c.JSON(http.StatusServiceUnavailable, sanitizedHealth)
-		}
-	} else {
-		// Development mode - full details
-		switch health.Status {
-		case "up":
-			c.JSON(http.StatusOK, health)
-		case "degraded":
-			c.JSON(http.StatusPartialContent, health)
-		default:
-			c.JSON(http.StatusServiceUnavailable, health)
-		}
+	// Execute pending account deletions in background (non-blocking)
+	if health.Services["database"].Status == "up" {
+		go executePendingDeletions()
+	}
+
+	// Return appropriate HTTP status
+	// Database is critical - if it's down, return 503
+	if health.Services["database"].Status != "up" {
+		c.JSON(http.StatusServiceUnavailable, health)
+		return
+	}
+
+	// Otherwise base on overall health
+	switch health.Status {
+	case "up":
+		c.JSON(http.StatusOK, health)
+	case "degraded":
+		c.JSON(http.StatusOK, health) // Degraded is still functional
+	default:
+		c.JSON(http.StatusServiceUnavailable, health)
 	}
 }
 
-// testSupabaseAPIEndpoint tests connectivity to a specific Supabase REST API endpoint
-func testSupabaseAPIEndpoint(tableName, query string) APIHealth {
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	apiKey := os.Getenv("SUPABASE_ANON_KEY")
-	
-	if supabaseURL == "" || apiKey == "" {
-		return APIHealth{
-			Status:         "down",
-			Endpoint:       "configuration_missing",
-			Error:          "Missing Supabase configuration",
-			ResponseTimeMs: 0,
-		}
+// executePendingDeletions runs pending account deletions in the background
+// This is called on health checks to ensure deletions happen even if no users log in
+func executePendingDeletions() {
+	connStr := os.Getenv("DB_CONNECTION_URI")
+	if connStr == "" {
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		database := os.Getenv("DB_DATABASE")
+		username := os.Getenv("DB_USERNAME")
+		password := os.Getenv("DB_PASSWORD")
+		connStr = fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", username, password, host, port, database)
 	}
 
-	testURL := supabaseURL + "/rest/v1/" + tableName + query
-	
-	// Record start time for response measurement
-	start := time.Now()
-	
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	
-	req, err := http.NewRequest("GET", testURL, nil)
+	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		return APIHealth{
-			Status:         "down",
-			Endpoint:       testURL,
-			Error:          "Failed to create request: " + err.Error(),
-			ResponseTimeMs: time.Since(start).Milliseconds(),
-		}
+		healthLog.Error("Failed to connect to database for pending deletions",
+			ports.F("error", err),
+		)
+		return
 	}
+	defer db.Close()
 
-	req.Header.Add("apikey", apiKey)
-	req.Header.Add("Authorization", "Bearer "+apiKey)
-	req.Header.Add("Content-Type", "application/json")
+	authService := external.NewAuthService(db)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	resp, err := client.Do(req)
-	responseTime := time.Since(start).Milliseconds()
-	
+	count, err := authService.ExecutePendingDeletions(ctx)
 	if err != nil {
-		return APIHealth{
-			Status:         "down",
-			Endpoint:       testURL,
-			Error:          "Connection failed: " + err.Error(),
-			ResponseTimeMs: responseTime,
-		}
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 {
-		return APIHealth{
-			Status:         "up",
-			Endpoint:       testURL,
-			ResponseTimeMs: responseTime,
-		}
+		healthLog.Error("Failed to execute pending deletions",
+			ports.F("error", err),
+		)
+		return
 	}
 
-	return APIHealth{
-		Status:         "down", 
-		Endpoint:       testURL,
-		Error:          fmt.Sprintf("HTTP %d: %s", resp.StatusCode, resp.Status),
-		ResponseTimeMs: responseTime,
+	if count > 0 {
+		healthLog.Info("Executed pending account deletions via health check",
+			ports.F("count", count),
+		)
 	}
 }
 
-// testDirectPostgresConnection tests direct PostgreSQL connectivity
-func testDirectPostgresConnection() DatabaseHealth {
-	// Build connection string from environment variables
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
-	dbDatabase := os.Getenv("DB_DATABASE")
-	dbUsername := os.Getenv("DB_USERNAME")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	
-	if dbPassword == "" || dbHost == "" {
-		return DatabaseHealth{
-			Status:     "down",
-			Connection: "configuration_missing",
-			Error:      "Missing required database environment variables",
+// checkDatabase tests PostgreSQL connectivity
+func checkDatabase() ServiceHealth {
+	start := time.Now()
+
+	connStr := os.Getenv("DB_CONNECTION_URI")
+	if connStr == "" {
+		// Build from individual vars
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		database := os.Getenv("DB_DATABASE")
+		username := os.Getenv("DB_USERNAME")
+		password := os.Getenv("DB_PASSWORD")
+
+		if host == "" || password == "" {
+			return ServiceHealth{
+				Status:         "down",
+				ResponseTimeMs: time.Since(start).Milliseconds(),
+				Error:          "Database not configured",
+			}
 		}
+		connStr = fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", username, password, host, port, database)
 	}
 
-	connectionString := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", dbUsername, dbPassword, dbHost, dbPort, dbDatabase)
-	
-	// Record start time for response measurement
-	start := time.Now()
-	
-	// Attempt connection
-	db, err := sql.Open("pgx", connectionString)
+	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		return DatabaseHealth{
+		return ServiceHealth{
 			Status:         "down",
-			Connection:     "direct_postgresql",
-			Error:          "Failed to open connection: " + err.Error(),
 			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Failed to open connection",
 		}
 	}
 	defer db.Close()
 
-	// Test the connection with a simple query
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	var result int
 	err = db.QueryRowContext(ctx, "SELECT 1").Scan(&result)
 	if err != nil {
-		return DatabaseHealth{
+		return ServiceHealth{
 			Status:         "down",
-			Connection:     "direct_postgresql",
-			Error:          "Query failed: " + err.Error(),
 			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Query failed",
 		}
 	}
 
-	return DatabaseHealth{
+	return ServiceHealth{
 		Status:         "up",
-		Connection:     "direct_postgresql",
 		ResponseTimeMs: time.Since(start).Milliseconds(),
+		Details:        "PostgreSQL connected",
 	}
 }
 
-// testSupabaseAuthHealth tests Supabase Auth service availability
-func testSupabaseAuthHealth() APIHealth {
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	apiKey := os.Getenv("SUPABASE_ANON_KEY")
-	
-	if supabaseURL == "" || apiKey == "" {
-		return APIHealth{
-			Status:         "down",
-			Endpoint:       "configuration_missing",
-			Error:          "Missing Supabase Auth configuration",
-			ResponseTimeMs: 0,
-		}
+// checkSessionsTable verifies the sessions table exists
+func checkSessionsTable() ServiceHealth {
+	start := time.Now()
+
+	connStr := os.Getenv("DB_CONNECTION_URI")
+	if connStr == "" {
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		database := os.Getenv("DB_DATABASE")
+		username := os.Getenv("DB_USERNAME")
+		password := os.Getenv("DB_PASSWORD")
+		connStr = fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", username, password, host, port, database)
 	}
 
-	// Test auth health endpoint with API key (like REST API pattern)
-	authURL := supabaseURL + "/auth/v1/health?apikey=" + apiKey
-	
-	start := time.Now()
-	
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-	
-	req, err := http.NewRequest("GET", authURL, nil)
+	db, err := sql.Open("pgx", connStr)
 	if err != nil {
-		return APIHealth{
+		return ServiceHealth{
 			Status:         "down",
-			Endpoint:       authURL,
-			Error:          "Failed to create auth request: " + err.Error(),
 			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Database connection failed",
 		}
 	}
+	defer db.Close()
 
-	// Add auth headers like REST API endpoints
-	req.Header.Add("apikey", apiKey)
-	req.Header.Add("Authorization", "Bearer "+apiKey)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	resp, err := client.Do(req)
-	responseTime := time.Since(start).Milliseconds()
-	
+	// Check if sessions table exists
+	var exists bool
+	err = db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT FROM information_schema.tables
+			WHERE table_schema = 'public'
+			AND table_name = 'sessions'
+		)
+	`).Scan(&exists)
+
 	if err != nil {
-		return APIHealth{
+		return ServiceHealth{
 			Status:         "down",
-			Endpoint:       authURL,
-			Error:          "Auth connection failed: " + err.Error(),
-			ResponseTimeMs: responseTime,
-		}
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 200 {
-		return APIHealth{
-			Status:         "up",
-			Endpoint:       authURL,
-			ResponseTimeMs: responseTime,
+			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Table check failed",
 		}
 	}
 
-	return APIHealth{
-		Status:         "down", 
-		Endpoint:       authURL,
-		Error:          fmt.Sprintf("Auth HTTP %d: %s", resp.StatusCode, resp.Status),
-		ResponseTimeMs: responseTime,
+	if !exists {
+		return ServiceHealth{
+			Status:         "down",
+			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Sessions table not found - run migration",
+		}
+	}
+
+	return ServiceHealth{
+		Status:         "up",
+		ResponseTimeMs: time.Since(start).Milliseconds(),
+		Details:        "Sessions table ready",
 	}
 }
 
-// testEnvironmentConfig validates production environment configuration
-func testEnvironmentConfig() APIHealth {
+// checkProfilesTable verifies the profiles table exists and has auth columns
+func checkProfilesTable() ServiceHealth {
 	start := time.Now()
-	
-	appEnv := os.Getenv("APP_ENV")
-	ginMode := os.Getenv("GIN_MODE")
-	debug := os.Getenv("DEBUG")
-	appURL := os.Getenv("APP_URL")
-	
-	var errors []string
-	
-	// Check production environment settings
-	if appEnv != "production" {
-		errors = append(errors, fmt.Sprintf("APP_ENV is '%s', expected 'production'", appEnv))
+
+	connStr := os.Getenv("DB_CONNECTION_URI")
+	if connStr == "" {
+		host := os.Getenv("DB_HOST")
+		port := os.Getenv("DB_PORT")
+		database := os.Getenv("DB_DATABASE")
+		username := os.Getenv("DB_USERNAME")
+		password := os.Getenv("DB_PASSWORD")
+		connStr = fmt.Sprintf("postgresql://%s:%s@%s:%s/%s", username, password, host, port, database)
 	}
-	
-	if ginMode != "release" {
-		errors = append(errors, fmt.Sprintf("GIN_MODE is '%s', expected 'release'", ginMode))
-	}
-	
-	if debug != "false" {
-		errors = append(errors, fmt.Sprintf("DEBUG is '%s', expected 'false'", debug))
-	}
-	
-	if appURL == "" {
-		errors = append(errors, "APP_URL is not set")
-	}
-	
-	responseTime := time.Since(start).Milliseconds()
-	
-	if len(errors) == 0 {
-		return APIHealth{
-			Status:         "up",
-			Endpoint:       "environment_config",
-			ResponseTimeMs: responseTime,
+
+	db, err := sql.Open("pgx", connStr)
+	if err != nil {
+		return ServiceHealth{
+			Status:         "down",
+			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Database connection failed",
 		}
 	}
-	
-	return APIHealth{
-		Status:         "down",
-		Endpoint:       "environment_config", 
-		Error:          fmt.Sprintf("Environment issues: %v", errors),
-		ResponseTimeMs: responseTime,
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Check if profiles table has password_hash column (migration applied)
+	var hasPasswordHash bool
+	err = db.QueryRowContext(ctx, `
+		SELECT EXISTS (
+			SELECT FROM information_schema.columns
+			WHERE table_schema = 'public'
+			AND table_name = 'profiles'
+			AND column_name = 'password_hash'
+		)
+	`).Scan(&hasPasswordHash)
+
+	if err != nil {
+		return ServiceHealth{
+			Status:         "down",
+			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Column check failed",
+		}
+	}
+
+	if !hasPasswordHash {
+		return ServiceHealth{
+			Status:         "down",
+			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "Auth columns missing - run migration",
+		}
+	}
+
+	return ServiceHealth{
+		Status:         "up",
+		ResponseTimeMs: time.Since(start).Milliseconds(),
+		Details:        "Profiles table ready",
 	}
 }
 
-// sanitizeHealthForProduction removes sensitive information from health response
-func sanitizeHealthForProduction(health HealthResponse) HealthResponse {
-	sanitized := HealthResponse{
-		Status:    health.Status,
-		Timestamp: health.Timestamp,
-		Summary:   health.Summary,
-	}
-	
-	// Simple status message without details
-	switch health.Status {
-	case "up":
-		sanitized.Message = "All systems operational"
-	case "degraded":
-		sanitized.Message = "Service partially available"
-	default:
-		sanitized.Message = "Service unavailable"
-	}
-	
-	// Sanitized database health - no connection details
-	sanitized.Database = DatabaseHealth{
-		Status: health.Database.Status,
-	}
-	if health.Database.Status != "up" {
-		sanitized.Database.Error = "Database connectivity issues"
-	}
-	
-	// Sanitized API health - no endpoints or detailed errors
-	sanitized.APIs = make(map[string]APIHealth)
-	for name, api := range health.APIs {
-		apiHealth := APIHealth{
-			Status: api.Status,
+// checkEmailConfig verifies Resend is configured
+func checkEmailConfig() ServiceHealth {
+	start := time.Now()
+
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" {
+		return ServiceHealth{
+			Status:         "down",
+			ResponseTimeMs: time.Since(start).Milliseconds(),
+			Error:          "RESEND_API_KEY not configured",
 		}
-		if api.Status != "up" {
-			apiHealth.Error = "Service connectivity issues"
-		}
-		sanitized.APIs[name] = apiHealth
 	}
-	
-	return sanitized
+
+	// Just check it's configured, don't make API calls
+	return ServiceHealth{
+		Status:         "up",
+		ResponseTimeMs: time.Since(start).Milliseconds(),
+		Details:        "Resend configured",
+	}
 }

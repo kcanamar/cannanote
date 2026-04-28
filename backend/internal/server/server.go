@@ -9,9 +9,9 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"backend/internal/database"
-	"backend/internal/core/application"
 	"backend/internal/adapters/repository"
+	"backend/internal/core/application"
+	"backend/internal/database"
 	httpAdapters "backend/internal/adapters/http"
 )
 
@@ -35,29 +35,22 @@ type Server struct {
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 
-	// Initialize database service (existing infrastructure code)
+	// Initialize database service
 	dbService := database.New()
 
 	// Get the underlying *sql.DB for repositories
-	// Repository adapters need direct database access for SQL operations
 	rawDB := dbService.GetDB()
 
-	// Wire the hexagonal architecture layers from inside out:
-	
+	// Wire the hexagonal architecture layers:
+
 	// 1. Repositories (adapters implementing ports)
-	// These translate between domain contracts and external systems
 	humanRepo := repository.NewSupabaseHumanRepository(rawDB)
 
-	// TODO: Implement these when we add authentication and authorization
-	// roleRepo := repository.NewSupabaseRoleRepository(rawDB)
-	// authService := external.NewSupabaseAuthService()
-
 	// 2. Application services (use cases and business workflows)
-	// These orchestrate domain entities and coordinate with repositories
-	// Pass nil for unimplemented services - services handle graceful degradation
+	// Auth is now handled directly in route handlers via AuthService
 	humanService := application.NewHumanService(humanRepo, nil, nil)
 
-	// 3. HTTP handlers (adapters for web interface)
+	// 4. HTTP handlers (adapters for web interface)
 	// These translate HTTP requests/responses to application service calls
 	humanHandlers := httpAdapters.NewHumanHandlers(humanService)
 

@@ -7,7 +7,12 @@ import (
 
 // DocsContent renders a documentation page with the three-column layout
 templ DocsContent(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string) {
-	@Base(doc.Title + " – CannaNote", currentPath) {
+	@DocsContentWithAuth(doc, sidebar, currentPath, "")
+}
+
+// DocsContentWithAuth renders a documentation page with optional auth state
+templ DocsContentWithAuth(doc *docs.Doc, sidebar []docs.SidebarItem, currentPath string, userEmail string) {
+	@BaseWithAuth(doc.Title+" – CannaNote", currentPath, userEmail) {
 		@components.DocsContentLayout(doc, sidebar, currentPath)
 	}
 }

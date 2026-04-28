@@ -34,6 +34,7 @@ temp/
 
 # Project build outputs
 main
+api
 
 # Templ generated files
 *templ.go

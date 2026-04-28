@@ -215,10 +215,15 @@ func (c *DocsCache) extractTOC(html string) []TOCItem {
 }
 
 // buildSidebar constructs the navigation sidebar from loaded documents
+// Uses path-based nesting: docs in subdirectories become children of index.md in that directory
 func (c *DocsCache) buildSidebar() {
-	sections := make(map[string][]SidebarItem)
-	
-	for _, doc := range c.docs {
+	// Track parent-child relationships based on path structure
+	// e.g., guides/offline/chrome is a child of guides/offline/index
+	childrenOf := make(map[string][]SidebarItem) // parent path -> children
+	topLevelBySection := make(map[string][]SidebarItem)
+
+	// First pass: identify all docs and their relationships
+	for path, doc := range c.docs {
 		if doc.Section == "" {
 			doc.Section = "root"
 		}
@@ -226,7 +231,7 @@ func (c *DocsCache) buildSidebar() {
 		item := SidebarItem{
 			Title:    doc.Title,
 			Label:    doc.SidebarLabel,
-			Href:     "/docs/" + doc.Path,
+			Href:     "/docs/" + path,
 			Order:    doc.SidebarOrder,
 			Section:  doc.Section,
 			IsFolder: false,
@@ -236,13 +241,51 @@ func (c *DocsCache) buildSidebar() {
 			item.Label = doc.Title
 		}
 
-		sections[doc.Section] = append(sections[doc.Section], item)
+		// Determine if this doc is a child of another doc based on path
+		// Path like "guides/offline/chrome" -> parent is "guides/offline/index"
+		parentPath := c.getParentIndexPath(path)
+
+		if parentPath != "" {
+			// This is a child doc - check if parent exists
+			if _, parentExists := c.docs[parentPath]; parentExists {
+				childrenOf[parentPath] = append(childrenOf[parentPath], item)
+				continue // Don't add to top level
+			}
+		}
+
+		// This is a top-level doc within its section
+		topLevelBySection[doc.Section] = append(topLevelBySection[doc.Section], item)
+	}
+
+	// Second pass: attach children to their parents and mark parents as folders
+	for path := range c.docs {
+		if children, hasChildren := childrenOf[path]; hasChildren {
+			// Sort children by order
+			sort.Slice(children, func(i, j int) bool {
+				return children[i].Order < children[j].Order
+			})
+
+			// Find the parent item in topLevelBySection and attach children
+			doc := c.docs[path]
+			section := doc.Section
+			if section == "" {
+				section = "root"
+			}
+
+			for i := range topLevelBySection[section] {
+				if topLevelBySection[section][i].Href == "/docs/"+path {
+					topLevelBySection[section][i].Children = children
+					topLevelBySection[section][i].IsFolder = true
+					break
+				}
+			}
+		}
 	}
 
 	// Sort items within each section
-	for section := range sections {
-		sort.Slice(sections[section], func(i, j int) bool {
-			return sections[section][i].Order < sections[section][j].Order
+	for section := range topLevelBySection {
+		sort.Slice(topLevelBySection[section], func(i, j int) bool {
+			return topLevelBySection[section][i].Order < topLevelBySection[section][j].Order
 		})
 	}
 
@@ -250,7 +293,7 @@ func (c *DocsCache) buildSidebar() {
 	var sidebar []SidebarItem
 
 	// Add root items first (like index page)
-	if rootItems, exists := sections["root"]; exists {
+	if rootItems, exists := topLevelBySection["root"]; exists {
 		sidebar = append(sidebar, rootItems...)
 	}
 
@@ -265,17 +308,17 @@ func (c *DocsCache) buildSidebar() {
 		"reference":       {"Reference", 4},
 		"community":       {"Community", 5},
 	}
-	
+
 	// Create ordered list of sections
 	type sectionInfo struct {
 		key   string
 		name  string
 		order int
 	}
-	
+
 	var orderedSections []sectionInfo
 	for key, config := range sectionConfig {
-		if _, exists := sections[key]; exists {
+		if _, exists := topLevelBySection[key]; exists {
 			orderedSections = append(orderedSections, sectionInfo{
 				key:   key,
 				name:  config.name,
@@ -283,15 +326,15 @@ func (c *DocsCache) buildSidebar() {
 			})
 		}
 	}
-	
+
 	// Sort sections by order
 	sort.Slice(orderedSections, func(i, j int) bool {
 		return orderedSections[i].order < orderedSections[j].order
 	})
-	
+
 	// Build hierarchical structure with folder headers
 	for _, section := range orderedSections {
-		if items, exists := sections[section.key]; exists && len(items) > 0 {
+		if items, exists := topLevelBySection[section.key]; exists && len(items) > 0 {
 			// Create folder header
 			folderItem := SidebarItem{
 				Title:    section.name,
@@ -307,6 +350,32 @@ func (c *DocsCache) buildSidebar() {
 	}
 
 	c.sidebar = sidebar
+}
+
+// getParentIndexPath returns the path of the parent index.md for a given doc path
+// Returns empty string if no parent relationship exists
+// e.g., "guides/offline/chrome" -> "guides/offline/index"
+// e.g., "guides/offline/index" -> "" (index files have no parent within their dir)
+// e.g., "getting-started/first-entry" -> "getting-started/index"
+func (c *DocsCache) getParentIndexPath(path string) string {
+	// No parent for root-level docs or empty paths
+	if path == "" || !strings.Contains(path, "/") {
+		return ""
+	}
+
+	// Check if this is an index file itself (ends with /index)
+	if strings.HasSuffix(path, "/index") {
+		return "" // Index files don't have parents within their own directory
+	}
+
+	// Get the directory portion and append /index
+	lastSlash := strings.LastIndex(path, "/")
+	if lastSlash == -1 {
+		return ""
+	}
+
+	parentDir := path[:lastSlash]
+	return parentDir + "/index"
 }
 
 // RefreshDoc refreshes a single document if it has been modified

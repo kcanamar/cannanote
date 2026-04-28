@@ -2,13 +2,17 @@ package web
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
+
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
 )
+
+var learnLog = logging.With("learn")
 
 // CannabinoidData represents the structure from our Supabase API
 type CannabinoidData struct {
@@ -27,7 +31,7 @@ func CannabinoidsHandler(c *gin.Context) {
 	apiKey := os.Getenv("SUPABASE_ANON_KEY")
 	
 	if supabaseURL == "" || apiKey == "" {
-		log.Printf("Error: Missing Supabase configuration")
+		learnLog.Error("Missing Supabase configuration")
 		c.String(http.StatusInternalServerError, "Configuration error")
 		return
 	}
@@ -37,7 +41,7 @@ func CannabinoidsHandler(c *gin.Context) {
 	fullURL := supabaseURL + "/rest/v1/cannabinoids?select=name,full_name,description,psychoactive,reported_experiences,compound_notes&order=name"
 	req, err := http.NewRequest("GET", fullURL, nil)
 	if err != nil {
-		log.Printf("Error creating request: %v", err)
+		learnLog.Error("Error creating request", ports.F("error", err))
 		c.String(http.StatusInternalServerError, "Error fetching data")
 		return
 	}
@@ -49,7 +53,7 @@ func CannabinoidsHandler(c *gin.Context) {
 	// Make request
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Error making request: %v", err)
+		learnLog.Error("Error making request", ports.F("error", err))
 		c.String(http.StatusInternalServerError, "Error fetching data")
 		return
 	}
@@ -58,7 +62,7 @@ func CannabinoidsHandler(c *gin.Context) {
 	// Parse response
 	var cannabinoids []CannabinoidData
 	if err := json.NewDecoder(resp.Body).Decode(&cannabinoids); err != nil {
-		log.Printf("Error decoding response: %v", err)
+		learnLog.Error("Error decoding response", ports.F("error", err))
 		c.String(http.StatusInternalServerError, "Error parsing data")
 		return
 	}
@@ -80,5 +84,7 @@ func CannabinoidsHandler(c *gin.Context) {
 	// Render template
 	component := CannabinoidsPage(cannabinoidMaps)
 	c.Header("Content-Type", "text/html")
-	component.Render(c.Request.Context(), c.Writer)
+	if err := component.Render(c.Request.Context(), c.Writer); err != nil {
+		learnLog.Error("Error rendering template", ports.F("error", err))
+	}
 }

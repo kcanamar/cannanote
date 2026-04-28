@@ -1,9 +1,10 @@
 package server
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"html"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -15,14 +16,36 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/supabase-community/supabase-go"
-	"github.com/supabase-community/gotrue-go/types"
 
 	"backend/cmd/web"
-	httpHandlers "backend/internal/adapters/http"
 	"backend/internal/adapters/external"
+	httpAdapters "backend/internal/adapters/http"
+	"backend/internal/adapters/logging"
+	"backend/internal/core/ports"
+	"backend/internal/version"
+
 	"github.com/a-h/templ"
 )
+
+var routesLog = logging.With("routes")
+
+// conditionalLog provides backward compatibility while using the new logging system
+// This maps the old level strings to proper logger methods
+func conditionalLog(level, format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	switch level {
+	case "DEBUG":
+		routesLog.Debug(msg)
+	case "INFO":
+		routesLog.Info(msg)
+	case "WARN", "WARNING":
+		routesLog.Warn(msg)
+	case "ERROR", "SECURITY":
+		routesLog.Warn(msg) // Security events as warnings for visibility
+	default:
+		routesLog.Info(msg)
+	}
+}
 
 // Email validation regex - RFC 5322 compliant but practical
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
@@ -32,16 +55,19 @@ func SecurityHeaders() gin.HandlerFunc {
 	return gin.HandlerFunc(func(c *gin.Context) {
 		// Prevent MIME type sniffing
 		c.Header("X-Content-Type-Options", "nosniff")
-		
+
 		// Prevent embedding in frames (clickjacking protection)
 		c.Header("X-Frame-Options", "DENY")
-		
+
 		// XSS protection (legacy, but still useful)
 		c.Header("X-XSS-Protection", "1; mode=block")
-		
+
 		// Force HTTPS (HSTS)
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
-		
+
+		// Permissions Policy - restrict browser features
+		c.Header("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()")
+
 		// Content Security Policy - development friendly but still secure
 		appEnv := os.Getenv("APP_ENV")
 		var csp string
@@ -52,7 +78,7 @@ func SecurityHeaders() gin.HandlerFunc {
 				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
 				"img-src 'self' data: https:; " +
 				"font-src 'self' https://fonts.gstatic.com; " +
-				"connect-src 'self'; " +
+				"connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; " +
 				"form-action 'self'; " +
 				"frame-ancestors 'none'; " +
 				"base-uri 'self'"
@@ -62,17 +88,28 @@ func SecurityHeaders() gin.HandlerFunc {
 				"img-src 'self' data: https: blob:; " +
 				"font-src 'self' data: https://fonts.gstatic.com; " +
 				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-				"connect-src 'self' ws: wss:; " +
+				"connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com; " +
 				"form-action 'self'"
 		}
 		c.Header("Content-Security-Policy", csp)
-		
+
 		// Referrer policy
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		
+
 		// Remove server information
 		c.Header("Server", "")
-		
+
+		c.Next()
+	})
+}
+
+// NoCacheHeaders middleware adds cache-control headers for authenticated responses
+// Prevents sensitive data from being cached by browsers or proxies
+func NoCacheHeaders() gin.HandlerFunc {
+	return gin.HandlerFunc(func(c *gin.Context) {
+		c.Header("Cache-Control", "no-store, no-cache, must-revalidate, private")
+		c.Header("Pragma", "no-cache")
+		c.Header("Expires", "0")
 		c.Next()
 	})
 }
@@ -83,12 +120,12 @@ func getTrustedClientIP(c *gin.Context) string {
 	if ip := c.GetHeader("CF-Connecting-IP"); ip != "" && isValidIP(ip) {
 		return ip
 	}
-	
+
 	// Check X-Real-IP (common proxy header)
 	if ip := c.GetHeader("X-Real-IP"); ip != "" && isValidIP(ip) {
 		return ip
 	}
-	
+
 	// Check X-Forwarded-For (may contain multiple IPs)
 	if forwarded := c.GetHeader("X-Forwarded-For"); forwarded != "" {
 		// Take the first IP (client IP)
@@ -100,7 +137,7 @@ func getTrustedClientIP(c *gin.Context) string {
 			}
 		}
 	}
-	
+
 	// Fall back to Gin's default (direct connection)
 	return c.ClientIP()
 }
@@ -118,63 +155,50 @@ func RequestSizeLimit(maxSize int64) gin.HandlerFunc {
 	})
 }
 
-// ConditionalLogging only logs debug info in development
-func conditionalLog(level, format string, args ...interface{}) {
-	debug := os.Getenv("DEBUG")
-	appEnv := os.Getenv("APP_ENV")
-	
-	// Only log debug messages in development or when DEBUG=true
-	if level == "DEBUG" && debug != "true" && appEnv == "production" {
-		return
-	}
-	
-	// Always log non-debug messages
-	log.Printf("["+level+"] "+format, args...)
-}
 
 // Rate limiting for beta signup
 type rateLimiter struct {
-	mu           sync.RWMutex
-	attempts     map[string][]time.Time
-	maxAttempts  int
+	mu            sync.RWMutex
+	attempts      map[string][]time.Time
+	maxAttempts   int
 	windowMinutes int
-	cleanupTimer *time.Timer
+	cleanupTimer  *time.Timer
 }
 
 // newRateLimiter creates a rate limiter with configurable limits
 func newRateLimiter(maxAttempts, windowMinutes int) *rateLimiter {
 	rl := &rateLimiter{
-		attempts:     make(map[string][]time.Time),
-		maxAttempts:  maxAttempts,
+		attempts:      make(map[string][]time.Time),
+		maxAttempts:   maxAttempts,
 		windowMinutes: windowMinutes,
 	}
-	
+
 	// Auto-cleanup every hour to prevent memory bloat
 	rl.cleanupTimer = time.AfterFunc(time.Hour, func() {
 		rl.cleanup()
 		rl.cleanupTimer.Reset(time.Hour)
 	})
-	
+
 	return rl
 }
 
 // Get rate limit settings from environment (with defaults)
 func getRateLimitSettings() (int, int) {
-	maxAttempts := 3 // default
+	maxAttempts := 3   // default
 	windowMinutes := 15 // default
-	
+
 	if envMax := os.Getenv("RATE_LIMIT_MAX_ATTEMPTS"); envMax != "" {
 		if parsed, err := strconv.Atoi(envMax); err == nil && parsed > 0 {
 			maxAttempts = parsed
 		}
 	}
-	
+
 	if envWindow := os.Getenv("RATE_LIMIT_WINDOW_MINUTES"); envWindow != "" {
 		if parsed, err := strconv.Atoi(envWindow); err == nil && parsed > 0 {
 			windowMinutes = parsed
 		}
 	}
-	
+
 	return maxAttempts, windowMinutes
 }
 
@@ -183,14 +207,26 @@ var signupRateLimiter = func() *rateLimiter {
 	return newRateLimiter(maxAttempts, windowMinutes)
 }()
 
+// Rate limiters for authentication endpoints (more strict than signup)
+var authRateLimiter = func() *rateLimiter {
+	// 5 attempts per 15 minutes for signin/password reset
+	return newRateLimiter(5, 15)
+}()
+
+// Rate limiter for password reset requests (prevent email enumeration spam)
+var passwordResetRateLimiter = func() *rateLimiter {
+	// 3 attempts per 30 minutes
+	return newRateLimiter(3, 30)
+}()
+
 // checkRateLimit checks if IP has exceeded rate limit (max 3 attempts per 15 minutes)
 func (rl *rateLimiter) checkRateLimit(ip string) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	
+
 	now := time.Now()
 	cutoff := now.Add(-time.Duration(rl.windowMinutes) * time.Minute)
-	
+
 	// Clean old attempts for this IP
 	if attempts, exists := rl.attempts[ip]; exists {
 		validAttempts := []time.Time{}
@@ -200,20 +236,20 @@ func (rl *rateLimiter) checkRateLimit(ip string) bool {
 			}
 		}
 		rl.attempts[ip] = validAttempts
-		
+
 		// Remove empty entries to save memory
 		if len(validAttempts) == 0 {
 			delete(rl.attempts, ip)
 		}
 	}
-	
+
 	// Check if too many attempts
 	if len(rl.attempts[ip]) >= rl.maxAttempts {
-		conditionalLog("SECURITY", "Rate limit exceeded for IP %s: %d/%d attempts in %d minutes", 
+		conditionalLog("SECURITY", "Rate limit exceeded for IP %s: %d/%d attempts in %d minutes",
 			ip, len(rl.attempts[ip]), rl.maxAttempts, rl.windowMinutes)
 		return false // Rate limit exceeded
 	}
-	
+
 	// Add current attempt
 	rl.attempts[ip] = append(rl.attempts[ip], now)
 	return true // Allow request
@@ -223,10 +259,10 @@ func (rl *rateLimiter) checkRateLimit(ip string) bool {
 func (rl *rateLimiter) cleanup() {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	
+
 	now := time.Now()
 	cutoff := now.Add(-time.Duration(rl.windowMinutes) * time.Minute)
-	
+
 	for ip, attempts := range rl.attempts {
 		validAttempts := []time.Time{}
 		for _, attempt := range attempts {
@@ -234,14 +270,14 @@ func (rl *rateLimiter) cleanup() {
 				validAttempts = append(validAttempts, attempt)
 			}
 		}
-		
+
 		if len(validAttempts) == 0 {
 			delete(rl.attempts, ip)
 		} else {
 			rl.attempts[ip] = validAttempts
 		}
 	}
-	
+
 	conditionalLog("DEBUG", "Rate limiter cleanup completed: %d active IPs", len(rl.attempts))
 }
 
@@ -249,7 +285,7 @@ func (rl *rateLimiter) cleanup() {
 func (rl *rateLimiter) getRateLimitStatus(ip string) (int, int) {
 	rl.mu.RLock()
 	defer rl.mu.RUnlock()
-	
+
 	attempts := len(rl.attempts[ip])
 	return attempts, rl.maxAttempts
 }
@@ -257,30 +293,30 @@ func (rl *rateLimiter) getRateLimitStatus(ip string) (int, int) {
 // validateAndSanitizeEmail validates and sanitizes email input
 func validateAndSanitizeEmail(email string) (string, error) {
 	conditionalLog("DEBUG", "validateAndSanitizeEmail input: '%s' (length: %d)", email, len(email))
-	
+
 	// Trim whitespace only - no HTML escaping for email addresses
 	email = strings.TrimSpace(email)
 	conditionalLog("DEBUG", "After trimming: '%s' (length: %d)", email, len(email))
-	
+
 	// Check length limits (RFC 5321: 320 chars max, but 254 is practical)
 	if len(email) > 254 {
 		return "", fmt.Errorf("email address too long (max 254 characters)")
 	}
-	
+
 	// Check minimum length (a@b.co = 6 chars minimum)
 	if len(email) < 6 {
 		conditionalLog("DEBUG", "Email too short - length is %d, minimum is 6", len(email))
 		return "", fmt.Errorf("email address too short")
 	}
-	
+
 	// Validate format first
 	if !emailRegex.MatchString(email) {
 		return "", fmt.Errorf("invalid email format")
 	}
-	
+
 	// Convert to lowercase for consistency
 	email = strings.ToLower(email)
-	
+
 	// Additional security: check for suspicious patterns that could indicate injection attempts
 	suspicious := []string{"<script", "javascript:", "data:", "vbscript:", "onload=", "';", "--", "/*"}
 	emailLower := strings.ToLower(email)
@@ -289,7 +325,7 @@ func validateAndSanitizeEmail(email string) (string, error) {
 			return "", fmt.Errorf("invalid email format")
 		}
 	}
-	
+
 	return email, nil
 }
 
@@ -297,31 +333,59 @@ func validateAndSanitizeEmail(email string) (string, error) {
 func validateConsent(consent string) error {
 	// Sanitize input
 	consent = strings.TrimSpace(html.EscapeString(consent))
-	
+
 	// HTML checkbox only sends "on" when checked, or empty string when unchecked
 	if consent != "on" {
 		return fmt.Errorf("privacy consent is required")
 	}
-	
+
 	return nil
 }
 
 func (s *Server) RegisterRoutes() http.Handler {
-	r := gin.Default()
-	
-	// Apply security middleware (production-aware)
+	// Set GIN mode based on environment (explicit, not just env var)
+	if version.IsProduction() {
+		gin.SetMode(gin.ReleaseMode)
+		routesLog.Info("GIN running in release mode")
+	} else {
+		gin.SetMode(gin.DebugMode)
+		routesLog.Info("GIN running in debug mode")
+	}
+
+	// Use gin.New() for explicit middleware control
+	r := gin.New()
+
+	// Recovery middleware - always needed
+	r.Use(gin.Recovery())
+
+	// Request logging - only in development
+	if version.IsDevelopment() {
+		r.Use(gin.Logger())
+		r.Use(func(c *gin.Context) {
+			clientIP := getTrustedClientIP(c)
+			routesLog.Debug("Incoming request",
+				ports.F("method", c.Request.Method),
+				ports.F("path", c.Request.URL.Path),
+				ports.F("ip", clientIP),
+			)
+			c.Next()
+			routesLog.Debug("Request completed",
+				ports.F("method", c.Request.Method),
+				ports.F("path", c.Request.URL.Path),
+				ports.F("status", c.Writer.Status()),
+			)
+		})
+	}
+
+	// Apply security middleware (always)
 	r.Use(SecurityHeaders())
 	r.Use(RequestSizeLimit(8 << 20)) // 8MB request limit
-	
-	// Add custom logging middleware (conditional debug)
-	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
-	r.Use(func(c *gin.Context) {
-		clientIP := getTrustedClientIP(c)
-		conditionalLog("DEBUG", "Incoming request: %s %s from %s", c.Request.Method, c.Request.URL.Path, clientIP)
-		c.Next()
-		conditionalLog("DEBUG", "Request completed: %s %s -> %d", c.Request.Method, c.Request.URL.Path, c.Writer.Status())
-	})
+
+	// Set CSRF cookie on all requests (for forms to use)
+	r.Use(httpAdapters.CSRFProtection())
+
+	// Create auth middleware
+	authMiddleware := httpAdapters.NewAuthMiddleware(s.db.GetDB())
 
 	// Landing page
 	r.GET("/", func(c *gin.Context) {
@@ -338,7 +402,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		templ.Handler(web.Terms()).ServeHTTP(c.Writer, c.Request)
 	})
 
-	r.GET("/health", httpHandlers.HealthHandler)
+	r.GET("/health", httpAdapters.HealthHandler)
 
 	// Cache headers middleware for static assets
 	r.Use(func(c *gin.Context) {
@@ -357,56 +421,89 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Static assets served with cache headers
 	r.Static("/assets", "./cmd/web/assets")
-	
+
 	// Serve robots.txt at root level
 	r.GET("/robots.txt", func(c *gin.Context) {
 		c.File("./cmd/web/assets/robots.txt")
 	})
 
-	r.GET("/web", func(c *gin.Context) {
-		templ.Handler(web.HelloForm()).ServeHTTP(c.Writer, c.Request)
+	// Serve favicon.ico at root level (browsers request this by default)
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.File("./cmd/web/assets/images/favicon/favicon.ico")
 	})
 
-	r.POST("/hello", func(c *gin.Context) {
-		web.HelloWebHandler(c.Writer, c.Request)
+	// Service worker - served dynamically with version injection
+	r.GET("/sw.js", func(c *gin.Context) {
+		swVersion := version.GetServiceWorkerVersion()
+		swLog := routesLog.With("sw")
+
+		swLog.Debug("Serving service worker",
+			ports.F("version", swVersion),
+			ports.F("env", version.Environment),
+		)
+
+		// Read the service worker template
+		swContent, err := os.ReadFile("./cmd/web/assets/sw.js")
+		if err != nil {
+			swLog.Error("Failed to read service worker file", ports.F("error", err))
+			c.String(http.StatusInternalServerError, "Failed to load service worker")
+			return
+		}
+
+		// Replace version placeholder with actual version
+		swJS := strings.Replace(string(swContent), "{{SW_VERSION}}", swVersion, 1)
+
+		// Set headers for service worker
+		c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+		c.Header("Content-Type", "application/javascript; charset=utf-8")
+		c.String(http.StatusOK, swJS)
+	})
+
+	// Offline fallback page
+	r.GET("/offline", func(c *gin.Context) {
+		templ.Handler(web.Offline()).ServeHTTP(c.Writer, c.Request)
 	})
 
 	// Documentation routes - check multiple possible locations
 	var contentDir string
 	possiblePaths := []string{
-		filepath.Join("..", "docs", "content"),     // Local development
+		filepath.Join("..", "docs", "content"),    // Local development
 		filepath.Join("docs", "content"),          // Fly.io deployment
 		filepath.Join("/app", "docs", "content"),  // Docker deployment
 	}
-	
+
 	for _, path := range possiblePaths {
 		if _, err := os.Stat(path); err == nil {
 			contentDir = path
 			break
 		}
 	}
-	
+
 	if contentDir == "" {
 		conditionalLog("ERROR", "Could not find docs content directory in any of these locations: %v", possiblePaths)
 	}
-	docsHandler, err := httpHandlers.NewDocsHandler(contentDir)
-	
+	docsHandler, err := httpAdapters.NewDocsHandler(contentDir, s.db.GetDB())
+
 	// Always add fallback route
 	r.GET("/docs-fallback", func(c *gin.Context) {
 		templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
 	})
-	
+
 	if err != nil {
-		log.Printf("Failed to initialize docs handler: %v", err)
+		routesLog.Error("Failed to initialize docs handler", ports.F("error", err))
 		// Fallback to old docs page
 		r.GET("/docs", func(c *gin.Context) {
 			templ.Handler(web.Docs()).ServeHTTP(c.Writer, c.Request)
 		})
 	} else {
-		// Dynamic docs routing - try the new handler
-		r.GET("/docs/*path", docsHandler.HandleDocsRequest)
-		r.GET("/docs", docsHandler.HandleDocsRequest)
-		
+		// Dynamic docs routing with optional auth (shows "Back to App" for logged-in users)
+		docsGroup := r.Group("")
+		docsGroup.Use(authMiddleware.OptionalSession())
+		{
+			docsGroup.GET("/docs/*path", docsHandler.HandleDocsRequest)
+			docsGroup.GET("/docs", docsHandler.HandleDocsRequest)
+		}
+
 		// Search endpoint
 		r.GET("/api/docs/search", docsHandler.HandleDocsSearch)
 	}
@@ -424,6 +521,63 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Beta signup API
 	r.POST("/api/beta-signup", s.BetaSignupHandler)
 
+	// Email verification/activation handler
+	r.GET("/activate", s.ActivateAccountHandler)
+
+	// Onboarding (password setup after email verification)
+	r.GET("/onboarding", s.OnboardingHandler)
+
+	// Password reset handler (consumes reset token and sets new password)
+	r.POST("/auth/reset-password", s.ResetPasswordHandler)
+
+	// Protected routes (require authentication)
+	protected := r.Group("/app")
+	protected.Use(authMiddleware.RequireSession())
+	protected.Use(NoCacheHeaders())               // Prevent caching of authenticated content
+	protected.Use(httpAdapters.CSRFProtection()) // CSRF protection for state-changing requests
+	{
+		protected.GET("", s.DashboardHandler)
+		protected.GET("/", s.DashboardHandler)
+
+		// Session routes
+		protected.GET("/sessions", s.SessionsHandler)
+		protected.GET("/sessions/new", s.SessionLogHandler)
+		protected.GET("/sessions/:id", s.SessionDetailHandler)
+		protected.GET("/sessions/:id/checkin", s.SessionCheckInHandler)
+
+		// Settings
+		protected.GET("/settings", s.SettingsHandler)
+	}
+
+	// Account deletion API (authenticated)
+	accountAPI := r.Group("/api/account")
+	accountAPI.Use(authMiddleware.RequireSession())
+	accountAPI.Use(NoCacheHeaders())              // Prevent caching of account data
+	accountAPI.Use(httpAdapters.CSRFProtection()) // CSRF protection
+	{
+		accountAPI.POST("/request-delete", s.RequestAccountDeletionHandler)
+		accountAPI.POST("/cancel-delete", s.CancelDeletionHandler)
+		accountAPI.GET("/deletion-status", s.DeletionStatusHandler)
+	}
+
+	// Cancel deletion via email link (token-based, no auth required)
+	r.GET("/account/cancel-delete", s.CancelDeletionByTokenHandler)
+
+	// Goodbye page (shown after account deletion)
+	r.GET("/goodbye", s.GoodbyeHandler)
+
+	// Deletion cancelled confirmation page
+	r.GET("/deletion-cancelled", s.DeletionCancelledHandler)
+
+	// Login page for unauthenticated users
+	r.GET("/login", s.LoginPageHandler)
+
+	// Sign in handler (processes login form)
+	r.POST("/auth/signin", s.SignInHandler)
+
+	// Sign out handler
+	r.POST("/auth/signout", s.SignOutHandler)
+
 	return r
 }
 
@@ -434,41 +588,37 @@ func (s *Server) HelloWorldHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func (s *Server) healthHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
-}
-
 func (s *Server) BetaSignupHandler(c *gin.Context) {
 	// Use secure IP detection for rate limiting
 	clientIP := getTrustedClientIP(c)
-	
+
 	// Check rate limit first
 	if !signupRateLimiter.checkRateLimit(clientIP) {
 		attempts, maxAttempts := signupRateLimiter.getRateLimitStatus(clientIP)
 		windowMinutes := signupRateLimiter.windowMinutes
-		
+
 		// More informative error message
-		errorMsg := fmt.Sprintf("Too many signup attempts (%d/%d). Please try again in %d minutes.", 
+		errorMsg := fmt.Sprintf("Too many signup attempts (%d/%d). Please try again in %d minutes.",
 			attempts, maxAttempts, windowMinutes)
 		templ.Handler(web.BetaSignupError(errorMsg)).ServeHTTP(c.Writer, c.Request)
 		return
 	}
-	
+
 	// Get raw input
 	emailRaw := c.PostForm("email")
 	consentRaw := c.PostForm("consent")
-	
+
 	// Validate input sizes to prevent DoS
 	if len(emailRaw) > 254 { // RFC 5321 email length limit
 		conditionalLog("SECURITY", "Oversized email input from %s: %d characters", clientIP, len(emailRaw))
 		templ.Handler(web.BetaSignupError("Email address is too long")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
-	
+
 	// Debug logging (only in development)
 	conditionalLog("DEBUG", "Raw email input: '%s' (length: %d)", emailRaw, len(emailRaw))
 	conditionalLog("DEBUG", "Raw consent input: '%s'", consentRaw)
-	
+
 	// Validate and sanitize email
 	email, err := validateAndSanitizeEmail(emailRaw)
 	if err != nil {
@@ -476,7 +626,7 @@ func (s *Server) BetaSignupHandler(c *gin.Context) {
 		templ.Handler(web.BetaSignupError("Please enter a valid email address")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
-	
+
 	// Validate consent
 	err = validateConsent(consentRaw)
 	if err != nil {
@@ -484,9 +634,9 @@ func (s *Server) BetaSignupHandler(c *gin.Context) {
 		templ.Handler(web.BetaSignupError("Privacy consent is required to join the beta")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
-	
+
 	// Create beta user profile
-	err = s.createBetaUser(email)
+	err = s.createBetaUser(c.Request.Context(), email)
 	if err != nil {
 		// Check if it's a duplicate email error
 		if strings.Contains(err.Error(), "already registered") {
@@ -494,76 +644,579 @@ func (s *Server) BetaSignupHandler(c *gin.Context) {
 			templ.Handler(web.BetaSignupError("This email is already registered for beta access")).ServeHTTP(c.Writer, c.Request)
 			return
 		}
-		
+
 		// Generic error for other failures
 		conditionalLog("ERROR", "Failed to create beta user %s: %v", email, err)
 		templ.Handler(web.BetaSignupError("Unable to process signup. Please try again.")).ServeHTTP(c.Writer, c.Request)
 		return
 	}
-	
+
 	conditionalLog("INFO", "Beta user created successfully: %s from %s", email, clientIP)
 	templ.Handler(web.BetaSignupSuccess(email)).ServeHTTP(c.Writer, c.Request)
 }
 
-// createBetaUser creates a Supabase auth user and corresponding profile
-func (s *Server) createBetaUser(email string) error {
-	// Initialize Supabase client with service role key for admin operations
-	supabaseURL := os.Getenv("SUPABASE_URL")
-	serviceKey := os.Getenv("SUPABASE_SECRET_KEY")
-	
-	if supabaseURL == "" || serviceKey == "" {
-		return fmt.Errorf("missing Supabase configuration")
-	}
-	
-	client, err := supabase.NewClient(supabaseURL, serviceKey, &supabase.ClientOptions{})
+// createBetaUser creates a user and sends welcome email with verification link
+func (s *Server) createBetaUser(ctx context.Context, email string) error {
+	conditionalLog("DEBUG", "Creating beta user: %s", email)
+
+	// Create auth service
+	authService := external.NewAuthService(s.db.GetDB())
+
+	// Create user (this checks for duplicates)
+	user, err := authService.CreateUser(ctx, email)
 	if err != nil {
-		return fmt.Errorf("failed to create Supabase client: %w", err)
+		return err
 	}
-	
-	// Check if user already exists by email in auth.users
-	db := s.db.GetDB()
-	var existingUserID string
-	err = db.QueryRow("SELECT id FROM auth.users WHERE email = $1", email).Scan(&existingUserID)
-	if err == nil {
-		// User already exists
-		return fmt.Errorf("email %s already registered for beta", email)
-	}
-	
-	// Create Supabase auth user with email verification required
-	conditionalLog("INFO", "Creating Supabase auth user for: %s", email)
-	
-	// Use the Auth API to create user - this will send verification email
-	authUser, err := client.Auth.AdminCreateUser(types.AdminCreateUserRequest{
-		Email:        email,
-		EmailConfirm: false, // Require email verification for real humans
-	})
+
+	// Generate verification token for email
+	verificationToken, err := authService.CreateEmailVerificationToken(ctx, user.ID)
 	if err != nil {
-		return fmt.Errorf("failed to create Supabase auth user: %w", err)
+		conditionalLog("ERROR", "Failed to create verification token: %v", err)
+		// User created but token failed - they can request new verification later
+		verificationToken = ""
 	}
-	
-	// Create corresponding profile using the real auth user ID
-	_, err = db.Exec(`
-		INSERT INTO profiles (id, email, beta_status, beta_joined_at, created_at) 
-		VALUES ($1, $2, 'waitlist', NOW(), NOW())
-	`, authUser.ID, email)
-	
-	if err != nil {
-		conditionalLog("ERROR", "Failed to create profile for auth user %s: %v", authUser.ID, err)
-		// TODO: Consider cleaning up auth user if profile creation fails
-		return fmt.Errorf("failed to create user profile: %w", err)
+
+	// Build verification link
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "http://localhost:8080"
 	}
-	
-	conditionalLog("INFO", "Successfully created Supabase auth user and profile: %s (ID: %s)", email, authUser.ID)
-	
+	verificationLink := ""
+	if verificationToken != "" {
+		verificationLink = fmt.Sprintf("%s/activate?token=%s", appURL, verificationToken)
+	}
+
+	conditionalLog("DEBUG", "Verification link generated for %s", email)
+
 	// Send welcome email via Resend (non-blocking)
 	go func() {
 		resendService := external.NewResendService()
-		if err := resendService.SendWelcomeEmail(email, ""); err != nil {
+		if err := resendService.SendWelcomeEmail(email, verificationLink); err != nil {
 			conditionalLog("ERROR", "Failed to send welcome email to %s: %v", email, err)
 		} else {
-			conditionalLog("INFO", "Welcome email sent successfully to: %s", email)
+			conditionalLog("INFO", "Welcome email sent to: %s", email)
 		}
 	}()
-	
+
 	return nil
+}
+
+// ActivateAccountHandler handles email verification from the welcome email
+func (s *Server) ActivateAccountHandler(c *gin.Context) {
+	conditionalLog("DEBUG", "ActivateAccountHandler called")
+
+	token := c.Query("token")
+	if token == "" {
+		conditionalLog("DEBUG", "No token provided")
+		templ.Handler(web.ActivationError("Missing activation token. Please check your email for the correct link.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Verify the email using our auth service
+	authService := external.NewAuthService(s.db.GetDB())
+	user, err := authService.VerifyEmail(c.Request.Context(), token)
+	if err != nil {
+		conditionalLog("ERROR", "Email verification failed: %v", err)
+		templ.Handler(web.ActivationError("Failed to verify your email. The link may have expired.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	conditionalLog("INFO", "Email verified for user: %s", user.Email)
+
+	// Generate password reset token so user can set their password
+	resetToken, err := authService.CreatePasswordResetToken(c.Request.Context(), user.ID)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to create reset token: %v", err)
+		// Still redirect to onboarding, they can request password reset manually
+		c.Redirect(http.StatusFound, "/onboarding?verified=true&email="+user.Email)
+		return
+	}
+
+	// Redirect to onboarding with the reset token
+	redirectURL := fmt.Sprintf("/onboarding?verified=true&email=%s&reset_token=%s", user.Email, resetToken)
+	conditionalLog("DEBUG", "Redirecting to onboarding")
+
+	c.Redirect(http.StatusFound, redirectURL)
+}
+
+// OnboardingHandler displays the onboarding page for new users to set their password
+func (s *Server) OnboardingHandler(c *gin.Context) {
+	verified := c.Query("verified") == "true"
+	email := c.Query("email")
+	resetToken := c.Query("reset_token")
+
+	conditionalLog("DEBUG", "OnboardingHandler: verified=%v, email=%s, token_present=%v", verified, email, resetToken != "")
+
+	templ.Handler(web.Onboarding(verified, email, resetToken)).ServeHTTP(c.Writer, c.Request)
+}
+
+// ResetPasswordHandler handles the password reset form submission
+func (s *Server) ResetPasswordHandler(c *gin.Context) {
+	clientIP := getTrustedClientIP(c)
+	conditionalLog("DEBUG", "ResetPasswordHandler called")
+
+	// Rate limit check for password reset attempts
+	if !passwordResetRateLimiter.checkRateLimit(clientIP) {
+		attempts, maxAttempts := passwordResetRateLimiter.getRateLimitStatus(clientIP)
+		routesLog.Warn("AUTH_RATE_LIMIT: Password reset rate limit exceeded",
+			ports.F("ip", clientIP),
+			ports.F("attempts", attempts),
+			ports.F("max", maxAttempts),
+		)
+		templ.Handler(web.PasswordResetError("Too many password reset attempts. Please try again in 30 minutes.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	token := c.PostForm("token")
+	password := c.PostForm("password")
+	confirmPassword := c.PostForm("confirm_password")
+
+	// Validate inputs
+	if token == "" {
+		templ.Handler(web.PasswordResetError("Missing reset token. Please try the activation link again.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Validate password length (prevent DoS with extremely long passwords)
+	if len(password) > 128 {
+		templ.Handler(web.PasswordResetError("Password is too long (max 128 characters).")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	if password == "" || len(password) < 8 {
+		templ.Handler(web.PasswordResetError("Password must be at least 8 characters.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	if password != confirmPassword {
+		templ.Handler(web.PasswordResetError("Passwords do not match.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Reset password using our auth service
+	authService := external.NewAuthService(s.db.GetDB())
+	user, err := authService.SetPassword(c.Request.Context(), token, password)
+	if err != nil {
+		routesLog.Warn("AUTH_FAILED: Password reset failed",
+			ports.F("ip", clientIP),
+			ports.F("reason", err.Error()),
+		)
+		templ.Handler(web.PasswordResetError("Failed to reset password. The link may have expired.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Log successful password change for security monitoring
+	routesLog.Info("AUTH_PASSWORD_CHANGE: Password set successfully",
+		ports.F("user_id", user.ID),
+		ports.F("email", user.Email),
+		ports.F("ip", clientIP),
+	)
+
+	// Session rotation: Revoke all existing sessions for this user
+	// This invalidates any sessions that may have been compromised
+	if err := authService.RevokeAllUserSessions(c.Request.Context(), user.ID); err != nil {
+		routesLog.Error("AUTH_ERROR: Failed to revoke existing sessions during password reset",
+			ports.F("user_id", user.ID),
+			ports.F("error", err),
+		)
+		// Continue anyway - password was reset successfully
+	} else {
+		routesLog.Info("AUTH_SESSION_ROTATION: All sessions revoked after password change",
+			ports.F("user_id", user.ID),
+		)
+	}
+
+	// Create new session for the user (auto-login with fresh session)
+	sessionToken, err := authService.CreateSession(
+		c.Request.Context(),
+		user.ID,
+		c.Request.UserAgent(),
+		getTrustedClientIP(c),
+	)
+	if err != nil {
+		routesLog.Error("AUTH_ERROR: Failed to create session after password reset",
+			ports.F("user_id", user.ID),
+			ports.F("error", err),
+		)
+		// Session creation failed, but password was reset - show success and let them log in manually
+		templ.Handler(web.PasswordResetSuccess()).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Set session cookie
+	httpAdapters.SetSessionCookie(c, sessionToken)
+
+	conditionalLog("DEBUG", "Session created, showing success page with redirect")
+
+	// Show success page that will redirect to /app
+	templ.Handler(web.PasswordResetSuccessWithRedirect()).ServeHTTP(c.Writer, c.Request)
+}
+
+// DashboardHandler displays the protected app dashboard for authenticated users
+func (s *Server) DashboardHandler(c *gin.Context) {
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	conditionalLog("DEBUG", "DashboardHandler: User ID: %s", userID)
+
+	// Get user profile from database
+	var email string
+	var betaStatus string
+	var deletionScheduledAt *time.Time
+	db := s.db.GetDB()
+
+	var deletionAt sql.NullTime
+	err := db.QueryRow("SELECT email, beta_status, deletion_scheduled_at FROM profiles WHERE id = $1", userID).Scan(&email, &betaStatus, &deletionAt)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to get profile: %v", err)
+		email = "Unknown"
+		betaStatus = "unknown"
+	}
+
+	// Calculate deletion time if scheduled
+	if deletionAt.Valid {
+		deletesAt := deletionAt.Time.Add(external.DeletionGracePeriod)
+		deletionScheduledAt = &deletesAt
+	}
+
+	// Execute any pending deletions (background check)
+	go func() {
+		authService := external.NewAuthService(s.db.GetDB())
+		if _, err := authService.ExecutePendingDeletions(context.Background()); err != nil {
+			conditionalLog("ERROR", "Failed to execute pending deletions: %v", err)
+		}
+	}()
+
+	conditionalLog("DEBUG", "Rendering dashboard for %s (status: %s)", email, betaStatus)
+
+	templ.Handler(web.Dashboard(userID, email, betaStatus, deletionScheduledAt)).ServeHTTP(c.Writer, c.Request)
+}
+
+// LoginPageHandler displays the login page for unauthenticated users
+// If user is already authenticated, redirects to /app
+func (s *Server) LoginPageHandler(c *gin.Context) {
+	// Check if user already has a valid session
+	if cookie, err := c.Cookie(httpAdapters.SessionCookieName); err == nil && cookie != "" {
+		authService := external.NewAuthService(s.db.GetDB())
+		if _, err := authService.ValidateSession(c.Request.Context(), cookie); err == nil {
+			// User is already authenticated, redirect to app
+			conditionalLog("DEBUG", "LoginPageHandler: User already authenticated, redirecting to /app")
+			c.Redirect(http.StatusFound, "/app")
+			return
+		}
+	}
+
+	templ.Handler(web.LoginPage()).ServeHTTP(c.Writer, c.Request)
+}
+
+// SignInHandler processes the login form and creates a session
+func (s *Server) SignInHandler(c *gin.Context) {
+	clientIP := getTrustedClientIP(c)
+
+	// Rate limit check for signin attempts
+	if !authRateLimiter.checkRateLimit(clientIP) {
+		attempts, maxAttempts := authRateLimiter.getRateLimitStatus(clientIP)
+		routesLog.Warn("AUTH_RATE_LIMIT: Sign in rate limit exceeded",
+			ports.F("ip", clientIP),
+			ports.F("attempts", attempts),
+			ports.F("max", maxAttempts),
+		)
+		templ.Handler(web.LoginError("Too many sign in attempts. Please try again in 15 minutes.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+
+	conditionalLog("DEBUG", "SignInHandler: Attempting sign in for %s", email)
+
+	// Validate inputs
+	if email == "" || password == "" {
+		templ.Handler(web.LoginError("Please enter both email and password.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Sign in with our auth service
+	authService := external.NewAuthService(s.db.GetDB())
+	user, err := authService.SignIn(c.Request.Context(), email, password)
+	if err != nil {
+		// Log failed authentication attempt for security monitoring
+		routesLog.Warn("AUTH_FAILED: Sign in failed",
+			ports.F("email", email),
+			ports.F("ip", clientIP),
+			ports.F("user_agent", c.Request.UserAgent()),
+			ports.F("reason", err.Error()),
+		)
+		templ.Handler(web.LoginError("Invalid email or password.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Log successful authentication
+	routesLog.Info("AUTH_SUCCESS: Sign in successful",
+		ports.F("user_id", user.ID),
+		ports.F("email", user.Email),
+		ports.F("ip", clientIP),
+	)
+
+	// Create session
+	sessionToken, err := authService.CreateSession(
+		c.Request.Context(),
+		user.ID,
+		c.Request.UserAgent(),
+		getTrustedClientIP(c),
+	)
+	if err != nil {
+		routesLog.Error("AUTH_ERROR: Failed to create session",
+			ports.F("user_id", user.ID),
+			ports.F("error", err),
+		)
+		templ.Handler(web.LoginError("Failed to create session. Please try again.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	// Set session cookie
+	httpAdapters.SetSessionCookie(c, sessionToken)
+
+	conditionalLog("DEBUG", "Session created, redirecting to /app")
+
+	// Redirect to dashboard
+	c.Redirect(http.StatusFound, "/app")
+}
+
+// SignOutHandler destroys the session and redirects to home
+func (s *Server) SignOutHandler(c *gin.Context) {
+	clientIP := getTrustedClientIP(c)
+	conditionalLog("DEBUG", "SignOutHandler called")
+
+	// Get session token from cookie
+	if cookie, err := c.Cookie(httpAdapters.SessionCookieName); err == nil && cookie != "" {
+		// Revoke session in database
+		authService := external.NewAuthService(s.db.GetDB())
+		if err := authService.RevokeSession(c.Request.Context(), cookie); err != nil {
+			routesLog.Error("AUTH_ERROR: Error revoking session on signout",
+				ports.F("error", err),
+				ports.F("ip", clientIP),
+			)
+		} else {
+			routesLog.Info("AUTH_SIGNOUT: User signed out",
+				ports.F("ip", clientIP),
+			)
+		}
+	}
+
+	// Clear session cookie
+	httpAdapters.ClearSessionCookie(c)
+
+	// Redirect to home
+	c.Redirect(http.StatusFound, "/")
+}
+
+// SessionsHandler displays the session history page
+func (s *Server) SessionsHandler(c *gin.Context) {
+	// Get user email for display
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.Sessions(email, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SessionLogHandler displays the new session logging form
+func (s *Server) SessionLogHandler(c *gin.Context) {
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.SessionLog(email, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SessionDetailHandler displays a single session's details
+func (s *Server) SessionDetailHandler(c *gin.Context) {
+	sessionID := c.Param("id")
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.SessionDetail(email, sessionID, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SessionCheckInHandler displays the check-in form for an active session
+func (s *Server) SessionCheckInHandler(c *gin.Context) {
+	sessionID := c.Param("id")
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.SessionCheckIn(email, sessionID, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// SettingsHandler displays the unified settings page
+func (s *Server) SettingsHandler(c *gin.Context) {
+	var email string
+	userID := httpAdapters.GetUserIDFromGinContext(c)
+	db := s.db.GetDB()
+	err := db.QueryRow("SELECT email FROM profiles WHERE id = $1", userID).Scan(&email)
+	if err != nil {
+		email = "Unknown"
+	}
+
+	templ.Handler(web.Settings(email, c.Request.URL.Path)).ServeHTTP(c.Writer, c.Request)
+}
+
+// RequestAccountDeletionHandler schedules account deletion with 24-hour grace period
+func (s *Server) RequestAccountDeletionHandler(c *gin.Context) {
+	userIDStr := httpAdapters.GetUserIDFromGinContext(c)
+	userID, err := httpAdapters.GetUserIDAsUUID(c)
+	if err != nil {
+		conditionalLog("ERROR", "Invalid user ID in context: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid session"})
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+
+	// Schedule deletion and get cancellation token
+	cancelToken, err := authService.ScheduleDeletion(c.Request.Context(), userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "already scheduled") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Deletion already scheduled"})
+			return
+		}
+		conditionalLog("ERROR", "Failed to schedule deletion for user %s: %v", userIDStr, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to schedule deletion"})
+		return
+	}
+
+	// Get user email for sending confirmation
+	email, err := authService.GetUserEmailByID(c.Request.Context(), userID)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to get user email: %v", err)
+		// Continue anyway - deletion is scheduled, email is nice-to-have
+	}
+
+	// Build cancel URL
+	appURL := os.Getenv("APP_URL")
+	if appURL == "" {
+		appURL = "http://localhost:8080"
+	}
+	cancelURL := fmt.Sprintf("%s/account/cancel-delete?token=%s", appURL, cancelToken)
+	deletesAt := time.Now().Add(external.DeletionGracePeriod)
+
+	// Send confirmation email (non-blocking)
+	if email != "" {
+		go func() {
+			resendService := external.NewResendService()
+			if err := resendService.SendDeletionConfirmationEmail(email, cancelURL, deletesAt); err != nil {
+				conditionalLog("ERROR", "Failed to send deletion confirmation email: %v", err)
+			} else {
+				conditionalLog("INFO", "Deletion confirmation email sent to: %s", email)
+			}
+		}()
+	}
+
+	conditionalLog("INFO", "Account deletion scheduled for user %s, deletes at %v", userIDStr, deletesAt)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":      true,
+		"scheduled_at": time.Now(),
+		"deletes_at":   deletesAt,
+	})
+}
+
+// CancelDeletionHandler cancels a scheduled deletion for authenticated user
+func (s *Server) CancelDeletionHandler(c *gin.Context) {
+	userID, err := httpAdapters.GetUserIDAsUUID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid session"})
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+	err = authService.CancelDeletionByUserID(c.Request.Context(), userID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no deletion scheduled") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No deletion scheduled"})
+			return
+		}
+		conditionalLog("ERROR", "Failed to cancel deletion: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to cancel deletion"})
+		return
+	}
+
+	// Return empty banner for HTMX swap
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, "<!-- Deletion cancelled -->")
+}
+
+// CancelDeletionByTokenHandler cancels deletion via email link
+func (s *Server) CancelDeletionByTokenHandler(c *gin.Context) {
+	token := c.Query("token")
+	if token == "" {
+		templ.Handler(web.DeletionCancelError("Missing cancellation token. Please check your email for the correct link.")).ServeHTTP(c.Writer, c.Request)
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+	err := authService.CancelDeletionByToken(c.Request.Context(), token)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to cancel deletion by token: %v", err)
+		if strings.Contains(err.Error(), "expired") {
+			templ.Handler(web.DeletionCancelError("This cancellation link has expired. Your account may have already been deleted.")).ServeHTTP(c.Writer, c.Request)
+		} else {
+			templ.Handler(web.DeletionCancelError("Invalid cancellation link. Please try cancelling from within the app.")).ServeHTTP(c.Writer, c.Request)
+		}
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/deletion-cancelled")
+}
+
+// DeletionStatusHandler returns the current deletion status for HTMX polling
+func (s *Server) DeletionStatusHandler(c *gin.Context) {
+	userID, err := httpAdapters.GetUserIDAsUUID(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid session"})
+		return
+	}
+
+	authService := external.NewAuthService(s.db.GetDB())
+	status, err := authService.GetDeletionStatus(c.Request.Context(), userID)
+	if err != nil {
+		conditionalLog("ERROR", "Failed to get deletion status: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get status"})
+		return
+	}
+
+	// Return HTMX component or empty if not scheduled
+	if !status.Scheduled {
+		c.Header("Content-Type", "text/html")
+		c.String(http.StatusOK, "<!-- No deletion scheduled -->")
+		return
+	}
+
+	templ.Handler(web.DeletionBanner(*status.DeletesAt)).ServeHTTP(c.Writer, c.Request)
+}
+
+// GoodbyeHandler shows the farewell page after account deletion
+func (s *Server) GoodbyeHandler(c *gin.Context) {
+	templ.Handler(web.Goodbye()).ServeHTTP(c.Writer, c.Request)
+}
+
+// DeletionCancelledHandler shows confirmation after cancelling deletion
+func (s *Server) DeletionCancelledHandler(c *gin.Context) {
+	templ.Handler(web.DeletionCancelled()).ServeHTTP(c.Writer, c.Request)
 }

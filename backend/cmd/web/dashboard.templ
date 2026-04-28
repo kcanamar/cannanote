@@ -1,0 +1,568 @@
+package web
+
+import (
+	"time"
+)
+
+// Dashboard displays the protected app area for authenticated users
+templ Dashboard(userID string, email string, betaStatus string, deletionScheduled *time.Time) {
+	@AppBase("Dashboard - CannaNote", "/app", email) {
+		<div class="max-w-4xl mx-auto space-y-6">
+			// Show deletion banner if scheduled
+			if deletionScheduled != nil {
+				@DeletionBanner(*deletionScheduled)
+			}
+			<!-- Primary CTA: Log Session -->
+			<a
+				href="/app/sessions/new"
+				class="block bg-gradient-to-r from-sage-600 to-sage-700 hover:from-sage-700 hover:to-sage-800 rounded-xl p-6 shadow-sm transition-all hover:shadow-md group"
+			>
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-4">
+						<div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+							<svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+							</svg>
+						</div>
+						<div>
+							<h2 data-copy="dashboard.logSession.title" class="text-xl font-semibold text-white">Log Session</h2>
+							<p data-copy="dashboard.logSession.subtitle" class="text-sage-100">Record your experience</p>
+						</div>
+					</div>
+					<svg class="w-6 h-6 text-white/70 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+					</svg>
+				</div>
+			</a>
+
+			<!-- Strain Insights -->
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<!-- Most Used Strain -->
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-5">
+					<div class="flex items-center gap-2 mb-3">
+						<svg class="w-4 h-4 text-sage-600 dark:text-sage-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+						</svg>
+						<span data-copy="dashboard.stats.mostUsed" class="text-sm text-gray-500 dark:text-gray-400">Most Used</span>
+					</div>
+					<p id="stat-top-strain" class="text-lg font-semibold text-navy-900 dark:text-white truncate">-</p>
+					<p id="stat-top-strain-count" class="text-sm text-gray-500 dark:text-gray-400"></p>
+				</div>
+
+				<!-- Best for Mood -->
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-5">
+					<div class="flex items-center gap-2 mb-3">
+						<svg class="w-4 h-4 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<span data-copy="dashboard.stats.bestMood" class="text-sm text-gray-500 dark:text-gray-400">Best for Mood</span>
+					</div>
+					<p id="stat-mood-strain" class="text-lg font-semibold text-navy-900 dark:text-white truncate">-</p>
+					<p id="stat-mood-strain-detail" class="text-sm text-gray-500 dark:text-gray-400"></p>
+				</div>
+
+				<!-- Collection Size -->
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-5">
+					<div class="flex items-center gap-2 mb-3">
+						<svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+						</svg>
+						<span data-copy="dashboard.stats.collection" class="text-sm text-gray-500 dark:text-gray-400">Your Collection</span>
+					</div>
+					<p id="stat-collection" class="text-lg font-semibold text-navy-900 dark:text-white">-</p>
+					<p id="stat-collection-detail" class="text-sm text-gray-500 dark:text-gray-400"></p>
+				</div>
+			</div>
+
+			<!-- Recent Sessions -->
+			<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg">
+				<div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-navy-700">
+					<h2 data-copy="dashboard.recentSessions" class="font-semibold text-navy-900 dark:text-white">Recent Sessions</h2>
+					<a href="/app/sessions" class="text-sm text-sage-600 dark:text-sage-400 hover:underline">View all</a>
+				</div>
+				<div id="recent-sessions" class="p-5">
+					<p id="no-sessions" data-copy="dashboard.noSessions" class="text-center text-gray-500 dark:text-gray-400 py-4">
+						No sessions recorded. Begin logging to track your experiences.
+					</p>
+					<div id="sessions-list" class="space-y-3 hidden">
+						<!-- Populated by JavaScript -->
+					</div>
+				</div>
+			</div>
+
+			<!-- Beta Status (smaller, less prominent) -->
+			if betaStatus != "" {
+				<div class="text-center text-sm text-gray-500 dark:text-gray-400">
+					<span class="inline-flex items-center gap-1">
+						<svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+						</svg>
+						Beta tester
+					</span>
+				</div>
+			}
+		</div>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script src="/assets/js/copy-service.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', async () => {
+				await SessionDB.init();
+
+				// Save offline credentials if we just logged in online
+				const pendingCreds = sessionStorage.getItem('pendingOfflineCredentials');
+				if (pendingCreds) {
+					try {
+						const { email, password } = JSON.parse(pendingCreds);
+						await SessionDB.saveOfflineCredentials(email, password);
+						sessionStorage.removeItem('pendingOfflineCredentials');
+						console.log('[Dashboard] Offline credentials saved for future offline login');
+					} catch (err) {
+						console.error('[Dashboard] Failed to save offline credentials:', err);
+					}
+				}
+
+				// Clear offline session flag since we're now online with a real session
+				if (navigator.onLine) {
+					localStorage.removeItem('offlineSession');
+				}
+
+				await loadDashboardStats();
+			});
+
+			async function loadDashboardStats() {
+				try {
+					const sessions = await SessionDB.getAll('sessions');
+					const products = await SessionDB.getAll('products');
+					const checkIns = await SessionDB.getAll('checkIns');
+
+					// Build product lookup
+					const productMap = {};
+					for (const p of products) {
+						productMap[p.id] = p;
+					}
+
+					// Calculate most used strain
+					const strainUsage = {};
+					for (const s of sessions) {
+						const product = productMap[s.productId];
+						if (product) {
+							const name = product.strainName;
+							strainUsage[name] = (strainUsage[name] || 0) + 1;
+						}
+					}
+
+					let topStrain = null;
+					let topCount = 0;
+					for (const [name, count] of Object.entries(strainUsage)) {
+						if (count > topCount) {
+							topStrain = name;
+							topCount = count;
+						}
+					}
+
+					if (topStrain) {
+						document.getElementById('stat-top-strain').textContent = topStrain;
+						document.getElementById('stat-top-strain-count').textContent = topCount + ' session' + (topCount !== 1 ? 's' : '');
+					} else {
+						document.getElementById('stat-top-strain').textContent = 'No data yet';
+					}
+
+					// Calculate best strain for mood (based on check-in mood improvements)
+					const strainMoodScores = {};
+					const strainMoodCounts = {};
+
+					for (const checkIn of checkIns) {
+						const session = sessions.find(s => s.id === checkIn.sessionId);
+						if (session && session.moodBefore && checkIn.mood) {
+							const product = productMap[session.productId];
+							if (product) {
+								const name = product.strainName;
+								const improvement = checkIn.mood - session.moodBefore;
+								strainMoodScores[name] = (strainMoodScores[name] || 0) + improvement;
+								strainMoodCounts[name] = (strainMoodCounts[name] || 0) + 1;
+							}
+						}
+					}
+
+					let bestMoodStrain = null;
+					let bestMoodAvg = -999;
+					for (const [name, total] of Object.entries(strainMoodScores)) {
+						const avg = total / strainMoodCounts[name];
+						if (avg > bestMoodAvg) {
+							bestMoodStrain = name;
+							bestMoodAvg = avg;
+						}
+					}
+
+					if (bestMoodStrain && bestMoodAvg > 0) {
+						document.getElementById('stat-mood-strain').textContent = bestMoodStrain;
+						document.getElementById('stat-mood-strain-detail').textContent = '+' + bestMoodAvg.toFixed(1) + ' avg improvement';
+					} else if (checkIns.length === 0) {
+						document.getElementById('stat-mood-strain').textContent = 'Log check-ins';
+						document.getElementById('stat-mood-strain-detail').textContent = 'to see insights';
+					} else {
+						document.getElementById('stat-mood-strain').textContent = 'Not enough data';
+					}
+
+					// Collection stats
+					const strainCount = products.length;
+					const totalSessions = sessions.length;
+					document.getElementById('stat-collection').textContent = strainCount + ' strain' + (strainCount !== 1 ? 's' : '');
+					if (totalSessions > 0) {
+						document.getElementById('stat-collection-detail').textContent = totalSessions + ' total session' + (totalSessions !== 1 ? 's' : '');
+					}
+
+					// Show recent sessions
+					if (sessions.length > 0) {
+						document.getElementById('no-sessions').classList.add('hidden');
+						const list = document.getElementById('sessions-list');
+						list.classList.remove('hidden');
+
+						const productMap = {};
+						for (const p of products) {
+							productMap[p.id] = p;
+						}
+
+						const recent = sessions
+							.sort((a, b) => b.timestamp - a.timestamp)
+							.slice(0, 3);
+
+						list.innerHTML = recent.map(s => {
+							const product = productMap[s.productId] || {};
+							const date = new Date(s.timestamp);
+							const isActive = s.status === 'active';
+
+							return '<a href="/app/sessions/' + s.id + '" class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors">' +
+								'<div class="flex items-center gap-3">' +
+								'<div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-navy-800 flex items-center justify-center text-lg">' +
+								(s.method === 'vape' ? '💨' : s.method === 'smoke' ? '🔥' : s.method === 'edible' ? '🍪' : '🌿') +
+								'</div>' +
+								'<div>' +
+								'<p class="font-medium text-navy-900 dark:text-white">' + (product.strainName || 'Unknown') + '</p>' +
+								'<p class="text-sm text-gray-500 dark:text-gray-400">' + date.toLocaleDateString() + '</p>' +
+								'</div>' +
+								'</div>' +
+								(isActive ? '<span class="text-xs px-2 py-1 rounded-full bg-sage-100 dark:bg-sage-900/30 text-sage-700 dark:text-sage-300">Active</span>' : '') +
+								'</a>';
+						}).join('');
+					}
+				} catch (err) {
+					console.error('[Dashboard] Failed to load stats:', err);
+				}
+			}
+		</script>
+	}
+}
+
+// LoginPage displays the login form for unauthenticated users
+templ LoginPage() {
+	@Base("Sign In - CannaNote", "/login") {
+		<div class="flex items-center justify-center px-4 py-12">
+			<div class="max-w-md w-full">
+				<div class="text-center mb-6">
+					<h1 class="text-2xl font-bold text-navy-900 dark:text-white mb-1">Sign In</h1>
+					<p class="text-gray-600 dark:text-gray-400 text-sm">Welcome back to CannaNote</p>
+				</div>
+
+				<!-- Offline indicator -->
+				<div id="offline-banner" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m-3.536-3.536a4 4 0 010-5.656m-7.072 7.072a4 4 0 010-5.656m-3.536 3.536a9 9 0 010-12.728"/>
+						</svg>
+						<span class="text-amber-800 dark:text-amber-300 text-sm">You're offline. Sign in with your previously saved credentials.</span>
+					</div>
+				</div>
+
+				<!-- Login error (for offline failures) -->
+				<div id="login-error" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<span id="login-error-text" class="text-red-800 dark:text-red-300 text-sm"></span>
+					</div>
+				</div>
+
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 shadow-sm">
+					<form id="login-form" action="/auth/signin" method="POST" class="space-y-4">
+						<div>
+							<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+								Email
+							</label>
+							<input
+								type="email"
+								id="email"
+								name="email"
+								required
+								autocomplete="username"
+								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								placeholder="you@example.com"
+							/>
+						</div>
+
+						<div>
+							<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+								Password
+							</label>
+							<input
+								type="password"
+								id="password"
+								name="password"
+								required
+								autocomplete="current-password"
+								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								placeholder="Your password"
+							/>
+						</div>
+
+						<button
+							type="submit"
+							id="submit-btn"
+							class="w-full py-3 px-4 bg-sage-600 hover:bg-sage-700 text-white font-semibold rounded-lg transition-colors"
+						>
+							Sign In
+						</button>
+					</form>
+
+					<div class="mt-6 text-center">
+						<p class="text-sm text-gray-600 dark:text-gray-400">
+							Don't have an account?{" "}
+							<a href="/#beta-signup" class="text-sage-600 dark:text-sage-400 hover:underline">
+								Join the beta
+							</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', async () => {
+				await SessionDB.init();
+				updateOfflineStatus();
+
+				window.addEventListener('online', updateOfflineStatus);
+				window.addEventListener('offline', updateOfflineStatus);
+
+				// Intercept form submission
+				document.getElementById('login-form').addEventListener('submit', handleLogin);
+			});
+
+			function updateOfflineStatus() {
+				const banner = document.getElementById('offline-banner');
+				if (!navigator.onLine) {
+					banner.classList.remove('hidden');
+				} else {
+					banner.classList.add('hidden');
+				}
+			}
+
+			async function handleLogin(e) {
+				const email = document.getElementById('email').value;
+				const password = document.getElementById('password').value;
+
+				// If online, let the form submit normally to the server
+				if (navigator.onLine) {
+					// Store credentials locally after form submits (handled by server redirect)
+					// We'll save them in the success redirect page
+					sessionStorage.setItem('pendingOfflineCredentials', JSON.stringify({ email, password }));
+					return; // Let form submit normally
+				}
+
+				// Offline login flow
+				e.preventDefault();
+
+				const errorDiv = document.getElementById('login-error');
+				const errorText = document.getElementById('login-error-text');
+				errorDiv.classList.add('hidden');
+
+				try {
+					const result = await SessionDB.verifyOfflineCredentials(email, password);
+
+					if (result.valid) {
+						// Set offline session flag
+						localStorage.setItem('offlineSession', JSON.stringify({
+							email: result.email,
+							startedAt: Date.now()
+						}));
+
+						// Redirect to app
+						window.location.href = '/app';
+					} else {
+						if (result.reason === 'no_credentials') {
+							errorText.textContent = 'No offline credentials found. Please sign in online first to enable offline access.';
+						} else {
+							errorText.textContent = 'Invalid email or password.';
+						}
+						errorDiv.classList.remove('hidden');
+					}
+				} catch (err) {
+					console.error('[Login] Offline auth error:', err);
+					errorText.textContent = 'An error occurred. Please try again.';
+					errorDiv.classList.remove('hidden');
+				}
+			}
+		</script>
+	}
+}
+
+// LoginError displays an error on the login page
+templ LoginError(message string) {
+	@Base("Sign In - CannaNote", "/login") {
+		<div class="min-h-screen flex items-center justify-center px-4 py-12">
+			<div class="max-w-md w-full">
+				<div class="text-center mb-8">
+					<h1 class="text-3xl font-bold text-navy-900 dark:text-white mb-2">Sign In</h1>
+					<p class="text-gray-600 dark:text-gray-400">Welcome back to CannaNote</p>
+				</div>
+
+				<!-- Offline indicator -->
+				<div id="offline-banner" class="hidden bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-amber-600 dark:text-amber-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m-3.536-3.536a4 4 0 010-5.656m-7.072 7.072a4 4 0 010-5.656m-3.536 3.536a9 9 0 010-12.728"/>
+						</svg>
+						<span class="text-amber-800 dark:text-amber-300 text-sm">You're offline. Sign in with your previously saved credentials.</span>
+					</div>
+				</div>
+
+				<!-- Server error message -->
+				<div id="server-error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<span class="text-red-800 dark:text-red-300 text-sm">{ message }</span>
+					</div>
+				</div>
+
+				<!-- Login error (for offline failures) -->
+				<div id="login-error" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+					<div class="flex items-center">
+						<svg class="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+						</svg>
+						<span id="login-error-text" class="text-red-800 dark:text-red-300 text-sm"></span>
+					</div>
+				</div>
+
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6 shadow-sm">
+					<form id="login-form" action="/auth/signin" method="POST" class="space-y-4">
+						<div>
+							<label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+								Email
+							</label>
+							<input
+								type="email"
+								id="email"
+								name="email"
+								required
+								autocomplete="username"
+								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								placeholder="you@example.com"
+							/>
+						</div>
+
+						<div>
+							<label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+								Password
+							</label>
+							<input
+								type="password"
+								id="password"
+								name="password"
+								required
+								autocomplete="current-password"
+								class="w-full px-4 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-800 text-navy-900 dark:text-white focus:ring-2 focus:ring-sage-500 focus:border-transparent"
+								placeholder="Your password"
+							/>
+						</div>
+
+						<button
+							type="submit"
+							class="w-full py-3 px-4 bg-sage-600 hover:bg-sage-700 text-white font-semibold rounded-lg transition-colors"
+						>
+							Sign In
+						</button>
+					</form>
+
+					<div class="mt-6 text-center">
+						<p class="text-sm text-gray-600 dark:text-gray-400">
+							Don't have an account?{" "}
+							<a href="/#beta-signup" class="text-sage-600 dark:text-sage-400 hover:underline">
+								Join the beta
+							</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', async () => {
+				await SessionDB.init();
+				updateOfflineStatus();
+
+				window.addEventListener('online', updateOfflineStatus);
+				window.addEventListener('offline', updateOfflineStatus);
+
+				document.getElementById('login-form').addEventListener('submit', handleLogin);
+			});
+
+			function updateOfflineStatus() {
+				const banner = document.getElementById('offline-banner');
+				const serverError = document.getElementById('server-error');
+				if (!navigator.onLine) {
+					banner.classList.remove('hidden');
+					serverError.classList.add('hidden'); // Hide server error when offline
+				} else {
+					banner.classList.add('hidden');
+					serverError.classList.remove('hidden');
+				}
+			}
+
+			async function handleLogin(e) {
+				const email = document.getElementById('email').value;
+				const password = document.getElementById('password').value;
+
+				if (navigator.onLine) {
+					sessionStorage.setItem('pendingOfflineCredentials', JSON.stringify({ email, password }));
+					return;
+				}
+
+				e.preventDefault();
+
+				const errorDiv = document.getElementById('login-error');
+				const errorText = document.getElementById('login-error-text');
+				errorDiv.classList.add('hidden');
+
+				try {
+					const result = await SessionDB.verifyOfflineCredentials(email, password);
+
+					if (result.valid) {
+						localStorage.setItem('offlineSession', JSON.stringify({
+							email: result.email,
+							startedAt: Date.now()
+						}));
+						window.location.href = '/app';
+					} else {
+						if (result.reason === 'no_credentials') {
+							errorText.textContent = 'No offline credentials found. Please sign in online first to enable offline access.';
+						} else {
+							errorText.textContent = 'Invalid email or password.';
+						}
+						errorDiv.classList.remove('hidden');
+					}
+				} catch (err) {
+					console.error('[Login] Offline auth error:', err);
+					errorText.textContent = 'An error occurred. Please try again.';
+					errorDiv.classList.remove('hidden');
+				}
+			}
+		</script>
+	}
+}

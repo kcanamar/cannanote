@@ -1,0 +1,197 @@
+package web
+
+import (
+	"time"
+)
+
+// DeletionBanner shows countdown when account deletion is scheduled
+// Renders at top of dashboard, updates via HTMX polling
+templ DeletionBanner(deletesAt time.Time) {
+	<div
+		id="deletion-banner"
+		class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6"
+		hx-get="/api/account/deletion-status"
+		hx-trigger="every 60s"
+		hx-swap="outerHTML"
+	>
+		<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+			<div class="flex items-center gap-3">
+				<div class="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+					<svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+					</svg>
+				</div>
+				<div>
+					<h3 class="font-medium text-amber-800 dark:text-amber-200">Account Deletion Scheduled</h3>
+					<p class="text-sm text-amber-600 dark:text-amber-400">
+						Deletes in <span id="countdown" data-deletes-at={ deletesAt.Format(time.RFC3339) }></span>
+					</p>
+				</div>
+			</div>
+			<div class="flex gap-2 ml-13 md:ml-0">
+				<a
+					href="/app/settings#export"
+					class="px-3 py-1.5 text-sm border border-amber-300 dark:border-amber-700 rounded-lg text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors"
+				>
+					Export Data
+				</a>
+				<button
+					hx-post="/api/account/cancel-delete"
+					hx-swap="outerHTML"
+					hx-target="#deletion-banner"
+					class="px-3 py-1.5 text-sm bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors"
+				>
+					Cancel Deletion
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// Live countdown timer
+		function updateCountdown() {
+			const el = document.getElementById('countdown');
+			if (!el) return;
+
+			const deletesAt = new Date(el.dataset.deletesAt);
+			const now = new Date();
+			const diff = deletesAt - now;
+
+			if (diff <= 0) {
+				el.textContent = 'any moment now';
+				return;
+			}
+
+			const hours = Math.floor(diff / (1000 * 60 * 60));
+			const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+			if (hours > 0) {
+				el.textContent = hours + 'h ' + minutes + 'm';
+			} else {
+				el.textContent = minutes + ' minute' + (minutes !== 1 ? 's' : '');
+			}
+		}
+
+		updateCountdown();
+		setInterval(updateCountdown, 60000);
+	</script>
+}
+
+// Goodbye shows the farewell page after account deletion
+templ Goodbye() {
+	@Base("Goodbye - CannaNote", "/goodbye") {
+		<div class="min-h-screen flex items-center justify-center px-4 py-12">
+			<div class="text-center max-w-md">
+				<div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 dark:bg-navy-800 flex items-center justify-center">
+					<svg class="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+					</svg>
+				</div>
+
+				<h1 class="text-2xl font-semibold text-navy-900 dark:text-white mb-4">
+					Your account has been deleted
+				</h1>
+
+				<p class="text-gray-600 dark:text-gray-400 mb-6">
+					All your data has been permanently removed from our systems.
+					Thank you for being part of the CannaNote community.
+				</p>
+
+				<div class="space-y-3">
+					<a
+						href="/"
+						class="inline-block px-6 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-lg transition-colors"
+					>
+						Return to Homepage
+					</a>
+
+					<p class="text-sm text-gray-500 dark:text-gray-500">
+						Changed your mind? You can always sign up again.
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			// Clear any remaining local data
+			if ('indexedDB' in window) {
+				indexedDB.deleteDatabase('cannanote');
+			}
+			// Clear service worker caches
+			if ('caches' in window) {
+				caches.keys().then(function(names) {
+					for (let name of names) {
+						caches.delete(name);
+					}
+				});
+			}
+		</script>
+	}
+}
+
+// DeletionCancelled shows confirmation after cancelling deletion
+templ DeletionCancelled() {
+	@Base("Deletion Cancelled - CannaNote", "/deletion-cancelled") {
+		<div class="min-h-screen flex items-center justify-center px-4 py-12">
+			<div class="text-center max-w-md">
+				<div class="w-16 h-16 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+					<svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+					</svg>
+				</div>
+
+				<h1 class="text-2xl font-semibold text-navy-900 dark:text-white mb-4">
+					Deletion Cancelled
+				</h1>
+
+				<p class="text-gray-600 dark:text-gray-400 mb-6">
+					Your account is safe. We're glad you're staying!
+					Your data remains intact and you can continue using CannaNote normally.
+				</p>
+
+				<a
+					href="/app"
+					class="inline-block px-6 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-lg transition-colors"
+				>
+					Go to Dashboard
+				</a>
+			</div>
+		</div>
+	}
+}
+
+// DeletionCancelError shows an error when cancellation fails
+templ DeletionCancelError(message string) {
+	@Base("Cancellation Error - CannaNote", "/account/cancel-delete") {
+		<div class="min-h-screen flex items-center justify-center px-4 py-12">
+			<div class="text-center max-w-md">
+				<div class="w-16 h-16 mx-auto mb-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+					<svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+					</svg>
+				</div>
+
+				<h1 class="text-2xl font-semibold text-navy-900 dark:text-white mb-4">
+					Cancellation Failed
+				</h1>
+
+				<p class="text-gray-600 dark:text-gray-400 mb-6">
+					{ message }
+				</p>
+
+				<div class="space-y-3">
+					<a
+						href="/login"
+						class="inline-block px-6 py-2 bg-sage-600 hover:bg-sage-700 text-white rounded-lg transition-colors"
+					>
+						Sign In
+					</a>
+
+					<p class="text-sm text-gray-500 dark:text-gray-500">
+						Need help? Contact us at support@cannanote.org
+					</p>
+				</div>
+			</div>
+		</div>
+	}
+}

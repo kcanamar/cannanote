@@ -2,7 +2,15 @@ package web
 
 import "backend/cmd/web/components"
 
+// Base renders the page layout for unauthenticated users
 templ Base(title string, currentPath string) {
+	@BaseWithAuth(title, currentPath, "") {
+		{ children... }
+	}
+}
+
+// BaseWithAuth renders the page layout with optional auth state
+templ BaseWithAuth(title string, currentPath string, userEmail string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -58,12 +66,17 @@ templ Base(title string, currentPath string) {
 			
 			<!-- External JavaScript files -->
 			<script src="/assets/js/theme.js"></script>
+			<script src="/assets/js/csrf.js"></script>
 			<script src="/assets/js/htmx.min.js" defer></script>
 			<script src="/assets/js/app.min.js" defer></script>
 		</head>
-		<body class="font-brand antialiased bg-white dark:bg-navy-950">
-			@components.Navigation(currentPath)
-			<main role="main">
+		<body class="font-brand antialiased bg-white dark:bg-navy-950 min-h-screen flex flex-col">
+			<!-- Skip Navigation Link (WCAG 2.4.1) -->
+			<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-sage-600 focus:text-white focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-sage-400">
+				Skip to main content
+			</a>
+			@components.NavigationWithAuth(currentPath, userEmail)
+			<main id="main-content" role="main" class="flex-1">
 				{ children... }
 			</main>
 			@components.Footer()

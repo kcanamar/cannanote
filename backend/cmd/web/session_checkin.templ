@@ -1,0 +1,336 @@
+package web
+
+// SessionCheckIn displays the check-in form for an active session
+templ SessionCheckIn(email string, sessionID string, currentPath string) {
+	@AppBase("Check-in - CannaNote", currentPath, email) {
+		<div class="max-w-2xl mx-auto">
+			<!-- Header -->
+			<div class="flex items-center gap-4 mb-6">
+				<a
+					href="/app/sessions"
+					class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-navy-800 transition-colors"
+					aria-label="Back to sessions"
+				>
+					@backIcon()
+				</a>
+				<div class="flex-1">
+					<h1 id="checkin-title" data-copy="checkin.title" class="text-2xl font-semibold text-navy-900 dark:text-white">Check-in</h1>
+					<p id="session-info" class="text-sm text-gray-500 dark:text-gray-400"></p>
+				</div>
+			</div>
+
+			<!-- Session Summary -->
+			<div class="bg-sage-50 dark:bg-sage-900/20 border border-sage-200 dark:border-sage-800 rounded-lg p-4 mb-6">
+				<div class="flex items-center justify-between">
+					<div>
+						<span id="summary-strain" class="font-medium text-navy-900 dark:text-white"></span>
+						<span id="summary-method" class="text-sm text-sage-600 dark:text-sage-400 ml-2"></span>
+					</div>
+					<div class="text-sm text-sage-600 dark:text-sage-400">
+						<span id="summary-elapsed"></span> ago
+					</div>
+				</div>
+			</div>
+
+			<!-- Check-in Form -->
+			<form id="checkin-form" class="space-y-6">
+				<!-- Current State -->
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
+					<h2 data-copy="checkin.howFeeling" class="text-lg font-medium text-navy-900 dark:text-white mb-4">Current state assessment</h2>
+
+					@feelingGrid("mood", "Mood", "Emotional state")
+					<div class="my-4"></div>
+					@feelingGrid("mind", "Mind", "Mental clarity")
+					<div class="my-4"></div>
+					@feelingGrid("body", "Body", "Physical comfort")
+				</div>
+
+				<!-- Intensity -->
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
+					<h2 id="intensity-label" data-copy="checkin.intensity" class="text-lg font-medium text-navy-900 dark:text-white mb-4">Effect Intensity</h2>
+					<div class="space-y-3">
+						<div class="flex justify-between text-sm" aria-hidden="true">
+							<span class="text-gray-500 dark:text-gray-400">Light</span>
+							<span id="intensity-value" class="font-medium text-navy-900 dark:text-white">5</span>
+							<span class="text-gray-500 dark:text-gray-400">Strong</span>
+						</div>
+						<input
+							type="range"
+							id="intensity"
+							name="intensity"
+							min="1"
+							max="10"
+							value="5"
+							aria-labelledby="intensity-label"
+							aria-valuemin="1"
+							aria-valuemax="10"
+							aria-valuenow="5"
+							aria-valuetext="5 out of 10, moderate intensity"
+							class="w-full h-2 bg-gray-200 dark:bg-navy-700 rounded-lg appearance-none cursor-pointer accent-sage-600"
+						/>
+						<div class="flex justify-between text-xs text-gray-400" aria-hidden="true">
+							<span>1</span>
+							<span>2</span>
+							<span>3</span>
+							<span>4</span>
+							<span>5</span>
+							<span>6</span>
+							<span>7</span>
+							<span>8</span>
+							<span>9</span>
+							<span>10</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Expectations -->
+				<fieldset class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
+					<legend data-copy="checkin.expectations" class="text-lg font-medium text-navy-900 dark:text-white mb-4">Does this match your expectations?</legend>
+					<div class="flex gap-2" role="radiogroup" aria-label="Expectations rating">
+						<label class="flex-1 cursor-pointer">
+							<input type="radio" name="expectations" value="yes" class="sr-only peer"/>
+							<div class="p-4 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+								<span class="text-2xl block mb-1" role="img" aria-label="Thumbs up">👍</span>
+								<span class="text-sm text-gray-600 dark:text-gray-400">Yes</span>
+							</div>
+						</label>
+						<label class="flex-1 cursor-pointer">
+							<input type="radio" name="expectations" value="somewhat" class="sr-only peer"/>
+							<div class="p-4 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+								<span class="text-2xl block mb-1" role="img" aria-label="Thinking">🤔</span>
+								<span class="text-sm text-gray-600 dark:text-gray-400">Somewhat</span>
+							</div>
+						</label>
+						<label class="flex-1 cursor-pointer">
+							<input type="radio" name="expectations" value="no" class="sr-only peer"/>
+							<div class="p-4 rounded-lg border border-gray-200 dark:border-navy-600 text-center peer-checked:bg-sage-100 dark:peer-checked:bg-sage-900/30 peer-checked:border-sage-600 hover:border-sage-400 transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-sage-500">
+								<span class="text-2xl block mb-1" role="img" aria-label="Thumbs down">👎</span>
+								<span class="text-sm text-gray-600 dark:text-gray-400">No</span>
+							</div>
+						</label>
+					</div>
+				</fieldset>
+
+				<!-- Notes -->
+				<div class="bg-white dark:bg-navy-900 border border-gray-200 dark:border-navy-700 rounded-lg p-6">
+					<label for="notes" class="block text-lg font-medium text-navy-900 dark:text-white mb-2">Notes (Optional)</label>
+					<textarea
+						id="notes"
+						name="notes"
+						rows="3"
+						placeholder="How does this compare to last time? Any notable effects?"
+						class="w-full px-3 py-2 border border-gray-300 dark:border-navy-600 rounded-lg bg-white dark:bg-navy-900 text-navy-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-sage-500 focus:border-transparent resize-none"
+					></textarea>
+				</div>
+
+				<!-- Actions -->
+				<div class="flex gap-3">
+					<button
+						type="submit"
+						class="flex-1 px-6 py-3 bg-sage-600 hover:bg-sage-700 text-white font-medium rounded-lg transition-colors"
+					>
+						<span data-copy="checkin.submit">Save Check-in</span>
+					</button>
+					<button
+						type="button"
+						onclick="endSession()"
+						class="px-6 py-3 border border-gray-300 dark:border-navy-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-navy-800 rounded-lg transition-colors"
+					>
+						<span data-copy="checkin.endSession">End Session</span>
+					</button>
+				</div>
+			</form>
+
+			<!-- Previous Check-ins -->
+			<div id="previous-checkins" class="hidden mt-8">
+				<h2 class="text-lg font-medium text-navy-900 dark:text-white mb-4">Previous Check-ins</h2>
+				<div id="checkins-list" class="space-y-3">
+					<!-- Populated by JavaScript -->
+				</div>
+			</div>
+		</div>
+
+		<!-- Session ID for JavaScript -->
+		<input type="hidden" id="session-id-data" value={ sessionID }/>
+
+		<script src="/assets/js/session-db.js"></script>
+		<script src="/assets/js/copy-service.js"></script>
+		<script>
+			const sessionID = document.getElementById('session-id-data').value;
+			const feelingEmojis = ['', '😫', '😔', '😐', '🙂', '😄'];
+
+			document.addEventListener('DOMContentLoaded', async () => {
+				await loadSession();
+				setupEventListeners();
+			});
+
+			async function loadSession() {
+				try {
+					const session = await SessionDB.get('sessions', sessionID);
+					if (!session) {
+						alert('Session not found');
+						window.location.href = '/app/sessions';
+						return;
+					}
+
+					// Check if session is still active
+					if (session.status !== 'active') {
+						window.location.href = `/app/sessions/${sessionID}`;
+						return;
+					}
+
+					// Load product
+					let product = null;
+					if (session.productId) {
+						product = await SessionDB.get('products', session.productId);
+					}
+
+					// Update header
+					document.getElementById('checkin-title').textContent = 'Check-in';
+					document.getElementById('session-info').textContent = product?.strainName || 'Active Session';
+
+					// Update summary
+					document.getElementById('summary-strain').textContent = product?.strainName || 'Unknown';
+					document.getElementById('summary-method').textContent = session.method;
+
+					// Calculate elapsed time
+					const elapsed = Math.floor((Date.now() - session.timestamp) / 60000);
+					let elapsedText;
+					if (elapsed < 60) {
+						elapsedText = `${elapsed} min`;
+					} else {
+						const hours = Math.floor(elapsed / 60);
+						const mins = elapsed % 60;
+						elapsedText = `${hours}h ${mins}m`;
+					}
+					document.getElementById('summary-elapsed').textContent = elapsedText;
+
+					// Load previous check-ins
+					await loadPreviousCheckIns();
+
+				} catch (err) {
+					console.error('[CheckIn] Failed to load session:', err);
+				}
+			}
+
+			async function loadPreviousCheckIns() {
+				try {
+					const checkIns = await SessionDB.getSessionCheckIns(sessionID);
+					if (checkIns.length === 0) return;
+
+					document.getElementById('previous-checkins').classList.remove('hidden');
+					const list = document.getElementById('checkins-list');
+					list.innerHTML = '';
+
+					for (const checkIn of checkIns) {
+						const card = document.createElement('div');
+						card.className = 'bg-gray-50 dark:bg-navy-800/50 rounded-lg p-4';
+
+						const time = new Date(checkIn.timestamp);
+						card.innerHTML = `
+							<div class="flex justify-between items-center mb-2">
+								<span class="text-sm text-gray-500 dark:text-gray-400">${time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+								<span class="text-sm text-gray-600 dark:text-gray-300">Intensity: ${checkIn.intensity}/10</span>
+							</div>
+							<div class="flex gap-4">
+								<span title="Mood">${feelingEmojis[checkIn.mood]}</span>
+								<span title="Mind">${feelingEmojis[checkIn.mind]}</span>
+								<span title="Body">${feelingEmojis[checkIn.body]}</span>
+							</div>
+						`;
+
+						list.appendChild(card);
+					}
+				} catch (err) {
+					console.error('[CheckIn] Failed to load previous check-ins:', err);
+				}
+			}
+
+			function setupEventListeners() {
+				// Intensity slider with accessible value updates (WCAG 4.1.2)
+				const slider = document.getElementById('intensity');
+				const intensityLabels = ['very light', 'light', 'mild', 'mild-moderate', 'moderate', 'moderate-strong', 'strong', 'very strong', 'intense', 'very intense'];
+				slider.oninput = () => {
+					const value = slider.value;
+					document.getElementById('intensity-value').textContent = value;
+					slider.setAttribute('aria-valuenow', value);
+					slider.setAttribute('aria-valuetext', `${value} out of 10, ${intensityLabels[value - 1]} intensity`);
+				};
+
+				// Form submission
+				document.getElementById('checkin-form').onsubmit = handleSubmit;
+			}
+
+			async function handleSubmit(e) {
+				e.preventDefault();
+
+				// Get selected feelings
+				const mood = getSelectedFeeling('mood');
+				const mind = getSelectedFeeling('mind');
+				const body = getSelectedFeeling('body');
+
+				if (!mood || !mind || !body) {
+					alert('Please rate your mood, mind, and body.');
+					return;
+				}
+
+				try {
+					const checkIn = await SessionDB.createCheckIn({
+						sessionId: sessionID,
+						mood,
+						mind,
+						body,
+						intensity: parseInt(document.getElementById('intensity').value),
+						meetsExpectations: document.querySelector('input[name="expectations"]:checked')?.value || null,
+						notes: document.getElementById('notes').value.trim()
+					});
+
+					console.log('[CheckIn] Created:', checkIn.id);
+
+					// Check if session should continue (schedule next check-in if multiple mode)
+					const session = await SessionDB.get('sessions', sessionID);
+					if (session.checkInMode === 'multiple' && session.status === 'active') {
+						// Check if within 4-hour window
+						const elapsed = Date.now() - session.timestamp;
+						const fourHours = 4 * 60 * 60 * 1000;
+
+						if (elapsed < fourHours) {
+							// Schedule next check-in
+							const nextInterval = Math.max(session.checkInInterval, 60); // At least 1 hour after 4 hours
+							const scheduledTime = Date.now() + (nextInterval * 60 * 1000);
+							await SessionDB.scheduleNotification(sessionID, scheduledTime);
+						}
+					}
+
+					// Redirect back to sessions
+					alert('Check-in saved!');
+					window.location.href = '/app/sessions';
+
+				} catch (err) {
+					console.error('[CheckIn] Failed to save:', err);
+					alert('Failed to save check-in. Please try again.');
+				}
+			}
+
+			function getSelectedFeeling(name) {
+				const selected = document.querySelector(`input[name="${name}"]:checked`);
+				return selected ? parseInt(selected.value) : null;
+			}
+
+			async function endSession() {
+				if (!confirm('End this session? You can still view the details later.')) {
+					return;
+				}
+
+				try {
+					await SessionDB.completeSession(sessionID);
+					await SessionDB.clearSessionNotifications(sessionID);
+					window.location.href = '/app/sessions';
+				} catch (err) {
+					console.error('[CheckIn] Failed to end session:', err);
+					alert('Failed to end session. Please try again.');
+				}
+			}
+		</script>
+	}
+}
