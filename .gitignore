@@ -1,8 +1,24 @@
-/node_modules
-.env
-.vscode
+# Dependencies
+node_modules/
 
-# macOS system files
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
 .DS_Store
-*/.DS_Store
-**/.DS_Store
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.bak
