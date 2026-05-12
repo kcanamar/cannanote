@@ -13,24 +13,33 @@ help:
 	@echo "🌱 CannaNote Development Commands"
 	@echo "=================================="
 	@echo ""
-	@echo "Quick Start:"
-	@echo "  make dev         - Start development server with hot reload"
-	@echo "  make dev-setup   - Install all development dependencies"
-	@echo "  make test        - Run tests"
+	@echo "Backend (Go):"
+	@echo "  make dev           - Start backend with hot reload"
+	@echo "  make dev-setup     - Install all dependencies"
+	@echo "  make test          - Run backend tests"
+	@echo ""
+	@echo "Desktop (Rust/egui):"
+	@echo "  make desktop-dev   - Run desktop app"
+	@echo "  make desktop-build - Build release binary"
+	@echo "  make desktop-test  - Run desktop tests"
+	@echo ""
+	@echo "Mobile (Flutter):"
+	@echo "  make mobile-deps   - Get Flutter dependencies"
+	@echo "  make mobile-dev    - Run mobile app"
+	@echo "  make mobile-build-android - Build Android APK"
+	@echo "  make mobile-build-ios     - Build iOS app"
 	@echo ""
 	@echo "Database (NeonDB):"
-	@echo "  make db-import   - Import schema and reference data to NeonDB"
-	@echo "  make db-verify   - Verify NeonDB data integrity"
+	@echo "  make db-import     - Import schema to NeonDB"
+	@echo "  make db-verify     - Verify NeonDB data"
 	@echo ""
 	@echo "Deployment (Fly.io):"
-	@echo "  make deploy      - Full deployment with pre-checks"
-	@echo "  make deploy-fast - Quick deployment (skip checks)"
-	@echo "  make deploy-status - Check deployment status"
-	@echo "  make deploy-logs - View production logs"
-	@echo "  make deploy-rollback - Rollback to previous version"
+	@echo "  make deploy        - Full deployment"
+	@echo "  make deploy-fast   - Quick deployment"
 	@echo ""
-	@echo "Utilities:"
-	@echo "  make clean       - Clean build artifacts"
+	@echo "Cross-Platform:"
+	@echo "  make test-all      - Run all platform tests"
+	@echo "  make clean-all     - Clean all build artifacts"
 
 # ==============================================================================
 # DEVELOPMENT COMMANDS
@@ -110,3 +119,69 @@ deploy-logs:
 # Rollback to previous version
 deploy-rollback:
 	@cd backend && make rollback
+
+# ==============================================================================
+# DESKTOP COMMANDS (Rust/egui)
+# ==============================================================================
+
+# Run desktop app in development mode
+desktop-dev:
+	@cd desktop && cargo run
+
+# Build desktop release binary
+desktop-build:
+	@cd desktop && cargo build --release
+
+# Run desktop tests
+desktop-test:
+	@cd desktop && cargo test
+
+# Format and lint desktop code
+desktop-lint:
+	@cd desktop && cargo fmt && cargo clippy
+
+# ==============================================================================
+# MOBILE COMMANDS (Flutter)
+# ==============================================================================
+
+# Get mobile dependencies
+mobile-deps:
+	@cd mobile && flutter pub get
+
+# Run mobile app in development mode
+mobile-dev:
+	@cd mobile && flutter run
+
+# Build Android APK
+mobile-build-android:
+	@cd mobile && flutter build apk --release
+
+# Build iOS app
+mobile-build-ios:
+	@cd mobile && flutter build ios --release
+
+# Run mobile tests
+mobile-test:
+	@cd mobile && flutter test
+
+# Generate code (Drift tables)
+mobile-gen:
+	@cd mobile && flutter pub run build_runner build --delete-conflicting-outputs
+
+# Lint mobile code
+mobile-lint:
+	@cd mobile && flutter analyze
+
+# ==============================================================================
+# CROSS-PLATFORM COMMANDS
+# ==============================================================================
+
+# Run all tests across all platforms
+test-all: test desktop-test mobile-test
+	@echo "✅ All platform tests passed"
+
+# Clean all build artifacts
+clean-all: clean
+	@cd desktop && cargo clean
+	@cd mobile && flutter clean
+	@echo "✅ All platforms cleaned"

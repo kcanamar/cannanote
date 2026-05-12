@@ -1,0 +1,53 @@
+name: cannanote_mobile
+description: Cannabis wellness journaling - mobile app
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.10.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Dependency Injection
+  get_it: ^7.6.0
+
+  # Database (SQLite via Drift)
+  drift: ^2.15.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+
+  # Utilities
+  uuid: ^4.2.0
+  http: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Drift code generation
+  drift_dev: ^2.15.0
+  build_runner: ^2.4.0
+
+  # App icon generation
+  flutter_launcher_icons: ^0.14.3
+
+# App icon configuration
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  # iOS specific
+  ios_content_mode: scaleAspectFill
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icon/
