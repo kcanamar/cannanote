@@ -22,3 +22,19 @@ node_modules/
 # Temp files
 *.tmp
 *.bak
+
+# --- Rust/Cargo ---
+# The target directory contains all compiled artifacts, executables, and dependencies.
+**/target/
+/.*.json
+/media/*
+
+# Remove Cargo.lock from gitignore if you are building an executable (typical for apps).
+# Keep it in gitignore if you are building a library.
+# Cargo.lock
+
+# --- egui / Web (WASM) ---
+# If you use Trunk or wasm-bindgen for web builds, ignore their output folders.
+/dist/
+/.trunk/
+/bindings/
