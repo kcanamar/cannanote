@@ -1,6 +1,16 @@
 // Dark mode initialization script - must run before any content renders
+// Uses safe localStorage access for privacy browsers
 (function() {
-	const theme = localStorage.getItem('theme');
+	// Safe localStorage read with fallback
+	function safeGetTheme() {
+		try {
+			return localStorage.getItem('theme');
+		} catch (e) {
+			return null; // localStorage unavailable (private browsing)
+		}
+	}
+
+	const theme = safeGetTheme();
 	const prefersDark = !theme && window.matchMedia('(prefers-color-scheme: dark)').matches;
 	const isDark = theme === 'dark' || prefersDark;
 	

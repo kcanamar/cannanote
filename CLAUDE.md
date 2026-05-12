@@ -34,22 +34,30 @@ This enables swapping implementations without changing business logic.
 
 #### Storage Layer (Ports & Adapters)
 ```
-cmd/web/assets/js/
+backend/cmd/web/assets/js/
   core/
-    domain/
-      session.js           # Domain entity definitions
-      strain.js
     ports/
-      storage-port.js      # Storage interface contract
-      sync-port.js         # Sync interface contract (future)
+      storage-port.js        # Storage interface contract
   adapters/
     storage/
-      indexed-db-adapter.js  # Implements storage-port
+      opfs-adapter.js        # Primary: Origin Private File System
+      indexeddb-adapter.js   # Fallback: IndexedDB
+      memory-adapter.js      # Last resort: In-memory
+      storage-factory.js     # Adapter selection logic
     sync/
       rest-sync-adapter.js   # Implements sync-port (future)
   application/
-    session-service.js     # Business logic, depends on ports
+    session-service.js       # Business logic, depends on ports
 ```
+
+#### Storage Degradation Chain
+OPFS → IndexedDB → Memory (for privacy browsers)
+
+| Browser | Mode | Storage Used |
+|---------|------|--------------|
+| Chrome/Firefox/Safari | Normal | OPFS or IndexedDB |
+| Brave (shields up) | Normal | OPFS or IndexedDB |
+| Any browser | Private | Memory (session only) |
 
 #### Storage Port Contract
 ```javascript
@@ -204,6 +212,13 @@ Client                           Server
 - **Sync status** - What's local vs synced
 - **Export history** - When you exported
 - **Delete options** - Granular data removal
+
+### Desktop Application (Tauri)
+- **macOS, Windows, Linux** - Native desktop experience
+- **Maximum local-first privacy** - No browser data clearing risks
+- **Rust backend** - Secure, fast, memory-safe
+- **SQLite storage** - Same data format as mobile
+- **Cross-platform sync** - PWA ↔ Mobile ↔ Desktop
 
 ---
 

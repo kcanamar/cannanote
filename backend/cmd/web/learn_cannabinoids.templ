@@ -34,13 +34,13 @@ templ CannabinoidsPage(cannabinoids []map[string]interface{}) {
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<title>Understanding Cannabinoids - CannaNote</title>
-		<script src="https://cdn.tailwindcss.com"></script>
+		<!-- Self-hosted fonts and compiled Tailwind CSS -->
+		<link rel="preload" href="/assets/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+		<link href="/assets/css/fonts.css" rel="stylesheet">
+		<link href="/assets/css/output.css" rel="stylesheet">
 		<script src="/assets/js/htmx.min.js"></script>
-		<style>
-			body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-		</style>
 	</head>
-	<body class="min-h-full bg-gray-50">
+	<body class="min-h-full bg-gray-50 font-brand">
 		
 		<!-- Navigation -->
 		<nav class="bg-white border-b border-gray-100">

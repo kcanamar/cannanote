@@ -1,23 +1,35 @@
 // CannaNote - Minimal Vanilla JavaScript
 // Handles dark mode, mobile menu, and form validation without frameworks
 
+// Safe localStorage wrapper for privacy browsers
+const safeLS = {
+  get: (key) => {
+    try { return localStorage.getItem(key); }
+    catch { return null; }
+  },
+  set: (key, value) => {
+    try { localStorage.setItem(key, value); return true; }
+    catch { return false; }
+  }
+};
+
 // Theme Management
 function initTheme() {
-  const theme = localStorage.getItem('theme');
+  const theme = safeLS.get('theme');
   const prefersDark = !theme && window.matchMedia('(prefers-color-scheme: dark)').matches;
   const isDark = theme === 'dark' || prefersDark;
-  
+
   if (isDark) {
     document.documentElement.classList.add('dark');
   }
-  
+
   updateThemeIcons(isDark);
 }
 
 function toggleTheme() {
   document.documentElement.classList.toggle('dark');
   const isDark = document.documentElement.classList.contains('dark');
-  localStorage.theme = isDark ? 'dark' : 'light';
+  safeLS.set('theme', isDark ? 'dark' : 'light');
   updateThemeIcons(isDark);
 }
 
@@ -111,17 +123,27 @@ function handleDocumentClick(event) {
   }
 }
 
-// Service Worker Update Handling
+// Service Worker Status
+window.swStatus = 'checking';
+
+// Service Worker Update Handling with graceful degradation
 function initServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
+  if (!('serviceWorker' in navigator)) {
+    window.swStatus = 'unsupported';
+    console.log('[App] Service workers not supported');
+    return;
+  }
 
   navigator.serviceWorker.register('/sw.js')
     .then((registration) => {
+      window.swStatus = 'active';
       console.log('[App] Service worker registered');
 
       // Check for updates periodically (every 5 minutes)
       setInterval(() => {
-        registration.update();
+        registration.update().catch(() => {
+          // Silently handle update check failures
+        });
       }, 5 * 60 * 1000);
 
       // Handle updates
@@ -138,7 +160,9 @@ function initServiceWorker() {
       });
     })
     .catch((error) => {
-      console.log('[App] Service worker registration failed:', error);
+      window.swStatus = 'unavailable';
+      console.log('[App] Service worker registration failed:', error.message);
+      // Don't block app - SW is an enhancement, not required
     });
 
   // Listen for messages from SW

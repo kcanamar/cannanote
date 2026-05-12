@@ -72,23 +72,23 @@ func SecurityHeaders() gin.HandlerFunc {
 		appEnv := os.Getenv("APP_ENV")
 		var csp string
 		if appEnv == "production" {
-			// Production CSP with external scripts only and Google Fonts support
+			// Production CSP - strict, self-hosted only (privacy-friendly)
 			csp = "default-src 'self'; " +
 				"script-src 'self'; " +
-				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-				"img-src 'self' data: https:; " +
-				"font-src 'self' https://fonts.gstatic.com; " +
-				"connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; " +
+				"style-src 'self' 'unsafe-inline'; " +
+				"img-src 'self' data:; " +
+				"font-src 'self'; " +
+				"connect-src 'self'; " +
 				"form-action 'self'; " +
 				"frame-ancestors 'none'; " +
 				"base-uri 'self'"
 		} else {
-			// Relaxed CSP for development
+			// Relaxed CSP for development (self-hosted fonts, no external CDNs)
 			csp = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
 				"img-src 'self' data: https: blob:; " +
-				"font-src 'self' data: https://fonts.gstatic.com; " +
-				"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-				"connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com; " +
+				"font-src 'self' data:; " +
+				"style-src 'self' 'unsafe-inline'; " +
+				"connect-src 'self' ws: wss:; " +
 				"form-action 'self'"
 		}
 		c.Header("Content-Security-Policy", csp)
