@@ -186,14 +186,14 @@ fn appFrame() anyerror!dvui.App.Result {
         if (state.sessions.len == 0) {
             dvui.labelNoFmt(@src(), "No sessions yet. Log your first session above!", .{}, .{});
         } else {
-            for (state.sessions) |session| {
+            for (state.sessions, 0..) |session, i| {
                 var buf: [128]u8 = undefined;
                 const label_text = std.fmt.bufPrint(&buf, "{s} {s} ({s})", .{
                     session.amount,
                     session.unit,
                     session.method,
                 }) catch "Error";
-                dvui.labelNoFmt(@src(), label_text, .{}, .{});
+                dvui.labelNoFmt(@src(), label_text, .{}, .{ .id_extra = i });
             }
         }
     }
