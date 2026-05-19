@@ -18,10 +18,11 @@ help:
 	@echo "  make dev-setup     - Install all dependencies"
 	@echo "  make test          - Run backend tests"
 	@echo ""
-	@echo "Desktop (Rust/egui):"
+	@echo "Desktop (Zig/dvui):"
 	@echo "  make desktop-dev   - Run desktop app"
 	@echo "  make desktop-build - Build release binary"
 	@echo "  make desktop-test  - Run desktop tests"
+	@echo "  make desktop-fmt   - Format Zig code"
 	@echo ""
 	@echo "Mobile (Flutter):"
 	@echo "  make mobile-deps   - Get Flutter dependencies"
@@ -121,24 +122,48 @@ deploy-rollback:
 	@cd backend && make rollback
 
 # ==============================================================================
-# DESKTOP COMMANDS (Rust/egui)
+# DESKTOP COMMANDS (Rust/egui) - Legacy
+# ==============================================================================
+
+# Run desktop app in development mode
+desktop-rust-dev:
+	@cd desktop && cargo run
+
+# Build desktop release binary
+desktop-rust-build:
+	@cd desktop && cargo build --release
+
+# Run desktop tests
+desktop-rust-test:
+	@cd desktop && cargo test
+
+# Format and lint desktop code
+desktop-rust-lint:
+	@cd desktop && cargo fmt && cargo clippy
+
+# ==============================================================================
+# DESKTOP COMMANDS (Zig/dvui) - Primary
 # ==============================================================================
 
 # Run desktop app in development mode
 desktop-dev:
-	@cd desktop && cargo run
+	@cd desktop-zig && zig build run
 
 # Build desktop release binary
 desktop-build:
-	@cd desktop && cargo build --release
+	@cd desktop-zig && zig build -Doptimize=ReleaseSafe
 
 # Run desktop tests
 desktop-test:
-	@cd desktop && cargo test
+	@cd desktop-zig && zig build test
 
-# Format and lint desktop code
-desktop-lint:
-	@cd desktop && cargo fmt && cargo clippy
+# Format desktop code
+desktop-fmt:
+	@cd desktop-zig && zig fmt src/
+
+# Clean desktop build artifacts
+desktop-clean:
+	@cd desktop-zig && rm -rf zig-out .zig-cache
 
 # ==============================================================================
 # MOBILE COMMANDS (Flutter)
