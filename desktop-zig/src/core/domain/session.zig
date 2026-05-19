@@ -22,13 +22,17 @@ pub const SyncStatus = enum {
 };
 
 /// Core domain entity - no I/O, no frameworks
-/// Pure data and business logic only
+/// Pure data and business logic only (matches web app schema)
 pub const Session = struct {
     id: [36]u8, // UUID as string
     method: []const u8,
     amount: []const u8,
     unit: []const u8,
+    strain: []const u8,
     notes: []const u8,
+    mood_before: u8, // 1-5, 0 = not set
+    mind_before: u8, // 1-5, 0 = not set
+    body_before: u8, // 1-5, 0 = not set
     status: SessionStatus,
     sync_status: SyncStatus,
     timestamp: i64, // Unix timestamp
@@ -43,6 +47,11 @@ pub const Session = struct {
         method: []const u8,
         amount: []const u8,
         unit: []const u8,
+        strain: []const u8,
+        mood_before: u8,
+        mind_before: u8,
+        body_before: u8,
+        notes: []const u8,
     ) !Self {
         const now = getCurrentTimestamp();
 
@@ -71,7 +80,11 @@ pub const Session = struct {
             .method = try allocator.dupe(u8, method),
             .amount = try allocator.dupe(u8, amount),
             .unit = try allocator.dupe(u8, unit),
-            .notes = "",
+            .strain = if (strain.len > 0) try allocator.dupe(u8, strain) else "",
+            .notes = if (notes.len > 0) try allocator.dupe(u8, notes) else "",
+            .mood_before = mood_before,
+            .mind_before = mind_before,
+            .body_before = body_before,
             .status = .active,
             .sync_status = .local,
             .timestamp = now,
@@ -101,6 +114,7 @@ pub const Session = struct {
         if (self.method.len > 0) allocator.free(self.method);
         if (self.amount.len > 0) allocator.free(self.amount);
         if (self.unit.len > 0) allocator.free(self.unit);
+        if (self.strain.len > 0) allocator.free(self.strain);
         if (self.notes.len > 0) allocator.free(self.notes);
     }
 
@@ -120,18 +134,22 @@ pub const DomainError = error{
 test "session creation" {
     const allocator = std.testing.allocator;
 
-    var session = try Session.init(allocator, "vape", "3", "puffs");
+    var session = try Session.init(allocator, "vape", "3", "puffs", "Blue Dream", 4, 3, 5, "Good session");
     defer session.deinit(allocator);
 
     try std.testing.expectEqualStrings("vape", session.method);
     try std.testing.expectEqualStrings("3", session.amount);
+    try std.testing.expectEqualStrings("Blue Dream", session.strain);
+    try std.testing.expectEqual(@as(u8, 4), session.mood_before);
+    try std.testing.expectEqual(@as(u8, 3), session.mind_before);
+    try std.testing.expectEqual(@as(u8, 5), session.body_before);
     try std.testing.expect(session.status == .active);
 }
 
 test "session validation" {
     const allocator = std.testing.allocator;
 
-    var session = try Session.init(allocator, "vape", "3", "puffs");
+    var session = try Session.init(allocator, "vape", "3", "puffs", "", 0, 0, 0, "");
     defer session.deinit(allocator);
 
     try session.validate();

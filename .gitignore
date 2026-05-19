@@ -46,23 +46,6 @@ npm-debug.log*
 *.cache
 
 # -----------------------------------------------------------------------------
-# Rust / Cargo (desktop/)
-# -----------------------------------------------------------------------------
-
-# Compiled output
-**/target/
-
-# Cargo.lock - keep for binaries, ignore for libraries
-# Uncomment if this becomes a library:
-# Cargo.lock
-
-# Backup files from rustfmt
-**/*.rs.bk
-
-# MSVC Windows builds
-*.pdb
-
-# -----------------------------------------------------------------------------
 # Zig (desktop-zig/)
 # -----------------------------------------------------------------------------
 
@@ -76,14 +59,6 @@ cannanote.db
 cannanote.db-journal
 cannanote.db-wal
 cannanote.db-shm
-
-# -----------------------------------------------------------------------------
-# egui / WASM Web Builds
-# -----------------------------------------------------------------------------
-
-/dist/
-/.trunk/
-/bindings/
 
 # -----------------------------------------------------------------------------
 # Flutter / Dart (mobile/)

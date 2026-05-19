@@ -63,14 +63,18 @@ pub const SqliteStorageAdapter = struct {
             return StorageError.DatabaseError;
         }
 
-        // Create sessions table if not exists
+        // Create sessions table if not exists (matches web app schema)
         const create_sql =
             \\CREATE TABLE IF NOT EXISTS sessions (
             \\    id TEXT PRIMARY KEY,
             \\    method TEXT NOT NULL,
             \\    amount TEXT NOT NULL,
             \\    unit TEXT NOT NULL,
+            \\    strain TEXT DEFAULT '',
             \\    notes TEXT DEFAULT '',
+            \\    mood_before INTEGER DEFAULT 0,
+            \\    mind_before INTEGER DEFAULT 0,
+            \\    body_before INTEGER DEFAULT 0,
             \\    status TEXT DEFAULT 'active',
             \\    sync_status TEXT DEFAULT 'local',
             \\    timestamp INTEGER NOT NULL,
@@ -94,8 +98,8 @@ pub const SqliteStorageAdapter = struct {
         const db = self.db orelse return StorageError.DatabaseError;
 
         const insert_sql =
-            \\INSERT INTO sessions (id, method, amount, unit, notes, status, sync_status, timestamp, created_at, updated_at)
-            \\VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            \\INSERT INTO sessions (id, method, amount, unit, strain, notes, mood_before, mind_before, body_before, status, sync_status, timestamp, created_at, updated_at)
+            \\VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         ;
 
         var stmt: ?*c.sqlite3_stmt = null;
@@ -109,12 +113,16 @@ pub const SqliteStorageAdapter = struct {
         _ = c.sqlite3_bind_text(stmt, 2, session.method.ptr, @intCast(session.method.len), null);
         _ = c.sqlite3_bind_text(stmt, 3, session.amount.ptr, @intCast(session.amount.len), null);
         _ = c.sqlite3_bind_text(stmt, 4, session.unit.ptr, @intCast(session.unit.len), null);
-        _ = c.sqlite3_bind_text(stmt, 5, session.notes.ptr, @intCast(session.notes.len), null);
-        _ = c.sqlite3_bind_text(stmt, 6, statusToString(session.status).ptr, -1, null);
-        _ = c.sqlite3_bind_text(stmt, 7, syncStatusToString(session.sync_status).ptr, -1, null);
-        _ = c.sqlite3_bind_int64(stmt, 8, session.timestamp);
-        _ = c.sqlite3_bind_int64(stmt, 9, session.created_at);
-        _ = c.sqlite3_bind_int64(stmt, 10, session.updated_at);
+        _ = c.sqlite3_bind_text(stmt, 5, session.strain.ptr, @intCast(session.strain.len), null);
+        _ = c.sqlite3_bind_text(stmt, 6, session.notes.ptr, @intCast(session.notes.len), null);
+        _ = c.sqlite3_bind_int(stmt, 7, @intCast(session.mood_before));
+        _ = c.sqlite3_bind_int(stmt, 8, @intCast(session.mind_before));
+        _ = c.sqlite3_bind_int(stmt, 9, @intCast(session.body_before));
+        _ = c.sqlite3_bind_text(stmt, 10, statusToString(session.status).ptr, -1, null);
+        _ = c.sqlite3_bind_text(stmt, 11, syncStatusToString(session.sync_status).ptr, -1, null);
+        _ = c.sqlite3_bind_int64(stmt, 12, session.timestamp);
+        _ = c.sqlite3_bind_int64(stmt, 13, session.created_at);
+        _ = c.sqlite3_bind_int64(stmt, 14, session.updated_at);
 
         if (c.sqlite3_step(stmt) != c.SQLITE_DONE) {
             return StorageError.DatabaseError;
@@ -127,7 +135,7 @@ pub const SqliteStorageAdapter = struct {
         const self: *Self = @ptrCast(@alignCast(ptr));
         const db = self.db orelse return StorageError.DatabaseError;
 
-        const select_sql = "SELECT id, method, amount, unit, notes, status, sync_status, timestamp, created_at, updated_at FROM sessions WHERE id = ?;";
+        const select_sql = "SELECT id, method, amount, unit, strain, notes, mood_before, mind_before, body_before, status, sync_status, timestamp, created_at, updated_at FROM sessions WHERE id = ?;";
 
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(db, select_sql, -1, &stmt, null) != c.SQLITE_OK) {
@@ -148,7 +156,7 @@ pub const SqliteStorageAdapter = struct {
         const self: *Self = @ptrCast(@alignCast(ptr));
         const db = self.db orelse return StorageError.DatabaseError;
 
-        const select_sql = "SELECT id, method, amount, unit, notes, status, sync_status, timestamp, created_at, updated_at FROM sessions ORDER BY timestamp DESC;";
+        const select_sql = "SELECT id, method, amount, unit, strain, notes, mood_before, mind_before, body_before, status, sync_status, timestamp, created_at, updated_at FROM sessions ORDER BY timestamp DESC;";
 
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(db, select_sql, -1, &stmt, null) != c.SQLITE_OK) {
@@ -172,7 +180,7 @@ pub const SqliteStorageAdapter = struct {
         const db = self.db orelse return StorageError.DatabaseError;
 
         const update_sql =
-            \\UPDATE sessions SET method = ?, amount = ?, unit = ?, notes = ?, status = ?, sync_status = ?, updated_at = ?
+            \\UPDATE sessions SET method = ?, amount = ?, unit = ?, strain = ?, notes = ?, mood_before = ?, mind_before = ?, body_before = ?, status = ?, sync_status = ?, updated_at = ?
             \\WHERE id = ?;
         ;
 
@@ -185,11 +193,15 @@ pub const SqliteStorageAdapter = struct {
         _ = c.sqlite3_bind_text(stmt, 1, session.method.ptr, @intCast(session.method.len), null);
         _ = c.sqlite3_bind_text(stmt, 2, session.amount.ptr, @intCast(session.amount.len), null);
         _ = c.sqlite3_bind_text(stmt, 3, session.unit.ptr, @intCast(session.unit.len), null);
-        _ = c.sqlite3_bind_text(stmt, 4, session.notes.ptr, @intCast(session.notes.len), null);
-        _ = c.sqlite3_bind_text(stmt, 5, statusToString(session.status).ptr, -1, null);
-        _ = c.sqlite3_bind_text(stmt, 6, syncStatusToString(session.sync_status).ptr, -1, null);
-        _ = c.sqlite3_bind_int64(stmt, 7, session.updated_at);
-        _ = c.sqlite3_bind_text(stmt, 8, session.getId().ptr, @intCast(session.getId().len), null);
+        _ = c.sqlite3_bind_text(stmt, 4, session.strain.ptr, @intCast(session.strain.len), null);
+        _ = c.sqlite3_bind_text(stmt, 5, session.notes.ptr, @intCast(session.notes.len), null);
+        _ = c.sqlite3_bind_int(stmt, 6, @intCast(session.mood_before));
+        _ = c.sqlite3_bind_int(stmt, 7, @intCast(session.mind_before));
+        _ = c.sqlite3_bind_int(stmt, 8, @intCast(session.body_before));
+        _ = c.sqlite3_bind_text(stmt, 9, statusToString(session.status).ptr, -1, null);
+        _ = c.sqlite3_bind_text(stmt, 10, syncStatusToString(session.sync_status).ptr, -1, null);
+        _ = c.sqlite3_bind_int64(stmt, 11, session.updated_at);
+        _ = c.sqlite3_bind_text(stmt, 12, session.getId().ptr, @intCast(session.getId().len), null);
 
         if (c.sqlite3_step(stmt) != c.SQLITE_DONE) {
             return StorageError.DatabaseError;
@@ -225,7 +237,7 @@ pub const SqliteStorageAdapter = struct {
         const self: *Self = @ptrCast(@alignCast(ptr));
         const db = self.db orelse return StorageError.DatabaseError;
 
-        const select_sql = "SELECT id, method, amount, unit, notes, status, sync_status, timestamp, created_at, updated_at FROM sessions WHERE sync_status = 'pending' ORDER BY timestamp DESC;";
+        const select_sql = "SELECT id, method, amount, unit, strain, notes, mood_before, mind_before, body_before, status, sync_status, timestamp, created_at, updated_at FROM sessions WHERE sync_status = 'pending' ORDER BY timestamp DESC;";
 
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(db, select_sql, -1, &stmt, null) != c.SQLITE_OK) {
@@ -254,9 +266,13 @@ pub const SqliteStorageAdapter = struct {
         const method_ptr = c.sqlite3_column_text(stmt, 1);
         const amount_ptr = c.sqlite3_column_text(stmt, 2);
         const unit_ptr = c.sqlite3_column_text(stmt, 3);
-        const notes_ptr = c.sqlite3_column_text(stmt, 4);
-        const status_ptr = c.sqlite3_column_text(stmt, 5);
-        const sync_status_ptr = c.sqlite3_column_text(stmt, 6);
+        const strain_ptr = c.sqlite3_column_text(stmt, 4);
+        const notes_ptr = c.sqlite3_column_text(stmt, 5);
+        const mood_before: u8 = @intCast(c.sqlite3_column_int(stmt, 6));
+        const mind_before: u8 = @intCast(c.sqlite3_column_int(stmt, 7));
+        const body_before: u8 = @intCast(c.sqlite3_column_int(stmt, 8));
+        const status_ptr = c.sqlite3_column_text(stmt, 9);
+        const sync_status_ptr = c.sqlite3_column_text(stmt, 10);
 
         var id: [36]u8 = undefined;
         if (id_ptr) |ptr| {
@@ -270,12 +286,16 @@ pub const SqliteStorageAdapter = struct {
             .method = try dupeString(allocator, method_ptr),
             .amount = try dupeString(allocator, amount_ptr),
             .unit = try dupeString(allocator, unit_ptr),
+            .strain = try dupeString(allocator, strain_ptr),
             .notes = try dupeString(allocator, notes_ptr),
+            .mood_before = mood_before,
+            .mind_before = mind_before,
+            .body_before = body_before,
             .status = stringToStatus(status_ptr),
             .sync_status = stringToSyncStatus(sync_status_ptr),
-            .timestamp = c.sqlite3_column_int64(stmt, 7),
-            .created_at = c.sqlite3_column_int64(stmt, 8),
-            .updated_at = c.sqlite3_column_int64(stmt, 9),
+            .timestamp = c.sqlite3_column_int64(stmt, 11),
+            .created_at = c.sqlite3_column_int64(stmt, 12),
+            .updated_at = c.sqlite3_column_int64(stmt, 13),
         };
     }
 

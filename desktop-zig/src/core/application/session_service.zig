@@ -25,8 +25,13 @@ pub const SessionService = struct {
         method: []const u8,
         amount: []const u8,
         unit: []const u8,
+        strain: []const u8,
+        mood_before: u8,
+        mind_before: u8,
+        body_before: u8,
+        notes: []const u8,
     ) !Session {
-        var session = try Session.init(self.allocator, method, amount, unit);
+        var session = try Session.init(self.allocator, method, amount, unit, strain, mood_before, mind_before, body_before, notes);
         errdefer session.deinit(self.allocator);
 
         // Domain validation
