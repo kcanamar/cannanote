@@ -42,11 +42,16 @@ var app_state: ?*AppState = null;
 
 const FocusPanel = enum { form, list };
 const FormField = enum { method, unit, amount, strain, mood, mind, body, notes };
+const Mode = enum { normal, insert };
 
 const AppState = struct {
     allocator: std.mem.Allocator,
     storage: SqliteStorageAdapter,
     service: SessionService,
+
+    // Vim-like mode
+    mode: Mode = .normal,
+    focus_text_entry: bool = false, // Flag to focus text entry on next frame
 
     // Focus state for vim navigation
     focus_panel: FocusPanel = .form,
@@ -234,6 +239,32 @@ const AppState = struct {
             return if (current > 0) current - 1 else max - 1;
         }
     }
+
+    // Check if current field is a text field
+    pub fn isOnTextField(self: *AppState) bool {
+        return self.focus_panel == .form and
+            (self.form_field == .amount or self.form_field == .strain or self.form_field == .notes);
+    }
+
+    // Check if current field is a dropdown
+    pub fn isOnDropdown(self: *AppState) bool {
+        return self.focus_panel == .form and
+            (self.form_field == .method or self.form_field == .unit or
+            self.form_field == .mood or self.form_field == .mind or self.form_field == .body);
+    }
+
+    // Enter insert mode (only on text fields)
+    pub fn enterInsertMode(self: *AppState) void {
+        if (self.isOnTextField()) {
+            self.mode = .insert;
+            self.focus_text_entry = true; // Request focus on next render
+        }
+    }
+
+    // Exit to normal mode
+    pub fn exitInsertMode(self: *AppState) void {
+        self.mode = .normal;
+    }
 };
 
 // ============================================================================
@@ -287,92 +318,92 @@ fn handleKeyboardInput(state: *AppState) void {
         const key = event.evt.key;
         if (key.action != .down and key.action != .repeat) continue;
 
-        // Check if on text field (amount, strain, notes)
-        const in_text_field = state.focus_panel == .form and
-            (state.form_field == .amount or state.form_field == .strain or state.form_field == .notes);
-
-        // Check if on dropdown field (method, unit, mood, mind, body)
-        const in_dropdown_field = state.focus_panel == .form and
-            (state.form_field == .method or state.form_field == .unit or
-            state.form_field == .mood or state.form_field == .mind or state.form_field == .body);
-
-        if (!in_text_field) {
-            switch (key.code) {
-                .j => {
-                    if (in_dropdown_field) {
-                        // j cycles dropdown value forward
-                        state.cycleFieldValue(1);
-                    } else {
-                        state.navDown();
-                    }
-                    event.handled = true;
-                },
-                .k => {
-                    if (in_dropdown_field) {
-                        // k cycles dropdown value backward
-                        state.cycleFieldValue(-1);
-                    } else {
-                        state.navUp();
-                    }
-                    event.handled = true;
-                },
-                .h => {
-                    state.navLeft();
-                    event.handled = true;
-                },
-                .l => {
-                    state.navRight();
-                    event.handled = true;
-                },
-                .d, .x => {
-                    if (state.focus_panel == .list) {
-                        state.deleteSelectedSession();
-                        event.handled = true;
-                    }
-                },
-                .enter => {
-                    if (state.focus_panel == .form) {
-                        state.logSession();
-                        event.handled = true;
-                    }
-                },
-                .tab => {
-                    // Tab moves to next field
-                    if (key.mod.has(.lshift) or key.mod.has(.rshift)) {
-                        state.navUp();
-                    } else {
-                        state.navDown();
-                    }
-                    event.handled = true;
-                },
-                .space => {
-                    if (in_dropdown_field) {
-                        state.cycleFieldValue(1);
-                        event.handled = true;
-                    }
-                },
-                .g => {
-                    if (state.focus_panel == .list) {
-                        state.list_index = 0;
-                        event.handled = true;
-                    } else if (state.focus_panel == .form) {
-                        // g goes to first field in form
-                        state.form_field = .method;
-                        event.handled = true;
-                    }
-                },
-                .n => {
-                    state.focus_panel = .form;
-                    state.form_field = .method;
-                    event.handled = true;
-                },
-                .r => {
-                    state.refreshSessions();
-                    event.handled = true;
-                },
-                // Capital G (shift+g) goes to bottom
-                else => {},
+        // INSERT MODE - only handle Escape
+        if (state.mode == .insert) {
+            if (key.code == .escape) {
+                state.exitInsertMode();
+                event.handled = true;
             }
+            // Let dvui handle all other keys for text entry
+            continue;
+        }
+
+        // NORMAL MODE - full vim navigation
+        switch (key.code) {
+            .j => {
+                state.navDown();
+                event.handled = true;
+            },
+            .k => {
+                state.navUp();
+                event.handled = true;
+            },
+            .h => {
+                state.navLeft();
+                event.handled = true;
+            },
+            .l => {
+                state.navRight();
+                event.handled = true;
+            },
+            .tab => {
+                if (key.mod.has(.lshift) or key.mod.has(.rshift)) {
+                    state.navUp();
+                } else {
+                    state.navDown();
+                }
+                event.handled = true;
+            },
+            .i => {
+                // Enter insert mode on text fields
+                if (state.isOnTextField()) {
+                    state.enterInsertMode();
+                    event.handled = true;
+                }
+            },
+            .space => {
+                // Cycle dropdown values
+                if (state.isOnDropdown()) {
+                    state.cycleFieldValue(1);
+                    event.handled = true;
+                }
+            },
+            .enter => {
+                // Enter ONLY submits the session
+                if (state.focus_panel == .form) {
+                    state.logSession();
+                    event.handled = true;
+                }
+            },
+            .d, .x => {
+                if (state.focus_panel == .list) {
+                    state.deleteSelectedSession();
+                    event.handled = true;
+                }
+            },
+            .g => {
+                if (state.focus_panel == .list) {
+                    state.list_index = 0;
+                } else if (state.focus_panel == .form) {
+                    state.form_field = .method;
+                }
+                event.handled = true;
+            },
+            .n => {
+                state.focus_panel = .form;
+                state.form_field = .method;
+                event.handled = true;
+            },
+            .r => {
+                state.refreshSessions();
+                event.handled = true;
+            },
+            .escape => {
+                // Clear status or other cancel action
+                state.status_message = "";
+                event.handled = true;
+            },
+            else => {},
         }
     }
 }
@@ -383,13 +414,22 @@ fn renderFormPanel(state: *AppState) void {
 
     const form_focused = state.focus_panel == .form;
 
+    // Mode indicator
+    const mode_str: []const u8 = if (state.mode == .insert) "-- INSERT --" else "-- NORMAL --";
+    dvui.labelNoFmt(@src(), mode_str, .{}, .{ .id_extra = 950 });
+    _ = dvui.spacer(@src(), .{ .min_size_content = .{ .h = 5 }, .id_extra = 951 });
+
     // Title with focus indicator
     const title: []const u8 = if (form_focused) "[ New Session ]" else "  New Session  ";
     dvui.labelNoFmt(@src(), title, .{}, .{});
-    _ = dvui.spacer(@src(), .{ .min_size_content = .{ .h = 10 } });
+    _ = dvui.spacer(@src(), .{ .min_size_content = .{ .h = 5 }, .id_extra = 952 });
 
-    // Help text
-    dvui.labelNoFmt(@src(), "j/k:value Tab:field h/l:panel Enter:log", .{}, .{ .id_extra = 900 });
+    // Help text based on mode
+    const help: []const u8 = if (state.mode == .insert)
+        "Esc:normal"
+    else
+        "j/k:nav i:edit Space:cycle Enter:submit h/l:panel";
+    dvui.labelNoFmt(@src(), help, .{}, .{ .id_extra = 900 });
     _ = dvui.spacer(@src(), .{ .min_size_content = .{ .h = 10 }, .id_extra = 901 });
 
     // Method
@@ -470,12 +510,13 @@ fn renderTextField(
     id_extra: usize,
 ) void {
     const is_focused = panel_focused and state.form_field == field;
+    const is_editing = is_focused and state.mode == .insert;
 
     var hbox = dvui.box(@src(), .{ .dir = .horizontal }, .{ .id_extra = id_extra + 300 });
     defer hbox.deinit();
 
-    // Focus indicator - more visible
-    const indicator: []const u8 = if (is_focused) "[>]" else "   ";
+    // Focus indicator - shows mode
+    const indicator: []const u8 = if (is_editing) "[I]" else if (is_focused) "[>]" else "   ";
     dvui.labelNoFmt(@src(), indicator, .{}, .{ .id_extra = id_extra + 400 });
 
     // Label with padding
@@ -483,9 +524,33 @@ fn renderTextField(
     const padded_label = std.fmt.bufPrint(&label_buf, "{s: <8}", .{label_text}) catch label_text;
     dvui.labelNoFmt(@src(), padded_label, .{}, .{ .id_extra = id_extra + 500 });
 
-    // Text entry
-    var te = dvui.textEntry(@src(), .{ .text = .{ .buffer = buffer } }, .{ .id_extra = id_extra + 600 });
-    te.deinit();
+    if (is_editing) {
+        // INSERT MODE: Show editable text entry
+        var te = dvui.textEntry(@src(), .{ .text = .{ .buffer = buffer } }, .{ .id_extra = id_extra + 600 });
+
+        // Focus the text entry if just entered insert mode
+        if (state.focus_text_entry) {
+            dvui.focusWidget(te.data().id, null, null);
+            state.focus_text_entry = false;
+        }
+
+        te.deinit();
+    } else {
+        // NORMAL MODE: Show as clickable label
+        const text_value = AppState.getBufferText(buffer);
+        var display_buf: [64]u8 = undefined;
+        const display = if (text_value.len > 0)
+            std.fmt.bufPrint(&display_buf, "[{s}]", .{text_value}) catch "[...]"
+        else
+            "[empty - press i to edit]";
+
+        // Clickable button that enters insert mode
+        if (dvui.button(@src(), display, .{}, .{ .id_extra = id_extra + 600 })) {
+            state.form_field = field;
+            state.focus_panel = .form;
+            state.enterInsertMode();
+        }
+    }
 }
 
 fn renderListPanel(state: *AppState) void {
